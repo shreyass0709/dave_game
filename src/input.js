@@ -1,6 +1,6 @@
 /**
  * Input Manager for Keyboard Controls
- * Tracks key states, just-pressed triggers, shooting, and buffers
+ * Tracks key states, just-pressed triggers, shooting, restart, and buffers
  */
 export class InputHandler {
   constructor() {
@@ -9,7 +9,7 @@ export class InputHandler {
 
     window.addEventListener('keydown', (e) => {
       // Prevent default browser scrolling for game keys
-      if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyS', 'KeyA', 'KeyD', 'KeyK', 'KeyB', 'KeyF'].includes(e.code)) {
+      if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyS', 'KeyA', 'KeyD', 'KeyK', 'KeyB', 'KeyF', 'KeyR', 'Enter'].includes(e.code)) {
         e.preventDefault();
       }
 
@@ -52,6 +52,10 @@ export class InputHandler {
 
   wasShootJustPressed() {
     return this.justPressed.has('KeyF');
+  }
+
+  wasRestartJustPressed() {
+    return this.justPressed.has('Enter') || this.justPressed.has('KeyR') || this.justPressed.has('Space');
   }
 
   wasDebugToggled() {

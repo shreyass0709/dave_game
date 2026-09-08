@@ -1,11 +1,10 @@
 /**
- * Level & Tile Map System (Level 1 - Dave-Inspired Complete Level)
- * Features solid terrain, hazards, varied collectibles (Coins, Rubies, Sapphires, Trophy),
- * enemy patrol stations, and the level exit portal.
+ * Multi-Level Tile Map System (Levels 1, 2, and 3)
+ * Provides progressive retro platformer levels with start positions,
+ * platforms, hazards, collectibles, enemy spawns, and exit portals.
  */
 
 export const TILE_SIZE = 16;
-export const MAP_COLS = 70;
 export const MAP_ROWS = 15;
 
 export const TILE_TYPES = {
@@ -24,147 +23,327 @@ export const TILE_TYPES = {
 };
 
 export class GameMap {
-  constructor() {
+  constructor(levelNumber = 1) {
     this.tileSize = TILE_SIZE;
-    this.cols = MAP_COLS;
     this.rows = MAP_ROWS;
     this.animTimer = 0;
     this.hasTrophy = false;
-
-    this.initLevel();
+    this.loadLevel(levelNumber);
   }
 
-  initLevel() {
-    // Initialize empty grid (15 rows x 70 cols)
+  /**
+   * Loads specific level layout and metadata
+   */
+  loadLevel(levelNumber) {
+    this.levelNumber = levelNumber;
+    this.hasTrophy = false;
+
+    if (levelNumber === 1) {
+      this.buildLevel1();
+    } else if (levelNumber === 2) {
+      this.buildLevel2();
+    } else if (levelNumber === 3) {
+      this.buildLevel3();
+    } else {
+      this.buildLevel1();
+    }
+  }
+
+  // ==========================================
+  // LEVEL 1: THE TRAINING VAULT (Easy)
+  // ==========================================
+  buildLevel1() {
+    this.cols = 68;
+    this.playerSpawn = { x: 32, y: 192 };
     this.grid = Array.from({ length: this.rows }, () => new Array(this.cols).fill(TILE_TYPES.EMPTY));
 
-    // 1. Top Ceiling (Row 0) and Boundary Walls (Col 0, Col 69)
-    for (let c = 0; c < this.cols; c++) {
-      this.grid[0][c] = TILE_TYPES.STEEL_BLOCK;
-    }
+    // Boundaries
+    for (let c = 0; c < this.cols; c++) this.grid[0][c] = TILE_TYPES.STEEL_BLOCK;
     for (let r = 0; r < this.rows; r++) {
       this.grid[r][0] = TILE_TYPES.STEEL_BLOCK;
       this.grid[r][this.cols - 1] = TILE_TYPES.STEEL_BLOCK;
     }
 
-    // 2. Base Ground (Row 14) with strategic pits and solid floors
+    // Base Ground with small fire pit at cols 13..14, spikes at 28..30, fire at 47..49
     for (let c = 0; c < this.cols; c++) {
-      // Pits at cols 13..14 (Fire Pit), 26..29 (Spike Pit), 48..51 (Lava/Fire Pit)
-      if ((c >= 13 && c <= 14) || (c >= 48 && c <= 51)) {
+      if ((c >= 13 && c <= 14) || (c >= 47 && c <= 49)) {
         this.grid[14][c] = TILE_TYPES.HAZARD_FIRE;
-      } else if (c >= 26 && c <= 29) {
+      } else if (c >= 28 && c <= 30) {
         this.grid[14][c] = TILE_TYPES.HAZARD_SPIKES;
       } else {
         this.grid[14][c] = TILE_TYPES.RED_BRICK;
       }
     }
 
-    // 3. SECTION 1: STARTING AREA & GENTLE HOP (Cols 1..22)
-    // Starting platforms & intro collectibles
+    // Section 1: Intro platforms & Coins
     this.grid[11][4] = TILE_TYPES.RED_BRICK;
     this.grid[11][5] = TILE_TYPES.RED_BRICK;
     this.grid[11][6] = TILE_TYPES.RED_BRICK;
-    this.grid[10][4] = TILE_TYPES.COLLECTIBLE_COIN;     // +100
-    this.grid[10][5] = TILE_TYPES.COLLECTIBLE_SAPPHIRE; // +300
-    this.grid[10][6] = TILE_TYPES.COLLECTIBLE_COIN;     // +100
+    this.grid[10][4] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[10][5] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+    this.grid[10][6] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][8] = TILE_TYPES.COLLECTIBLE_COIN; // Ground coin for easy early pickup
 
-    // Ground coins
-    this.grid[13][8] = TILE_TYPES.COLLECTIBLE_COIN;
-    this.grid[13][9] = TILE_TYPES.COLLECTIBLE_COIN;
-
-    // Hop across first small fire pit (cols 13..14)
+    // Fire hop platform
     this.grid[12][11] = TILE_TYPES.RED_BRICK;
     this.grid[12][12] = TILE_TYPES.RED_BRICK;
-    this.grid[11][11] = TILE_TYPES.COLLECTIBLE_COIN;
-    this.grid[11][12] = TILE_TYPES.COLLECTIBLE_COIN;
-
     this.grid[9][14] = TILE_TYPES.RED_BRICK;
     this.grid[9][15] = TILE_TYPES.RED_BRICK;
     this.grid[9][16] = TILE_TYPES.RED_BRICK;
-    this.grid[8][15] = TILE_TYPES.COLLECTIBLE_RUBY;     // +200
-    this.grid[8][16] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[8][15] = TILE_TYPES.COLLECTIBLE_RUBY;
 
-    this.grid[12][18] = TILE_TYPES.RED_BRICK;
-    this.grid[12][19] = TILE_TYPES.RED_BRICK;
-    this.grid[11][18] = TILE_TYPES.COLLECTIBLE_COIN;
+    // Enemy Patrol 1 (Ground) & Coins
+    this.grid[13][18] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][20] = TILE_TYPES.ENEMY_SPAWN;
+    this.grid[13][21] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][22] = TILE_TYPES.COLLECTIBLE_COIN;
 
-    // Enemy Patrol Station 1 (Col 21, Row 13)
-    this.grid[13][21] = TILE_TYPES.ENEMY_SPAWN;
-
-    // 4. SECTION 2: MULTI-TIER PLATFORMS & SPIKE PIT (Cols 23..44)
-    this.grid[12][24] = TILE_TYPES.RED_BRICK;
+    // Section 2: Spike pit crossing
     this.grid[12][25] = TILE_TYPES.RED_BRICK;
-    this.grid[11][24] = TILE_TYPES.COLLECTIBLE_COIN;
-
-    // Island platform directly above spike pit (spikes at 26..29)
-    this.grid[9][27] = TILE_TYPES.WOOD_PLATFORM;
     this.grid[9][28] = TILE_TYPES.WOOD_PLATFORM;
-    this.grid[8][27] = TILE_TYPES.COLLECTIBLE_SAPPHIRE; // +300
-    this.grid[8][28] = TILE_TYPES.COLLECTIBLE_SAPPHIRE; // +300
+    this.grid[9][29] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][28] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+    this.grid[8][29] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[12][32] = TILE_TYPES.RED_BRICK;
+    this.grid[13][34] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][35] = TILE_TYPES.COLLECTIBLE_COIN;
 
-    this.grid[11][30] = TILE_TYPES.RED_BRICK;
-    this.grid[11][31] = TILE_TYPES.RED_BRICK;
-    this.grid[10][30] = TILE_TYPES.COLLECTIBLE_COIN;
-
-    // Stepped wall hurdle
-    this.grid[12][34] = TILE_TYPES.STEEL_BLOCK;
-    this.grid[13][34] = TILE_TYPES.STEEL_BLOCK;
-
-    // High secret ledge
+    // Secret high ledge
     this.grid[7][36] = TILE_TYPES.RED_BRICK;
     this.grid[7][37] = TILE_TYPES.RED_BRICK;
-    this.grid[7][38] = TILE_TYPES.RED_BRICK;
-    this.grid[6][36] = TILE_TYPES.COLLECTIBLE_COIN;
-    this.grid[6][37] = TILE_TYPES.COLLECTIBLE_RUBY;     // +200
-    this.grid[6][38] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[6][36] = TILE_TYPES.COLLECTIBLE_RUBY;
+    this.grid[6][37] = TILE_TYPES.COLLECTIBLE_COIN;
 
-    // Enemy Patrol Station 2 (Col 40, Row 13)
-    this.grid[13][40] = TILE_TYPES.ENEMY_SPAWN;
+    // Enemy Patrol 2 (Ground)
+    this.grid[13][39] = TILE_TYPES.ENEMY_SPAWN;
+    this.grid[13][42] = TILE_TYPES.COLLECTIBLE_COIN;
 
-    this.grid[11][42] = TILE_TYPES.RED_BRICK;
-    this.grid[11][43] = TILE_TYPES.RED_BRICK;
-    this.grid[10][42] = TILE_TYPES.COLLECTIBLE_COIN;
-
-    // 5. SECTION 3: THE TROPHY CHAMBER (Cols 45..58)
-    this.grid[12][46] = TILE_TYPES.RED_BRICK;
-    this.grid[12][47] = TILE_TYPES.RED_BRICK;
-    this.grid[11][46] = TILE_TYPES.COLLECTIBLE_COIN;
-
-    // Floating platforms above lava pit (48..51)
+    // Section 3: Trophy Chamber
+    this.grid[12][45] = TILE_TYPES.RED_BRICK;
+    this.grid[11][45] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+    this.grid[9][48] = TILE_TYPES.WOOD_PLATFORM;
     this.grid[9][49] = TILE_TYPES.WOOD_PLATFORM;
-    this.grid[9][50] = TILE_TYPES.WOOD_PLATFORM;
-    this.grid[9][51] = TILE_TYPES.WOOD_PLATFORM;
-    this.grid[8][49] = TILE_TYPES.COLLECTIBLE_COIN;
-    this.grid[8][50] = TILE_TYPES.ENEMY_SPAWN; // Platform guard
-    this.grid[8][51] = TILE_TYPES.COLLECTIBLE_RUBY;
+    this.grid[8][49] = TILE_TYPES.ENEMY_SPAWN; // Platform guard
 
-    // High Trophy Pedestal
+    // Trophy Altar
+    this.grid[6][51] = TILE_TYPES.STEEL_BLOCK;
     this.grid[6][52] = TILE_TYPES.STEEL_BLOCK;
-    this.grid[6][53] = TILE_TYPES.STEEL_BLOCK;
-    this.grid[5][52] = TILE_TYPES.COLLECTIBLE_TROPHY; // Golden Trophy Key Item! (+1000)
+    this.grid[5][51] = TILE_TYPES.COLLECTIBLE_TROPHY;
+    this.grid[5][52] = TILE_TYPES.COLLECTIBLE_RUBY;
 
-    this.grid[9][55] = TILE_TYPES.WOOD_PLATFORM;
-    this.grid[9][56] = TILE_TYPES.WOOD_PLATFORM;
-    this.grid[8][55] = TILE_TYPES.COLLECTIBLE_COIN;
-    this.grid[8][56] = TILE_TYPES.COLLECTIBLE_SAPPHIRE; // +300
-
-    this.grid[12][58] = TILE_TYPES.RED_BRICK;
-    this.grid[12][59] = TILE_TYPES.RED_BRICK;
-    this.grid[11][58] = TILE_TYPES.COLLECTIBLE_COIN;
-
-    // 6. SECTION 4: THE GOAL & EXIT PORTAL (Cols 60..69)
+    this.grid[9][54] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[12][57] = TILE_TYPES.RED_BRICK;
+    this.grid[11][57] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][60] = TILE_TYPES.COLLECTIBLE_COIN;
     this.grid[13][61] = TILE_TYPES.COLLECTIBLE_COIN;
-    this.grid[13][63] = TILE_TYPES.COLLECTIBLE_COIN;
-    this.grid[13][64] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][62] = TILE_TYPES.COLLECTIBLE_COIN;
 
-    // Pillar decoration
-    this.grid[11][62] = TILE_TYPES.STEEL_BLOCK;
-    this.grid[12][62] = TILE_TYPES.STEEL_BLOCK;
-    this.grid[13][62] = TILE_TYPES.STEEL_BLOCK;
+    // Exit Door
+    this.grid[12][64] = TILE_TYPES.EXIT_DOOR;
+    this.grid[13][64] = TILE_TYPES.EXIT_DOOR;
+  }
 
-    // The Exit Door (Row 12 & 13, Col 66)
-    this.grid[12][66] = TILE_TYPES.EXIT_DOOR;
-    this.grid[13][66] = TILE_TYPES.EXIT_DOOR;
+  // ==========================================
+  // LEVEL 2: THE CYBER FACTORY (Medium)
+  // ==========================================
+  buildLevel2() {
+    this.cols = 76;
+    this.playerSpawn = { x: 32, y: 192 };
+    this.grid = Array.from({ length: this.rows }, () => new Array(this.cols).fill(TILE_TYPES.EMPTY));
+
+    // Boundaries
+    for (let c = 0; c < this.cols; c++) this.grid[0][c] = TILE_TYPES.STEEL_BLOCK;
+    for (let r = 0; r < this.rows; r++) {
+      this.grid[r][0] = TILE_TYPES.STEEL_BLOCK;
+      this.grid[r][this.cols - 1] = TILE_TYPES.STEEL_BLOCK;
+    }
+
+    // Ground with alternating hazards (cols 11..13 spikes, 23..25 fire, 39..42 spikes, 53..56 lava)
+    for (let c = 0; c < this.cols; c++) {
+      if ((c >= 11 && c <= 13) || (c >= 39 && c <= 42)) {
+        this.grid[14][c] = TILE_TYPES.HAZARD_SPIKES;
+      } else if ((c >= 23 && c <= 25) || (c >= 53 && c <= 56)) {
+        this.grid[14][c] = TILE_TYPES.HAZARD_FIRE;
+      } else {
+        this.grid[14][c] = TILE_TYPES.STEEL_BLOCK;
+      }
+    }
+
+    // Section 1: Factory Entrance & Pipe Hopping
+    this.grid[11][5] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[11][6] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[10][5] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[10][6] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][8] = TILE_TYPES.COLLECTIBLE_COIN;
+
+    // Elevated Girders over first spike pit
+    this.grid[9][11] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][12] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][13] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][12] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+
+    // Enemy Patrol 1
+    this.grid[13][15] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][18] = TILE_TYPES.ENEMY_SPAWN;
+    this.grid[13][19] = TILE_TYPES.COLLECTIBLE_COIN;
+
+    // Section 2: Stepped Conveyors over fire
+    this.grid[12][22] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[9][24] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][25] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][24] = TILE_TYPES.COLLECTIBLE_RUBY;
+    this.grid[8][25] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[12][27] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[13][28] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+
+    // Enemy Patrol 2 (Mid-air girder)
+    this.grid[8][32] = TILE_TYPES.ENEMY_SPAWN;
+    this.grid[9][31] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][32] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][33] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][31] = TILE_TYPES.COLLECTIBLE_RUBY;
+    this.grid[8][33] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][36] = TILE_TYPES.COLLECTIBLE_COIN;
+
+    // Section 3: High Secret Tower & Hazard crossing
+    this.grid[11][37] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[7][40] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[7][41] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[6][40] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+    this.grid[6][41] = TILE_TYPES.COLLECTIBLE_RUBY;
+
+    // Enemy Patrol 3 (Ground)
+    this.grid[13][44] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][45] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][46] = TILE_TYPES.ENEMY_SPAWN;
+    this.grid[13][48] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+
+    // Section 4: Crane Altar & The Trophy
+    this.grid[12][50] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[9][53] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][54] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][53] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[8][54] = TILE_TYPES.ENEMY_SPAWN; // Guard
+
+    // High Altar
+    this.grid[6][56] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[6][57] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[5][56] = TILE_TYPES.COLLECTIBLE_TROPHY;
+    this.grid[5][57] = TILE_TYPES.COLLECTIBLE_RUBY;
+
+    this.grid[10][60] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][60] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+    this.grid[12][63] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[11][63] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][67] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][68] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][69] = TILE_TYPES.COLLECTIBLE_COIN;
+
+    // Exit Gate
+    this.grid[12][72] = TILE_TYPES.EXIT_DOOR;
+    this.grid[13][72] = TILE_TYPES.EXIT_DOOR;
+  }
+
+  // ==========================================
+  // LEVEL 3: THE DAVE FORTRESS (Hard / Climax)
+  // ==========================================
+  buildLevel3() {
+    this.cols = 86;
+    this.playerSpawn = { x: 32, y: 192 };
+    this.grid = Array.from({ length: this.rows }, () => new Array(this.cols).fill(TILE_TYPES.EMPTY));
+
+    // Boundaries
+    for (let c = 0; c < this.cols; c++) this.grid[0][c] = TILE_TYPES.STEEL_BLOCK;
+    for (let r = 0; r < this.rows; r++) {
+      this.grid[r][0] = TILE_TYPES.STEEL_BLOCK;
+      this.grid[r][this.cols - 1] = TILE_TYPES.STEEL_BLOCK;
+    }
+
+    // Extensive hazard pits across the fortress floor
+    for (let c = 0; c < this.cols; c++) {
+      if ((c >= 12 && c <= 16) || (c >= 35 && c <= 40) || (c >= 58 && c <= 63)) {
+        this.grid[14][c] = TILE_TYPES.HAZARD_FIRE; // Deep Lava Pits
+      } else if ((c >= 24 && c <= 27) || (c >= 48 && c <= 51)) {
+        this.grid[14][c] = TILE_TYPES.HAZARD_SPIKES; // Spikes
+      } else {
+        this.grid[14][c] = TILE_TYPES.RED_BRICK;
+      }
+    }
+
+    // Section 1: The Castle Courtyard
+    this.grid[11][4] = TILE_TYPES.RED_BRICK;
+    this.grid[11][5] = TILE_TYPES.RED_BRICK;
+    this.grid[10][4] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[10][5] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+    this.grid[13][8] = TILE_TYPES.COLLECTIBLE_COIN;
+
+    // Stepping stones over large lava pit 1
+    this.grid[12][11] = TILE_TYPES.RED_BRICK;
+    this.grid[9][13] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][14] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][13] = TILE_TYPES.COLLECTIBLE_RUBY;
+    this.grid[8][14] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+    this.grid[12][17] = TILE_TYPES.RED_BRICK;
+
+    // Enemy Patrol 1 & 2
+    this.grid[13][19] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][20] = TILE_TYPES.ENEMY_SPAWN;
+    this.grid[8][22] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+
+    // Spike pit 1 traversal
+    this.grid[11][23] = TILE_TYPES.RED_BRICK;
+    this.grid[8][25] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][26] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[7][25] = TILE_TYPES.ENEMY_SPAWN; // Platform guard
+    this.grid[7][26] = TILE_TYPES.COLLECTIBLE_RUBY;
+    this.grid[11][28] = TILE_TYPES.RED_BRICK;
+    this.grid[13][30] = TILE_TYPES.COLLECTIBLE_COIN;
+
+    // Section 2: Ascending Fortress Spires
+    this.grid[12][32] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[9][34] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[6][36] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[6][37] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[5][36] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+    this.grid[5][37] = TILE_TYPES.COLLECTIBLE_RUBY;
+
+    // Enemy Patrol 3 & 4
+    this.grid[13][41] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][42] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][43] = TILE_TYPES.ENEMY_SPAWN;
+    this.grid[10][45] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][45] = TILE_TYPES.ENEMY_SPAWN;
+    this.grid[9][46] = TILE_TYPES.COLLECTIBLE_RUBY;
+    this.grid[13][47] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][53] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+
+    // Section 3: Deep Lava Chasm & The Grand Trophy Spire
+    this.grid[12][54] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[9][57] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][58] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][58] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+
+    // The Grand Fortress Altar
+    this.grid[5][61] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[5][62] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[4][61] = TILE_TYPES.COLLECTIBLE_TROPHY; // Grand Trophy!
+    this.grid[4][62] = TILE_TYPES.COLLECTIBLE_RUBY;
+
+    // Enemy Patrol 5 & 6 (Guarding exit approach)
+    this.grid[8][65] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[7][65] = TILE_TYPES.ENEMY_SPAWN;
+    this.grid[7][66] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+    this.grid[11][68] = TILE_TYPES.RED_BRICK;
+    this.grid[10][68] = TILE_TYPES.COLLECTIBLE_RUBY;
+    this.grid[13][71] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][74] = TILE_TYPES.ENEMY_SPAWN;
+    this.grid[13][76] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][77] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][78] = TILE_TYPES.COLLECTIBLE_COIN;
+
+    // Master Exit Portal
+    this.grid[12][82] = TILE_TYPES.EXIT_DOOR;
+    this.grid[13][82] = TILE_TYPES.EXIT_DOOR;
   }
 
   /**
@@ -185,31 +364,20 @@ export class GameMap {
     return spawns;
   }
 
-  /**
-   * Check if a tile is solid terrain (blocks movement)
-   */
   isSolid(col, row) {
-    if (col < 0 || col >= this.cols || row < 0 || row >= this.rows) {
-      return true; // Map boundaries are solid
-    }
+    if (col < 0 || col >= this.cols || row < 0 || row >= this.rows) return true;
     const tile = this.grid[row][col];
     return tile === TILE_TYPES.RED_BRICK ||
            tile === TILE_TYPES.STEEL_BLOCK ||
            tile === TILE_TYPES.WOOD_PLATFORM;
   }
 
-  /**
-   * Check if tile is a deadly hazard
-   */
   isHazard(col, row) {
     if (col < 0 || col >= this.cols || row < 0 || row >= this.rows) return false;
     const tile = this.grid[row][col];
     return tile === TILE_TYPES.HAZARD_FIRE || tile === TILE_TYPES.HAZARD_SPIKES;
   }
 
-  /**
-   * Check if tile contains a collectible item and returns metadata
-   */
   getCollectible(col, row) {
     if (col < 0 || col >= this.cols || row < 0 || row >= this.rows) return null;
     const tile = this.grid[row][col];
@@ -231,9 +399,6 @@ export class GameMap {
     return null;
   }
 
-  /**
-   * Collects item at tile and clears tile to empty (prevents duplicate collection)
-   */
   collectTile(col, row) {
     if (col < 0 || col >= this.cols || row < 0 || row >= this.rows) return null;
     const item = this.getCollectible(col, row);
@@ -241,28 +406,21 @@ export class GameMap {
       if (item.type === 'TROPHY') {
         this.hasTrophy = true;
       }
-      this.grid[row][col] = TILE_TYPES.EMPTY; // Clear immediately
+      this.grid[row][col] = TILE_TYPES.EMPTY;
       return item;
     }
     return null;
   }
 
-  /**
-   * Check if tile is the exit portal
-   */
   isExit(col, row) {
     if (col < 0 || col >= this.cols || row < 0 || row >= this.rows) return false;
     return this.grid[row][col] === TILE_TYPES.EXIT_DOOR;
   }
 
-  /**
-   * Render tile map and animated objects
-   */
   render(ctx, camera) {
     const s = this.tileSize;
     this.animTimer += 0.03;
 
-    // Viewport tile culling for maximum performance
     const startCol = Math.max(0, Math.floor(camera.x / s));
     const endCol = Math.min(this.cols - 1, Math.ceil((camera.x + camera.viewportWidth) / s));
 
@@ -356,15 +514,12 @@ export class GameMap {
   renderHazardFire(ctx, x, y) {
     const s = this.tileSize;
     const flicker = Math.floor(this.animTimer * 10) % 3;
-
     ctx.fillStyle = '#450a0a';
     ctx.fillRect(x, y + 10, s, 6);
-
     ctx.fillStyle = '#ea580c';
     ctx.fillRect(x + 1, y + 4 + (flicker === 0 ? 1 : 0), 4, 10);
     ctx.fillRect(x + 6, y + 2 + (flicker === 1 ? 1 : 0), 4, 12);
     ctx.fillRect(x + 11, y + 5 + (flicker === 2 ? 1 : 0), 4, 9);
-
     ctx.fillStyle = '#facc15';
     ctx.fillRect(x + 2, y + 7, 2, 7);
     ctx.fillRect(x + 7, y + 5, 2, 9);
@@ -375,7 +530,6 @@ export class GameMap {
     const s = this.tileSize;
     ctx.fillStyle = '#334155';
     ctx.fillRect(x, y + 13, s, 3);
-
     ctx.fillStyle = '#cbd5e1';
     for (let i = 0; i < 3; i++) {
       const sx = x + i * 5 + 1;
@@ -385,95 +539,69 @@ export class GameMap {
     }
   }
 
-  /**
-   * Animated spinning gold coin (+100)
-   */
   renderCollectibleCoin(ctx, x, y) {
     const s = this.tileSize;
     const bob = Math.sin(this.animTimer * 4) * 1.5;
     const cy = y + 4 + bob;
     const spinFrame = Math.floor(this.animTimer * 8) % 4;
 
-    ctx.fillStyle = '#ca8a04'; // Dark Gold border
-
+    ctx.fillStyle = '#ca8a04';
     if (spinFrame === 0 || spinFrame === 2) {
-      // Full circle coin
       ctx.fillRect(x + 4, cy, 8, 8);
-      ctx.fillStyle = '#facc15'; // Bright Gold
+      ctx.fillStyle = '#facc15';
       ctx.fillRect(x + 5, cy + 1, 6, 6);
-      ctx.fillStyle = '#fef08a'; // Specular highlight
+      ctx.fillStyle = '#fef08a';
       ctx.fillRect(x + 6, cy + 2, 2, 2);
     } else if (spinFrame === 1) {
-      // 3/4 turn
       ctx.fillRect(x + 6, cy, 4, 8);
       ctx.fillStyle = '#facc15';
       ctx.fillRect(x + 7, cy + 1, 2, 6);
       ctx.fillStyle = '#fef08a';
       ctx.fillRect(x + 7, cy + 2, 1, 2);
     } else {
-      // Edge turn (thin sliver)
       ctx.fillRect(x + 7, cy, 2, 8);
       ctx.fillStyle = '#fef08a';
       ctx.fillRect(x + 7, cy + 2, 2, 3);
     }
   }
 
-  /**
-   * Sparkling Ruby Gem (+200)
-   */
   renderCollectibleRuby(ctx, x, y) {
     const s = this.tileSize;
     const bob = Math.sin(this.animTimer * 4 + 1) * 1.5;
     const gy = y + 3 + bob;
-
-    ctx.fillStyle = '#991b1b'; // Dark Red Outline
+    ctx.fillStyle = '#991b1b';
     ctx.fillRect(x + 4, gy + 1, 8, 8);
-
-    ctx.fillStyle = '#ef4444'; // Bright Red Facet
+    ctx.fillStyle = '#ef4444';
     ctx.fillRect(x + 5, gy + 2, 6, 6);
-
-    ctx.fillStyle = '#fca5a5'; // Pink / White Sparkle
+    ctx.fillStyle = '#fca5a5';
     ctx.fillRect(x + 5, gy + 2, 2, 2);
   }
 
-  /**
-   * Sparkling Sapphire Gem (+300)
-   */
   renderCollectibleSapphire(ctx, x, y) {
     const s = this.tileSize;
     const bob = Math.sin(this.animTimer * 4 + 2) * 1.5;
     const gy = y + 3 + bob;
-
-    // Diamond cut sapphire
-    ctx.fillStyle = '#0369a1'; // Deep Blue
+    ctx.fillStyle = '#0369a1';
     ctx.fillRect(x + 5, gy + 1, 6, 2);
     ctx.fillRect(x + 3, gy + 3, 10, 3);
     ctx.fillRect(x + 5, gy + 6, 6, 2);
     ctx.fillRect(x + 7, gy + 8, 2, 2);
-
-    ctx.fillStyle = '#38bdf8'; // Sky Blue Facet
+    ctx.fillStyle = '#38bdf8';
     ctx.fillRect(x + 5, gy + 2, 4, 4);
-
-    ctx.fillStyle = '#ffffff'; // White glint
+    ctx.fillStyle = '#ffffff';
     ctx.fillRect(x + 5, gy + 2, 2, 2);
   }
 
-  /**
-   * Golden Trophy Chalice (+1000, Key Item)
-   */
   renderCollectibleTrophy(ctx, x, y) {
     const s = this.tileSize;
     const shimmer = Math.sin(this.animTimer * 6) > 0.5;
-
     ctx.fillStyle = shimmer ? '#fef08a' : '#eab308';
     ctx.fillRect(x + 2, y + 1, 12, 5);
     ctx.fillRect(x + 4, y + 6, 8, 3);
     ctx.fillRect(x + 6, y + 9, 4, 3);
     ctx.fillRect(x + 3, y + 12, 10, 3);
-
     ctx.fillRect(x + 0, y + 2, 2, 4);
     ctx.fillRect(x + 14, y + 2, 2, 4);
-
     ctx.fillStyle = '#dc2626';
     ctx.fillRect(x + 7, y + 3, 2, 2);
   }
@@ -481,10 +609,8 @@ export class GameMap {
   renderExitDoor(ctx, x, y) {
     const w = this.tileSize;
     const h = this.tileSize * 2;
-
     ctx.fillStyle = this.hasTrophy ? '#fbbf24' : '#71717a';
     ctx.fillRect(x + 1, y, w - 2, h);
-
     ctx.fillStyle = '#050508';
     ctx.fillRect(x + 3, y + 3, w - 6, h - 3);
 

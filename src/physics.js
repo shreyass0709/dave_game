@@ -155,9 +155,16 @@ export class PhysicsEngine {
           events.collectedItems.push(item);
         }
 
-        // C. Exit Portal Check
+        // C. Exit Portal Check (Strict overlap check)
         if (this.map.isExit(c, r)) {
-          events.reachedExit = true;
+          const doorLeft = c * tileSize;
+          const doorRight = (c + 1) * tileSize;
+          const playerCenterX = player.x + player.width / 2;
+
+          // Player center must be genuinely within door frame
+          if (playerCenterX >= doorLeft + 2 && playerCenterX <= doorRight - 2) {
+            events.reachedExit = true;
+          }
         }
       }
     }

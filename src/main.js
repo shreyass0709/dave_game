@@ -1,7 +1,7 @@
 /**
  * Main Game Entry Point
- * Orchestrates Level 1 gameplay, camera tracking, HUD, collectibles, scoring,
- * particle effects, shooting mechanics, enemy AI, combat scoring, and exit events.
+ * Orchestrates multi-level progression (Levels 1, 2, 3), camera tracking, HUD,
+ * collectibles, scoring, particle effects, shooting mechanics, enemy AI, and Grand Victory.
  */
 
 import { GameMap, TILE_SIZE } from './map.js';
@@ -12,47 +12,80 @@ import { Camera } from './camera.js';
 import { Enemy } from './enemy.js';
 import { EffectManager } from './effects.js';
 
-class Game {
-  constructor() {
-    this.canvas = document.getElementById('gameCanvas');
-    this.ctx = this.canvas.getContext('2d');
+export const GameState = {
+  PLAYING: 'PLAYING',
+  LEVEL_COMPLETE: 'LEVEL_COMPLETE',
+  GAME_VICTORY: 'GAME_VICTORY'
+};
 
-    // Ensure pixel crispness (no blur/anti-aliasing)
-    this.ctx.imageSmoothingEnabled = false;
+export class Game {
+  constructor(canvasElement = null) {
+    if (typeof document !== 'undefined') {
+      this.canvas = canvasElement || document.getElementById('gameCanvas');
+      this.ctx = this.canvas ? this.canvas.getContext('2d') : null;
+      if (this.ctx) this.ctx.imageSmoothingEnabled = false;
+      this.input = new InputHandler();
+      this.camera = new Camera(this.canvas.width, this.canvas.height);
+    } else {
+      this.canvas = { width: 400, height: 240 };
+      this.ctx = null;
+      this.input = null;
+      this.camera = new Camera(400, 240);
+    }
 
-    this.map = new GameMap();
-    // Start player at Col 2, Row 12 (32, 192)
-    this.player = new Player(32, 192);
-    this.physics = new PhysicsEngine(this.map);
-    this.input = new InputHandler();
-    this.camera = new Camera(this.canvas.width, this.canvas.height);
     this.effects = new EffectManager();
-
-    // Dynamic Entity Collections
-    this.projectiles = [];
-    this.initEnemies();
-
     this.showDebug = false;
     this.lastTime = 0;
     this.fps = 60;
     this.fpsTimer = 0;
     this.frameCount = 0;
 
-    // Persistent Level Scoring & Game State
+    // Persistent Game State & Multi-Level Management
     this.score = 0;
-    this.level = 1;
+    this.currentLevel = 1;
+    this.maxLevels = 3;
     this.lives = 3;
-    this.levelComplete = false;
-    this.messageBanner = "GO THRU THE DOOR!";
-    this.messageTimer = 0;
+    this.gameState = GameState.PLAYING;
+    this.messageBanner = "LEVEL 1: FIND TROPHY & GO TO EXIT!";
+    this.messageTimer = 4;
 
-    // Start game loop
-    this.loop = this.loop.bind(this);
-    requestAnimationFrame(this.loop);
+    this.loadLevel(1);
+
+    // Start game loop in browser environment
+    if (typeof window !== 'undefined') {
+      this.loop = this.loop.bind(this);
+      requestAnimationFrame(this.loop);
+    }
   }
 
-  initEnemies() {
+  /**
+   * Loads a specific level and resets entities cleanly
+   */
+  loadLevel(levelNumber) {
+    this.currentLevel = levelNumber;
+    this.map = new GameMap(levelNumber);
+
+    if (!this.player) {
+      this.player = new Player(this.map.playerSpawn.x, this.map.playerSpawn.y);
+    } else {
+      this.player.spawnX = this.map.playerSpawn.x;
+      this.player.spawnY = this.map.playerSpawn.y;
+      this.player.respawn(this.map.playerSpawn.x, this.map.playerSpawn.y);
+    }
+
+    this.physics = new PhysicsEngine(this.map);
+    this.projectiles = [];
     this.enemies = this.map.getEnemySpawns().map(spawn => new Enemy(spawn.x, spawn.y));
+    this.effects.clear();
+    this.camera.snapTo(this.player, this.map.cols * TILE_SIZE);
+    this.gameState = GameState.PLAYING;
+    this.messageBanner = `LEVEL ${levelNumber}: FIND TROPHY & GO TO EXIT!`;
+    this.messageTimer = 3.5;
+  }
+
+  restartGame() {
+    this.score = 0;
+    this.loadLevel(1);
   }
 
   /**
@@ -63,10 +96,8 @@ class Game {
     let dt = (timestamp - this.lastTime) / 1000;
     this.lastTime = timestamp;
 
-    // Clamp delta time to avoid large physics steps
     if (dt > 0.05) dt = 0.05;
 
-    // FPS calculation
     this.frameCount++;
     this.fpsTimer += dt;
     if (this.fpsTimer >= 1.0) {
@@ -78,61 +109,87 @@ class Game {
     this.update(dt);
     this.render();
 
-    requestAnimationFrame(this.loop);
+    if (typeof window !== 'undefined') {
+      requestAnimationFrame(this.loop);
+    }
   }
 
   /**
-   * Update game logic, player, projectiles, enemies, effects, physics, and interactions
+   * Update game logic, player, projectiles, enemies, effects, physics, and level transitions
    */
   update(dt) {
-    if (this.input.wasDebugToggled()) {
+    if (this.input && this.input.wasDebugToggled()) {
       this.showDebug = !this.showDebug;
     }
 
-    if (this.input.wasDeathTestPressed()) {
+    // 1. Handle LEVEL_COMPLETE state (Advance to next level)
+    if (this.gameState === GameState.LEVEL_COMPLETE) {
+      if (this.input && this.input.wasRestartJustPressed()) {
+        if (this.currentLevel < this.maxLevels) {
+          this.loadLevel(this.currentLevel + 1);
+        } else {
+          this.gameState = GameState.GAME_VICTORY;
+        }
+      }
+      if (this.input) this.input.clearFrame();
+      return;
+    }
+
+    // 2. Handle GAME_VICTORY state (Replay from Level 1)
+    if (this.gameState === GameState.GAME_VICTORY) {
+      if (this.input && this.input.wasRestartJustPressed()) {
+        this.restartGame();
+      }
+      if (this.input) this.input.clearFrame();
+      return;
+    }
+
+    if (this.input && this.input.wasDeathTestPressed()) {
       this.player.die();
     }
 
-    // 1. Update Visual Particle & Score Effects
+    // 3. Update Visual Particle & Score Effects
     this.effects.update(dt);
 
-    // 2. Update Enemies
+    // 4. Update Enemies
     for (const enemy of this.enemies) {
       enemy.update(this.map, dt);
     }
     this.enemies = this.enemies.filter(e => !e.isRemoved);
 
-    // 3. Handle Player Input & Shooting
-    const newProjectile = this.player.handleInput(this.input, dt);
-    if (newProjectile && this.projectiles.length < 8) {
-      this.projectiles.push(newProjectile);
+    // 5. Handle Player Input & Shooting
+    if (this.input) {
+      const newProjectile = this.player.handleInput(this.input, dt);
+      if (newProjectile && this.projectiles.length < 8) {
+        this.projectiles.push(newProjectile);
+      }
     }
 
-    // 4. Update Projectiles
+    // 6. Update Projectiles
     for (const proj of this.projectiles) {
       proj.update(this.map, dt);
     }
 
-    // 5. Update Physics & Process Collisions
+    // 7. Update Physics & Process Collisions
     const events = this.physics.update(this.player, dt, this.enemies, this.projectiles);
     this.player.updateAnimation(dt);
 
-    // Filter out destroyed/out-of-bounds projectiles
+    // Filter out destroyed projectiles
     this.projectiles = this.projectiles.filter(p => !p.isRemoved);
 
-    // 6. Process Collectible Pickups & Trigger Visual Effects
+    // 8. Process Collectibles & Score Popups
     if (events.collectedItems && events.collectedItems.length > 0) {
       for (const item of events.collectedItems) {
         this.score += item.score;
         this.effects.addScorePopup(item.x, item.y, item.score, item.color);
 
         if (item.type === 'TROPHY') {
-          this.showMessage("TROPHY COLLECTED! GO TO EXIT!", 4);
+          this.showMessage("TROPHY COLLECTED! EXIT IS OPEN!", 4);
         }
       }
     }
 
-    // Stomp & Shooting Defeat Rewards
+    // Stomp & Shooting Combat Rewards
     if (events.stompedEnemies && events.stompedEnemies.length > 0) {
       for (const enemy of events.stompedEnemies) {
         this.score += 200;
@@ -156,12 +213,22 @@ class Game {
       this.showMessage("OUCH! WATCH OUT FOR HAZARDS!", 2.5);
     }
 
+    // 9. Process Level Completion Flow
     if (events.reachedExit) {
       if (this.map.hasTrophy) {
-        this.levelComplete = true;
-        this.showMessage("LEVEL 1 COMPLETE! EXCELLENT!", 10);
+        this.player.vx = 0;
+        this.player.vy = 0;
+        this.projectiles = [];
+
+        if (this.currentLevel < this.maxLevels) {
+          this.score += 500; // Level completion bonus
+          this.gameState = GameState.LEVEL_COMPLETE;
+        } else {
+          this.score += 2000; // Grand campaign victory bonus
+          this.gameState = GameState.GAME_VICTORY;
+        }
       } else {
-        this.showMessage("GO FIND THE GOLDEN TROPHY FIRST!", 2);
+        this.showMessage("FIND THE GOLDEN TROPHY TO OPEN EXIT!", 2.5);
       }
     }
 
@@ -174,7 +241,7 @@ class Game {
     const mapPixelWidth = this.map.cols * TILE_SIZE;
     this.camera.update(this.player, mapPixelWidth, dt);
 
-    this.input.clearFrame();
+    if (this.input) this.input.clearFrame();
   }
 
   showMessage(text, duration = 3) {
@@ -186,6 +253,7 @@ class Game {
    * Render all game layers: World (Camera space) and HUD (Screen space)
    */
   render() {
+    if (!this.ctx) return;
     const ctx = this.ctx;
     const w = this.canvas.width;
     const h = this.canvas.height;
@@ -233,10 +301,19 @@ class Game {
     // 3. Render Screen-Space Retro HUD Bar
     this.renderHUD(ctx);
 
-    // 4. Render Center Message / Objective Banner
-    this.renderMessageBanner(ctx);
+    // 4. Render Center Message Banner
+    if (this.gameState === GameState.PLAYING) {
+      this.renderMessageBanner(ctx);
+    }
 
-    // 5. Render Debug Overlay (if active)
+    // 5. Render Modals (LEVEL COMPLETE or GAME VICTORY)
+    if (this.gameState === GameState.LEVEL_COMPLETE) {
+      this.renderLevelCompleteModal(ctx);
+    } else if (this.gameState === GameState.GAME_VICTORY) {
+      this.renderVictoryModal(ctx);
+    }
+
+    // 6. Render Debug Overlay
     if (this.showDebug) {
       this.renderDebug(ctx);
     }
@@ -246,7 +323,6 @@ class Game {
    * Retro top status banner (Score, Level, Trophy Status, Lives)
    */
   renderHUD(ctx) {
-    // Top banner background
     ctx.fillStyle = '#0000aa';
     ctx.fillRect(0, 0, this.canvas.width, 16);
 
@@ -258,7 +334,7 @@ class Game {
     ctx.fillText(`SCORE:${String(this.score).padStart(5, '0')}`, 6, 8);
 
     // LEVEL
-    ctx.fillText(`LVL:${String(this.level).padStart(2, '0')}`, 140, 8);
+    ctx.fillText(`LVL:${String(this.currentLevel).padStart(2, '0')}`, 140, 8);
 
     // TROPHY STATUS (Key item indicator)
     if (this.map.hasTrophy) {
@@ -286,11 +362,11 @@ class Game {
       ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
       ctx.fillRect(0, this.canvas.height - 18, this.canvas.width, 18);
 
-      ctx.strokeStyle = this.levelComplete ? '#22c55e' : '#38bdf8';
+      ctx.strokeStyle = '#38bdf8';
       ctx.lineWidth = 1;
       ctx.strokeRect(0, this.canvas.height - 18, this.canvas.width, 18);
 
-      ctx.fillStyle = this.levelComplete ? '#86efac' : '#fef08a';
+      ctx.fillStyle = '#fef08a';
       ctx.font = '7px "Press Start 2P", monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -300,31 +376,114 @@ class Game {
   }
 
   /**
+   * LEVEL COMPLETE modal between levels
+   */
+  renderLevelCompleteModal(ctx) {
+    const w = this.canvas.width;
+    const h = this.canvas.height;
+
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+    ctx.fillRect(0, 0, w, h);
+
+    const boxW = 300;
+    const boxH = 115;
+    const boxX = (w - boxW) / 2;
+    const boxY = (h - boxH) / 2;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(boxX, boxY, boxW, boxH);
+
+    ctx.strokeStyle = '#22c55e';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(boxX, boxY, boxW, boxH);
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = '10px "Press Start 2P", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(`*** LEVEL ${this.currentLevel} COMPLETE! ***`, w / 2, boxY + 28);
+
+    ctx.fillStyle = '#facc15';
+    ctx.font = '8px "Press Start 2P", monospace';
+    ctx.fillText(`SCORE: ${this.score} (+500 BONUS)`, w / 2, boxY + 54);
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '6px "Press Start 2P", monospace';
+    ctx.fillText(`PRESS [ENTER] TO ENTER LEVEL ${this.currentLevel + 1}`, w / 2, boxY + 86);
+
+    ctx.textAlign = 'start';
+  }
+
+  /**
+   * GRAND VICTORY modal after Level 3
+   */
+  renderVictoryModal(ctx) {
+    const w = this.canvas.width;
+    const h = this.canvas.height;
+
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+    ctx.fillRect(0, 0, w, h);
+
+    const boxW = 320;
+    const boxH = 125;
+    const boxX = (w - boxW) / 2;
+    const boxY = (h - boxH) / 2;
+
+    ctx.fillStyle = '#1e1b4b'; // Deep Indigo Victory box
+    ctx.fillRect(boxX, boxY, boxW, boxH);
+
+    ctx.strokeStyle = '#fbbf24'; // Gold Border
+    ctx.lineWidth = 2;
+    ctx.strokeRect(boxX, boxY, boxW, boxH);
+
+    ctx.fillStyle = '#facc15';
+    ctx.font = '11px "Press Start 2P", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('*** YOU WIN! ***', w / 2, boxY + 28);
+
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = '7px "Press Start 2P", monospace';
+    ctx.fillText('ALL 3 LEVELS CONQUERED!', w / 2, boxY + 50);
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = '8px "Press Start 2P", monospace';
+    ctx.fillText(`FINAL SCORE: ${this.score}`, w / 2, boxY + 72);
+
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = '6px "Press Start 2P", monospace';
+    ctx.fillText('PRESS [SPACE] OR [ENTER] TO REPLAY', w / 2, boxY + 98);
+
+    ctx.textAlign = 'start';
+  }
+
+  /**
    * Live diagnostics telemetry overlay
    */
   renderDebug(ctx) {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
-    ctx.fillRect(4, 20, 195, 100);
+    ctx.fillRect(4, 20, 205, 108);
 
     ctx.strokeStyle = '#38bdf8';
     ctx.lineWidth = 1;
-    ctx.strokeRect(4, 20, 195, 100);
+    ctx.strokeRect(4, 20, 205, 108);
 
     ctx.fillStyle = '#38bdf8';
     ctx.font = '6px "Press Start 2P", monospace';
     ctx.textBaseline = 'top';
 
     ctx.fillText(`DEBUG TELEMETRY`, 8, 24);
-    ctx.fillText(`STATE: ${this.player.state}`, 8, 34);
-    ctx.fillText(`FACING: ${this.player.facing === Direction.RIGHT ? 'RIGHT' : 'LEFT'}`, 8, 44);
+    ctx.fillText(`STATE: ${this.gameState} (LVL ${this.currentLevel})`, 8, 34);
+    ctx.fillText(`PLAYER: ${this.player.state} (${this.player.facing === Direction.RIGHT ? 'RIGHT' : 'LEFT'})`, 8, 44);
     ctx.fillText(`POS: ${this.player.x.toFixed(0)}, ${this.player.y.toFixed(0)}  CAM: ${this.camera.x.toFixed(0)}`, 8, 54);
     ctx.fillText(`VEL: ${this.player.vx.toFixed(1)}, ${this.player.vy.toFixed(1)}`, 8, 64);
-    ctx.fillText(`FX: ${this.effects.effects.length} | SCORE: ${this.score}`, 8, 74);
-    ctx.fillText(`TROPHY: ${this.map.hasTrophy ? 'COLLECTED' : 'NONE'} | FPS:${this.fps}`, 8, 84);
+    ctx.fillText(`SHOTS: ${this.projectiles.length} | ENEMIES: ${this.enemies.length}`, 8, 74);
+    ctx.fillText(`TROPHY: ${this.map.hasTrophy ? 'YES' : 'NO'} | SCORE: ${this.score}`, 8, 84);
+    ctx.fillText(`FPS: ${this.fps}`, 8, 94);
   }
 }
 
-// Initialize on page load
-window.addEventListener('DOMContentLoaded', () => {
-  new Game();
-});
+// Initialize on browser DOM load
+if (typeof window !== 'undefined') {
+  window.addEventListener('DOMContentLoaded', () => {
+    new Game();
+  });
+}
