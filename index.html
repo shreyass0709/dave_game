@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Retro Platformer - Dave Inspired Mini-Project</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="arcade-cabinet">
+    <header class="game-header">
+      <div class="game-title">RETRO PLATFORMER</div>
+      <div class="game-subtitle">College Mini-Project | Dave-Inspired Engine</div>
+    </header>
+
+    <div class="screen-frame">
+      <canvas id="gameCanvas" width="400" height="240"></canvas>
+    </div>
+
+    <footer class="controls-panel">
+      <div class="controls-guide">
+        <div class="control-item">
+          <span class="key-badge">A</span> / <span class="key-badge">◀</span> : Move Left
+        </div>
+        <div class="control-item">
+          <span class="key-badge">D</span> / <span class="key-badge">▶</span> : Move Right
+        </div>
+        <div class="control-item">
+          <span class="key-badge">W</span> / <span class="key-badge">▲</span> / <span class="key-badge">Space</span> : Jump
+        </div>
+        <div class="control-item">
+          <span class="key-badge">B</span> : Toggle Hitboxes (Debug)
+        </div>
+      </div>
+      <div class="status-indicator">
+        <span class="status-dot"></span> Physics Engine: Active (60 FPS)
+      </div>
+    </footer>
+  </div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
