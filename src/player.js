@@ -234,10 +234,17 @@ export class Player {
     this.invulnerableTimer = 0;
   }
 
+  setSpawn(x, y) {
+    this.spawnX = x;
+    this.spawnY = y;
+  }
+
   /**
    * Respawn player at spawn position or specified coordinates
    */
   respawn(x = this.spawnX, y = this.spawnY) {
+    this.spawnX = x;
+    this.spawnY = y;
     this.x = x;
     this.y = y;
     this.vx = 0;

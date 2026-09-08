@@ -36,6 +36,11 @@ export class Projectile {
     // 1. Playable Area Boundaries Check
     if (this.x < 0 || this.x + this.width > mapPixelWidth || this.y < 0 || this.y > mapPixelHeight) {
       this.isRemoved = true;
+      this.hitWall = true;
+      this.wallHitPos = {
+        x: Math.max(0, Math.min(mapPixelWidth, this.direction > 0 ? this.x + this.width : this.x)),
+        y: Math.max(0, Math.min(mapPixelHeight, this.y + this.height / 2))
+      };
       return;
     }
 

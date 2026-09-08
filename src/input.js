@@ -119,6 +119,14 @@ export class InputHandler {
     return this.justPressed.has('ArrowDown') || this.justPressed.has('KeyS');
   }
 
+  wasMenuLeft() {
+    return this.justPressed.has('ArrowLeft') || this.justPressed.has('KeyA');
+  }
+
+  wasMenuRight() {
+    return this.justPressed.has('ArrowRight') || this.justPressed.has('KeyD');
+  }
+
   wasMenuSelect() {
     return this.justPressed.has('Enter') || this.justPressed.has('Space');
   }

@@ -18,12 +18,13 @@ export class EffectManager {
   /**
    * Spawns floating score text and theme sparkle burst
    */
-  addScorePopup(x, y, score, color = '#facc15') {
+  addScorePopup(x, y, score, color = '#facc15', label = '') {
+    const text = label ? `+${score} ${label}` : `+${score}`;
     this.effects.push({
       type: 'TEXT',
       x: x + 4,
       y: y - 2,
-      text: `+${score}`,
+      text: text,
       color: color,
       timer: 0,
       duration: 0.85,

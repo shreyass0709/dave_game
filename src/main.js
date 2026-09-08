@@ -14,9 +14,11 @@ import { Camera } from './camera.js';
 import { Enemy } from './enemy.js';
 import { EffectManager } from './effects.js';
 import { UIManager, UIButton } from './ui.js';
+import { SoundSystem } from './audio.js';
 
 export const GameState = {
   MAIN_MENU: 'MAIN_MENU',
+  LEVEL_SELECT: 'LEVEL_SELECT',
   PLAYING: 'PLAYING',
   PAUSED: 'PAUSED',
   LEVEL_COMPLETE: 'LEVEL_COMPLETE',
@@ -46,6 +48,7 @@ export class Game {
 
     this.effects = new EffectManager();
     this.ui = new UIManager();
+    this.sound = new SoundSystem();
     this.showDebug = false;
     this.lastTime = 0;
     this.fps = 60;
@@ -61,6 +64,11 @@ export class Game {
     this.activeCheckpoint = null;
     this.gameState = GameState.MAIN_MENU;
     this.selectedMenuIndex = 0;
+    this.selectedLevelIndex = 0;
+    this.unlockedLevels = 1;
+    this.completedLevels = new Set();
+    this.highScores = { 1: 0, 2: 0, 3: 0 };
+    this.previousState = GameState.MAIN_MENU;
     this.messageBanner = "LEVEL 1: FIND TROPHY & GO TO EXIT!";
     this.messageTimer = 0;
 
@@ -99,19 +107,21 @@ export class Game {
   initButtons() {
     this.menuButtons = {
       [GameState.MAIN_MENU]: [
-        new UIButton({ id: 'play', label: 'PLAY', x: 130, y: 92, width: 140, height: 20, color: '#38bdf8' }),
-        new UIButton({ id: 'instructions', label: 'INSTRUCTIONS', x: 130, y: 118, width: 140, height: 20, color: '#38bdf8' }),
-        new UIButton({ id: 'settings', label: 'SETTINGS', x: 130, y: 144, width: 140, height: 20, color: '#38bdf8' }),
-        new UIButton({ id: 'quit', label: 'QUIT', x: 130, y: 170, width: 140, height: 20, color: '#ef4444' })
+        new UIButton({ id: 'play', label: 'PLAY', x: 175, y: 82, width: 160, height: 21, variant: 'success', color: '#22c55e' }),
+        new UIButton({ id: 'levels', label: 'LEVELS', badge: '[LVL 1]', x: 175, y: 106, width: 160, height: 19, variant: 'gold', color: '#facc15' }),
+        new UIButton({ id: 'instructions', label: 'INSTRUCTIONS', x: 175, y: 129, width: 160, height: 19, variant: 'primary', color: '#38bdf8' }),
+        new UIButton({ id: 'settings', label: 'SETTINGS', x: 175, y: 152, width: 160, height: 19, variant: 'secondary', color: '#a855f7' }),
+        new UIButton({ id: 'quit', label: 'QUIT', x: 175, y: 175, width: 160, height: 19, variant: 'danger', color: '#ef4444' })
       ],
       [GameState.PAUSED]: [
-        new UIButton({ id: 'resume', label: 'RESUME', x: 130, y: 80, width: 140, height: 20, color: '#38bdf8' }),
-        new UIButton({ id: 'restart_level', label: 'RESTART LEVEL', x: 130, y: 106, width: 140, height: 20, color: '#facc15' }),
-        new UIButton({ id: 'main_menu', label: 'MAIN MENU', x: 130, y: 132, width: 140, height: 20, color: '#ef4444' })
+        new UIButton({ id: 'resume', label: 'RESUME', x: 125, y: 114, width: 150, height: 17, variant: 'success', color: '#22c55e' }),
+        new UIButton({ id: 'restart_level', label: 'RESTART LEVEL', x: 125, y: 134, width: 150, height: 17, variant: 'gold', color: '#facc15' }),
+        new UIButton({ id: 'settings', label: 'SETTINGS', x: 125, y: 154, width: 150, height: 17, variant: 'secondary', color: '#a855f7' }),
+        new UIButton({ id: 'main_menu', label: 'MAIN MENU', x: 125, y: 174, width: 150, height: 17, variant: 'danger', color: '#ef4444' })
       ],
       [GameState.GAME_OVER]: [
-        new UIButton({ id: 'restart_game', label: 'RESTART', x: 130, y: 96, width: 140, height: 20, color: '#22c55e' }),
-        new UIButton({ id: 'main_menu', label: 'MAIN MENU', x: 130, y: 124, width: 140, height: 20, color: '#ef4444' })
+        new UIButton({ id: 'restart_game', label: 'RETRY LEVEL', x: 125, y: 126, width: 150, height: 19, variant: 'success', color: '#22c55e' }),
+        new UIButton({ id: 'main_menu', label: 'MAIN MENU', x: 125, y: 150, width: 150, height: 19, variant: 'danger', color: '#ef4444' })
       ],
       [GameState.LEVEL_COMPLETE]: [
         new UIButton({ id: 'next_level', label: 'NEXT LEVEL', x: 130, y: 100, width: 140, height: 20, color: '#22c55e' }),
@@ -122,18 +132,99 @@ export class Game {
         new UIButton({ id: 'main_menu', label: 'MAIN MENU', x: 130, y: 130, width: 140, height: 20, color: '#ef4444' })
       ],
       [GameState.INSTRUCTIONS]: [
-        new UIButton({ id: 'back_main', label: 'BACK', x: 130, y: 184, width: 140, height: 20, color: '#38bdf8' })
+        new UIButton({ id: 'back_main', label: '◄ BACK', x: 18, y: 198, width: 80, height: 20, variant: 'primary', color: '#38bdf8' })
       ],
       [GameState.SETTINGS]: [
-        new UIButton({ id: 'toggle_sfx', label: 'TOGGLE SOUND', x: 130, y: 102, width: 140, height: 18, color: '#a855f7' }),
-        new UIButton({ id: 'toggle_music', label: 'TOGGLE MUSIC', x: 130, y: 126, width: 140, height: 18, color: '#a855f7' }),
-        new UIButton({ id: 'toggle_crt', label: 'TOGGLE CRT', x: 130, y: 150, width: 140, height: 18, color: '#a855f7' }),
-        new UIButton({ id: 'back_main', label: 'BACK', x: 130, y: 174, width: 140, height: 18, color: '#38bdf8' })
+        new UIButton({ id: 'toggle_sfx', label: 'SOUND FX', badge: '[ ON ]', x: 275, y: 54, width: 98, height: 22, variant: 'primary', color: '#a855f7' }),
+        new UIButton({ id: 'toggle_music', label: 'MUSIC', badge: '[ ON ]', x: 275, y: 92, width: 98, height: 22, variant: 'primary', color: '#a855f7' }),
+        new UIButton({ id: 'toggle_crt', label: 'CRT FILTER', badge: '[ ON ]', x: 275, y: 130, width: 98, height: 22, variant: 'primary', color: '#a855f7' }),
+        new UIButton({ id: 'back_main', label: '◄ BACK', x: 18, y: 198, width: 80, height: 20, variant: 'primary', color: '#38bdf8' })
       ],
       [GameState.QUIT]: [
         new UIButton({ id: 'return_title', label: 'RETURN TO TITLE', x: 120, y: 130, width: 160, height: 22, color: '#38bdf8' })
+      ],
+      [GameState.LEVEL_SELECT]: [
+        new UIButton({ id: 'back_main', label: '◄ BACK', x: 18, y: 198, width: 80, height: 20, variant: 'primary', color: '#38bdf8' })
       ]
     };
+  }
+
+  /**
+   * Handles dedicated Level Selection screen navigation (Keyboard & Mouse)
+   */
+  handleLevelSelectNavigation() {
+    if (!this.input) return;
+
+    const isLeft = this.input.wasMenuLeft ? this.input.wasMenuLeft() : false;
+    const isRight = this.input.wasMenuRight ? this.input.wasMenuRight() : false;
+    const isSelect = this.input.wasMenuSelect ? this.input.wasMenuSelect() : false;
+    const isBack = this.input.wasMenuBack ? this.input.wasMenuBack() : (this.input.wasPauseJustPressed ? this.input.wasPauseJustPressed() : false);
+    const isClick = this.input.wasMouseClicked ? this.input.wasMouseClicked() : false;
+    const mousePos = this.input.getMousePos ? this.input.getMousePos() : { x: -1, y: -1 };
+
+    // 1. Keyboard Horizontal Selection
+    if (isLeft) {
+      this.selectedLevelIndex = (this.selectedLevelIndex - 1 + 3) % 3;
+    } else if (isRight) {
+      this.selectedLevelIndex = (this.selectedLevelIndex + 1) % 3;
+    }
+
+    // 2. Keyboard Back
+    if (isBack) {
+      this.executeButtonAction('back_main');
+      return;
+    }
+
+    // 3. Mouse Hover over Cards
+    const cardRects = [
+      { x: 18, y: 48, w: 114, h: 142 },
+      { x: 143, y: 48, w: 114, h: 142 },
+      { x: 268, y: 48, w: 114, h: 142 }
+    ];
+
+    if (mousePos.x >= 0 && mousePos.y >= 0) {
+      for (let i = 0; i < cardRects.length; i++) {
+        const c = cardRects[i];
+        if (mousePos.x >= c.x && mousePos.x <= c.x + c.w && mousePos.y >= c.y && mousePos.y <= c.y + c.h) {
+          this.selectedLevelIndex = i;
+          break;
+        }
+      }
+    }
+
+    // 4. Mouse Click on Back Button
+    const backBtn = (this.menuButtons[GameState.LEVEL_SELECT] || [])[0];
+    if (isClick && backBtn && backBtn.contains(mousePos.x, mousePos.y)) {
+      this.executeButtonAction('back_main');
+      return;
+    }
+
+    // 5. Card Click or Enter Launch
+    let wantsLaunch = isSelect;
+    if (isClick) {
+      for (let i = 0; i < cardRects.length; i++) {
+        const c = cardRects[i];
+        if (mousePos.x >= c.x && mousePos.x <= c.x + c.w && mousePos.y >= c.y && mousePos.y <= c.y + c.h) {
+          this.selectedLevelIndex = i;
+          wantsLaunch = true;
+          break;
+        }
+      }
+    }
+
+    if (wantsLaunch) {
+      const targetLevel = this.selectedLevelIndex + 1;
+      if (targetLevel <= this.unlockedLevels) {
+        this.loadLevel(targetLevel);
+        this.score = 0;
+        this.levelStartScore = 0;
+        this.lives = 3;
+        this.screenFadeAlpha = 1.0;
+        this.gameState = GameState.PLAYING;
+      } else {
+        this.showMessage(`MISSION LOCKED! CLEAR LEVEL ${targetLevel - 1} FIRST`, 2.5);
+      }
+    }
   }
 
   /**
@@ -144,6 +235,9 @@ export class Game {
     this.map = new GameMap(levelNumber);
     this.screenFadeAlpha = 1.0; // Trigger smooth fade transition
     this.activeCheckpoint = { x: this.map.playerSpawn.x, y: this.map.playerSpawn.y };
+    if (this.ui && this.ui.triggerLevelIntro) {
+      this.ui.triggerLevelIntro(levelNumber);
+    }
 
     if (!this.player) {
       this.player = new Player(this.map.playerSpawn.x, this.map.playerSpawn.y);
@@ -202,23 +296,33 @@ export class Game {
   handleMenuNavigation(buttons) {
     if (!this.input || !buttons || buttons.length === 0) return;
 
-    const isKeyUp = this.input.wasMenuUp();
-    const isKeyDown = this.input.wasMenuDown();
-    const isEnterPressed = this.input.wasMenuSelect();
-    const isMouseClick = this.input.wasMouseClicked();
-    const mousePos = this.input.getMousePos();
+    const isKeyUp = this.input.wasMenuUp ? this.input.wasMenuUp() : false;
+    const isKeyDown = this.input.wasMenuDown ? this.input.wasMenuDown() : false;
+    const isEnterPressed = this.input.wasMenuSelect ? this.input.wasMenuSelect() : false;
+    const isMouseClick = this.input.wasMouseClicked ? this.input.wasMouseClicked() : false;
+    const mousePos = this.input.getMousePos ? this.input.getMousePos() : { x: -1, y: -1 };
 
     // 1. Keyboard Navigation
     if (isKeyUp) {
       this.selectedMenuIndex = (this.selectedMenuIndex - 1 + buttons.length) % buttons.length;
     } else if (isKeyDown) {
       this.selectedMenuIndex = (this.selectedMenuIndex + 1) % buttons.length;
-    } else if (isMouseClick && mousePos.x >= 0 && mousePos.y >= 0) {
-      // 2. Mouse Click Selection
+    } else if (mousePos.x >= 0 && mousePos.y >= 0) {
+      // 2. Mouse Hover Selection
       for (let i = 0; i < buttons.length; i++) {
         if (buttons[i].contains(mousePos.x, mousePos.y)) {
           this.selectedMenuIndex = i;
           break;
+        }
+      }
+      // In settings, also check setting row bounds
+      if (this.gameState === GameState.SETTINGS) {
+        for (let i = 0; i < 3; i++) {
+          const ry = 48 + i * 38;
+          if (mousePos.x >= 18 && mousePos.x <= 382 && mousePos.y >= ry && mousePos.y <= ry + 34) {
+            this.selectedMenuIndex = i;
+            break;
+          }
         }
       }
     }
@@ -232,6 +336,15 @@ export class Game {
         if (buttons[i].contains(mousePos.x, mousePos.y)) {
           triggeredButton = buttons[i];
           break;
+        }
+      }
+      if (!triggeredButton && this.gameState === GameState.SETTINGS) {
+        for (let i = 0; i < 3; i++) {
+          const ry = 48 + i * 38;
+          if (mousePos.x >= 18 && mousePos.x <= 382 && mousePos.y >= ry && mousePos.y <= ry + 34) {
+            triggeredButton = buttons[i];
+            break;
+          }
         }
       }
     }
@@ -250,13 +363,21 @@ export class Game {
         this.restartGame();
         this.gameState = GameState.PLAYING;
         break;
+      case 'levels':
+        this.gameState = GameState.LEVEL_SELECT;
+        this.selectedLevelIndex = this.currentLevel - 1;
+        this.selectedMenuIndex = 0;
+        this.ui.resetLevelSelectAnimation();
+        break;
       case 'instructions':
         this.gameState = GameState.INSTRUCTIONS;
         this.selectedMenuIndex = 0;
+        this.ui.resetInstructionsAnimation();
         break;
       case 'settings':
         this.gameState = GameState.SETTINGS;
         this.selectedMenuIndex = 0;
+        this.ui.resetSettingsAnimation();
         break;
       case 'quit':
         this.gameState = GameState.QUIT;
@@ -289,16 +410,31 @@ export class Game {
       case 'return_title':
         this.gameState = GameState.MAIN_MENU;
         this.selectedMenuIndex = 0;
+        this.ui.resetMenuAnimation();
+        if (this.menuButtons && this.menuButtons[GameState.MAIN_MENU]) {
+          const mainLvlBtn = this.menuButtons[GameState.MAIN_MENU].find(b => b.id === 'levels');
+          if (mainLvlBtn) mainLvlBtn.badge = `[LVL ${this.currentLevel}]`;
+        }
         break;
       case 'toggle_sfx':
         this.ui.settings.soundFX = !this.ui.settings.soundFX;
+        if (this.sound) {
+          this.sound.setSoundFX(this.ui.settings.soundFX);
+          if (this.ui.settings.soundFX) this.sound.playPickup(true);
+        }
         break;
       case 'toggle_music':
         this.ui.settings.music = !this.ui.settings.music;
+        if (this.sound) {
+          this.sound.setMusic(this.ui.settings.music);
+        }
         break;
       case 'toggle_crt':
         this.ui.settings.crtFilter = !this.ui.settings.crtFilter;
         this.updateCRTClass();
+        if (this.sound) {
+          this.sound.playPickup(false);
+        }
         break;
     }
   }
@@ -313,16 +449,30 @@ export class Game {
       this.screenFadeAlpha = Math.max(0, this.screenFadeAlpha - 2.5 * dt);
     }
 
-    if (this.input && this.input.wasDebugToggled()) {
+    if (this.input && this.input.wasDebugToggled && this.input.wasDebugToggled()) {
       this.showDebug = !this.showDebug;
     }
 
     // 1. MAIN MENU & MODAL STATES
     if (this.gameState !== GameState.PLAYING) {
+      if (this.gameState === GameState.LEVEL_SELECT) {
+        this.handleLevelSelectNavigation();
+        if (this.input) this.input.clearFrame();
+        return;
+      }
+
+      // Shortcut ESC to return to main menu from INSTRUCTIONS or SETTINGS
+      if ((this.gameState === GameState.INSTRUCTIONS || this.gameState === GameState.SETTINGS) &&
+          this.input && (this.input.wasMenuBack ? this.input.wasMenuBack() : (this.input.wasPauseJustPressed ? this.input.wasPauseJustPressed() : false))) {
+        this.executeButtonAction('back_main');
+        if (this.input) this.input.clearFrame();
+        return;
+      }
+
       const activeButtons = this.menuButtons[this.gameState] || [];
 
       // Shortcut ESC to resume if in PAUSED state
-      if (this.gameState === GameState.PAUSED && this.input && this.input.wasPauseJustPressed()) {
+      if (this.gameState === GameState.PAUSED && this.input && (this.input.wasPauseJustPressed ? this.input.wasPauseJustPressed() : false)) {
         this.gameState = GameState.PLAYING;
         if (this.input) this.input.clearFrame();
         return;
@@ -335,7 +485,7 @@ export class Game {
     }
 
     // 2. PLAYING STATE: Check Pause Key (P / ESC)
-    if (this.input && this.input.wasPauseJustPressed()) {
+    if (this.input && this.input.wasPauseJustPressed && this.input.wasPauseJustPressed()) {
       this.gameState = GameState.PAUSED;
       this.selectedMenuIndex = 0;
       if (this.input) this.input.clearFrame();
@@ -343,7 +493,7 @@ export class Game {
     }
 
     // Debug death test
-    if (this.input && this.input.wasDeathTestPressed()) {
+    if (this.input && this.input.wasDeathTestPressed && this.input.wasDeathTestPressed()) {
       this.player.die();
     }
 
@@ -361,14 +511,16 @@ export class Game {
       const wasGroundedBefore = this.player.isGrounded;
       const newProjectile = this.player.handleInput(this.input, dt);
 
-      // Landing / Takeoff dust puff feedback
+      // Landing / Takeoff dust puff & jump sound feedback
       if (wasGroundedBefore && !this.player.isGrounded && this.player.vy < -100) {
         this.effects.addDustPuff(this.player.x, this.player.y);
+        if (this.sound) this.sound.playJump();
       }
 
       if (newProjectile && this.projectiles.length < 8) {
         this.projectiles.push(newProjectile);
         this.effects.addMuzzleFlash(this.player.x, this.player.y, this.player.facing);
+        if (this.sound) this.sound.playShoot();
       }
     }
 
@@ -409,11 +561,17 @@ export class Game {
     if (events.collectedItems && events.collectedItems.length > 0) {
       for (const item of events.collectedItems) {
         this.score += item.score;
-        this.effects.addScorePopup(item.x, item.y, item.score, item.color);
+        const itemLabel = item.type === 'TROPHY' ? 'TROPHY' : (item.type === 'COIN' ? 'COIN' : 'GEM');
+        this.effects.addScorePopup(item.x, item.y, item.score, item.color, itemLabel);
+        if (this.ui && this.ui.triggerScorePulse) this.ui.triggerScorePulse();
 
         if (item.type === 'TROPHY') {
           this.showMessage("TROPHY COLLECTED! EXIT IS OPEN!", 4);
           this.effects.addVictoryConfetti(item.x, item.y);
+          if (this.ui && this.ui.triggerTrophyAcquisition) this.ui.triggerTrophyAcquisition();
+          if (this.sound) this.sound.playTrophy();
+        } else {
+          if (this.sound) this.sound.playPickup(item.score >= 250);
         }
       }
     }
@@ -421,36 +579,45 @@ export class Game {
     // Checkpoint Activation Feedback
     if (events.activatedCheckpoint) {
       this.activeCheckpoint = { x: events.activatedCheckpoint.x, y: events.activatedCheckpoint.y - 2 };
+      this.player.setSpawn(this.activeCheckpoint.x, this.activeCheckpoint.y);
       this.showMessage("CHECKPOINT ACTIVATED!", 2.5);
       this.effects.addVictoryConfetti(events.activatedCheckpoint.x + 8, events.activatedCheckpoint.y + 4);
+      if (this.ui && this.ui.triggerCheckpointNotification) this.ui.triggerCheckpointNotification("CHECKPOINT ACTIVATED");
+      if (this.sound) this.sound.playCheckpoint();
     }
 
     // Stomp & Shooting Combat Rewards
     if (events.stompedEnemies && events.stompedEnemies.length > 0) {
       for (const enemy of events.stompedEnemies) {
         this.score += 200;
-        this.effects.addScorePopup(enemy.x, enemy.y, 200, '#34d399');
+        this.effects.addScorePopup(enemy.x, enemy.y, 200, '#34d399', 'STOMP');
         this.effects.addExplosion(enemy.x, enemy.y, '#34d399');
+        if (this.ui && this.ui.triggerScorePulse) this.ui.triggerScorePulse();
       }
       this.showMessage("ENEMY STOMPED! +200", 2.0);
+      if (this.sound) this.sound.playExplosion();
     }
     if (events.shotEnemies && events.shotEnemies.length > 0) {
       for (const enemy of events.shotEnemies) {
         this.score += 200;
-        this.effects.addScorePopup(enemy.x, enemy.y, 200, '#38bdf8');
+        this.effects.addScorePopup(enemy.x, enemy.y, 200, '#38bdf8', 'BLAST');
         this.effects.addExplosion(enemy.x, enemy.y, '#38bdf8');
+        if (this.ui && this.ui.triggerScorePulse) this.ui.triggerScorePulse();
       }
       this.showMessage("ENEMY BLASTED! +200", 2.0);
+      if (this.sound) this.sound.playExplosion();
     }
 
     if (events.hitEnemy) {
       this.showMessage("HIT BY ENEMY! OUCH!", 2.5);
       this.effects.addDamageFlash('rgba(239, 68, 68, 0.4)', 0.25);
+      if (this.sound) this.sound.playDamage();
     }
 
     if (events.hitHazard) {
       this.showMessage("OUCH! WATCH OUT FOR HAZARDS!", 2.5);
       this.effects.addDamageFlash('rgba(239, 68, 68, 0.4)', 0.25);
+      if (this.sound) this.sound.playDamage();
     }
 
     // 9. Process Level Completion Flow
@@ -461,7 +628,11 @@ export class Game {
         this.projectiles = [];
         this.effects.addVictoryConfetti(this.player.x, this.player.y);
 
+        this.completedLevels.add(this.currentLevel);
+        this.highScores[this.currentLevel] = Math.max(this.highScores[this.currentLevel] || 0, this.score);
+
         if (this.currentLevel < this.maxLevels) {
+          this.unlockedLevels = Math.max(this.unlockedLevels, this.currentLevel + 1);
           this.score += 500; // Level completion bonus
           this.gameState = GameState.LEVEL_COMPLETE;
           this.selectedMenuIndex = 0;
@@ -507,9 +678,20 @@ export class Game {
     ctx.fillStyle = '#050508';
     ctx.fillRect(0, 0, w, h);
 
-    // 2. Render Main Menu if active
+    // 2. Render Main Menu & Level Select if active
     if (this.gameState === GameState.MAIN_MENU) {
       this.ui.renderMainMenu(ctx, w, h, this.selectedMenuIndex, this.menuButtons[GameState.MAIN_MENU]);
+      this.ui.renderScreenFade(ctx, w, h, this.screenFadeAlpha);
+      return;
+    }
+
+    if (this.gameState === GameState.LEVEL_SELECT) {
+      const backBtn = (this.menuButtons[GameState.LEVEL_SELECT] || [])[0];
+      this.ui.renderLevelSelect(ctx, w, h, this.selectedLevelIndex, backBtn, {
+        unlockedLevels: this.unlockedLevels,
+        completedLevels: this.completedLevels,
+        highScores: this.highScores
+      });
       this.ui.renderScreenFade(ctx, w, h, this.screenFadeAlpha);
       return;
     }
@@ -600,19 +782,29 @@ export class Game {
   }
 
   renderMessageBanner(ctx) {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
-    ctx.fillRect(0, this.canvas.height - 18, this.canvas.width, 18);
+    if (this.messageTimer <= 0) return;
+    const alpha = Math.min(1, Math.max(0, this.messageTimer < 0.4 ? this.messageTimer / 0.4 : 1.0));
 
-    ctx.strokeStyle = '#38bdf8';
+    const bw = Math.min(330, this.canvas.width - 32);
+    const bh = 18;
+    const bx = (this.canvas.width - bw) / 2;
+    const by = this.canvas.height - 22;
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = 'rgba(8, 13, 26, 0.92)';
+    ctx.fillRect(bx, by, bw, bh);
+
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
     ctx.lineWidth = 1;
-    ctx.strokeRect(0, this.canvas.height - 18, this.canvas.width, 18);
+    ctx.strokeRect(bx, by, bw, bh);
 
     ctx.fillStyle = '#fef08a';
-    ctx.font = '7px "Press Start 2P", monospace';
+    ctx.font = '6px "Press Start 2P", monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(this.messageBanner, this.canvas.width / 2, this.canvas.height - 9);
-    ctx.textAlign = 'start';
+    ctx.fillText(this.messageBanner, this.canvas.width / 2, by + bh / 2);
+    ctx.restore();
   }
 
   renderDebug(ctx) {

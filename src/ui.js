@@ -1,19 +1,201 @@
 /**
- * Retro UI Manager
- * Renders pixel-perfect Main Menu, HUD, Pause Menu, Game Over,
- * Level Complete, Final Victory, Instructions, and Settings screens.
- * Supports dual navigation (Keyboard & Mouse) with rich retro visuals.
+ * Modern Retro UI Design System & Manager
+ * Implements a cohesive design language: "Retro gameplay + modern animated indie game interface"
+ * Provides design tokens, typography system, reusable UIButton components,
+ * reusable UIPanel / modal card containers, motion easing utilities, and screen state renders.
  */
 
+// =============================================================================
+// 1. DESIGN TOKENS & PALETTE
+// =============================================================================
+export const UITokens = {
+  // Brand & Accent Colors
+  primary: '#38bdf8',               // Electric Cyan (interactive focus / primary actions)
+  primaryGlow: 'rgba(56, 189, 248, 0.45)',
+  primaryDark: '#0284c7',
+  
+  secondary: '#a855f7',             // Cyber Violet (settings / secondary accents)
+  secondaryGlow: 'rgba(168, 85, 247, 0.45)',
+  secondaryDark: '#7e22ce',
+  
+  gold: '#facc15',                  // Radiant Gold (trophy, scores, victory)
+  goldGlow: 'rgba(250, 204, 21, 0.45)',
+  goldDark: '#ca8a04',
+  
+  success: '#22c55e',               // Emerald Green (play, next level, active checkpoints)
+  successGlow: 'rgba(34, 197, 94, 0.45)',
+  successDark: '#16a34a',
+  
+  danger: '#ef4444',                // Laser Red (game over, quit, hazard warnings)
+  dangerGlow: 'rgba(239, 68, 68, 0.45)',
+  dangerDark: '#dc2626',
+  
+  disabled: '#475569',              // Slate Gray (locked / disabled)
+  disabledGlow: 'rgba(71, 85, 105, 0.2)',
+
+  // Surfaces & Backgrounds
+  bgApp: '#060813',
+  bgCabinet: '#111726',
+  bgPanel: '#0b1120',
+  bgPanelOverlay: 'rgba(11, 17, 32, 0.94)',
+  bgButton: '#0f172a',
+  bgButtonHover: '#1e293b',
+  bgButtonActive: '#334155',
+
+  // Borders & Specular Highlights
+  borderDefault: '#1e293b',
+  borderHighlight: 'rgba(255, 255, 255, 0.2)',
+  borderActive: '#38bdf8',
+
+  // Typography Palette
+  textPrimary: '#f8fafc',
+  textSecondary: '#cbd5e1',
+  textMuted: '#94a3b8',
+  textDark: '#020617',
+
+  // Metrics & Typography
+  fontFamily: '"Press Start 2P", monospace',
+  fontSizeTitle: '14px',
+  fontSizeSection: '10px',
+  fontSizeButton: '8px',
+  fontSizeBody: '7px',
+  fontSizeSmall: '6px'
+};
+
+// =============================================================================
+// 2. MOTION & ANIMATION UTILITIES
+// =============================================================================
+export class UIAnimation {
+  /**
+   * Linear interpolation helper
+   */
+  static lerp(a, b, t) {
+    return a + (b - a) * Math.min(1, Math.max(0, t));
+  }
+
+  /**
+   * Quadratic ease-out curve
+   */
+  static easeOutQuad(t) {
+    return t * (2 - t);
+  }
+
+  /**
+   * Back ease-out for bouncy popups
+   */
+  static easeOutBack(t, overshoot = 1.4) {
+    const c1 = overshoot;
+    const c3 = c1 + 1;
+    const p = t - 1;
+    return 1 + c3 * Math.pow(p, 3) + c1 * Math.pow(p, 2);
+  }
+
+  /**
+   * Sine wave pulse oscillation helper between min and max
+   */
+  static getPulse(timer, speed = 4, min = 0, max = 1) {
+    const s = (Math.sin(timer * speed) + 1) * 0.5;
+    return min + s * (max - min);
+  }
+}
+
+// =============================================================================
+// 3. TYPOGRAPHY SYSTEM
+// =============================================================================
+export class UITypography {
+  /**
+   * Renders standardized text with optional drop shadow, glow, and alignment
+   */
+  static drawText(ctx, text, x, y, {
+    size = '8px',
+    color = UITokens.textPrimary,
+    align = 'center',
+    baseline = 'middle',
+    shadow = true,
+    shadowColor = '#020617',
+    shadowOffset = 1.5,
+    glow = false,
+    glowColor = UITokens.primaryGlow
+  } = {}) {
+    ctx.save();
+    ctx.font = `${size} ${UITokens.fontFamily}`;
+    ctx.textAlign = align;
+    ctx.textBaseline = baseline;
+
+    if (shadow) {
+      ctx.fillStyle = shadowColor;
+      ctx.fillText(text, x + shadowOffset, y + shadowOffset);
+    }
+
+    if (glow) {
+      ctx.shadowColor = glowColor;
+      ctx.shadowBlur = 6;
+    }
+
+    ctx.fillStyle = color;
+    ctx.fillText(text, x, y);
+    ctx.restore();
+  }
+}
+
+// =============================================================================
+// 4. REUSABLE MODERN BUTTON COMPONENT
+// =============================================================================
 export class UIButton {
-  constructor({ id, label, x, y, width = 140, height = 20, color = '#38bdf8' }) {
+  constructor({
+    id,
+    label,
+    x,
+    y,
+    width = 140,
+    height = 20,
+    variant = 'primary',
+    color = null,
+    badge = '',
+    disabled = false
+  }) {
     this.id = id;
     this.label = label;
     this.x = x;
     this.y = y;
     this.width = width;
     this.height = height;
-    this.color = color;
+    this.variant = variant;
+    this.customColor = color;
+    this.badge = badge;
+    this.disabled = disabled;
+
+    // Animation & Feedback States
+    this.hoverProgress = 0;   // Smooth 0 -> 1 hover interpolation
+    this.pressProgress = 0;   // 0 -> 1 click feedback
+    this.animTimer = 0;
+  }
+
+  /**
+   * Resolves theme color and glowing accent for this button variant
+   */
+  getThemeColors() {
+    if (this.customColor) {
+      return {
+        accent: this.customColor,
+        glow: this.customColor.startsWith('#') ? `${this.customColor}66` : UITokens.primaryGlow,
+        dark: UITokens.borderDefault
+      };
+    }
+
+    switch (this.variant) {
+      case 'success':
+        return { accent: UITokens.success, glow: UITokens.successGlow, dark: UITokens.successDark };
+      case 'secondary':
+        return { accent: UITokens.secondary, glow: UITokens.secondaryGlow, dark: UITokens.secondaryDark };
+      case 'gold':
+        return { accent: UITokens.gold, glow: UITokens.goldGlow, dark: UITokens.goldDark };
+      case 'danger':
+        return { accent: UITokens.danger, glow: UITokens.dangerGlow, dark: UITokens.dangerDark };
+      case 'primary':
+      default:
+        return { accent: UITokens.primary, glow: UITokens.primaryGlow, dark: UITokens.primaryDark };
+    }
   }
 
   contains(px, py) {
@@ -21,446 +203,2265 @@ export class UIButton {
            py >= this.y && py <= this.y + this.height;
   }
 
-  render(ctx, isSelected, isHovered) {
+  update(dt, isActive = false) {
+    this.animTimer += dt;
+    const targetHover = isActive ? 1 : 0;
+    this.hoverProgress = UIAnimation.lerp(this.hoverProgress, targetHover, 12 * dt);
+
+    if (this.pressProgress > 0) {
+      this.pressProgress = Math.max(0, this.pressProgress - 6 * dt);
+    }
+  }
+
+  triggerPress() {
+    this.pressProgress = 1.0;
+  }
+
+  render(ctx, isSelected, isHovered = false, slideOffsetX = 0, alpha = 1.0) {
+    if (alpha <= 0.01) return;
     const active = isSelected || isHovered;
+    const theme = this.getThemeColors();
 
-    // Button Base Body
-    ctx.fillStyle = active ? '#1e293b' : '#0f172a';
-    ctx.fillRect(this.x, this.y, this.width, this.height);
+    ctx.save();
+    if (alpha < 1.0) {
+      ctx.globalAlpha *= alpha;
+    }
 
-    // Glowing Beveled Outline
-    ctx.strokeStyle = active ? this.color : '#334155';
+    const drawX = this.x + slideOffsetX;
+
+    // Calculate scale transform for interactive hover & press feedback
+    const scale = active ? 1.025 : (1.0 - this.pressProgress * 0.04);
+    const centerX = drawX + this.width / 2;
+    const centerY = this.y + this.height / 2;
+
+    ctx.translate(centerX, centerY);
+    ctx.scale(scale, scale);
+    ctx.translate(-centerX, -centerY);
+
+    // 1. Ambient Glow Backing on Active
+    if (active && !this.disabled) {
+      ctx.shadowColor = theme.glow;
+      ctx.shadowBlur = 8;
+    }
+
+    // 2. Button Body Surface
+    ctx.fillStyle = active ? UITokens.bgButtonHover : UITokens.bgButton;
+    ctx.fillRect(drawX, this.y, this.width, this.height);
+
+    // Reset shadow blur for crisp borders
+    ctx.shadowBlur = 0;
+
+    // 3. Double-Beveled Border
+    ctx.strokeStyle = active ? theme.accent : UITokens.borderDefault;
     ctx.lineWidth = active ? 2 : 1;
-    ctx.strokeRect(this.x, this.y, this.width, this.height);
+    ctx.strokeRect(drawX, this.y, this.width, this.height);
 
-    // Top-left Glossy Reflective Highlight
-    ctx.fillStyle = active ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.08)';
-    ctx.fillRect(this.x + 1, this.y + 1, this.width - 2, 2);
-    ctx.fillRect(this.x + 1, this.y + 1, 2, this.height - 2);
+    // 4. Specular Top Lip & Side Shine
+    ctx.fillStyle = active ? 'rgba(255, 255, 255, 0.28)' : 'rgba(255, 255, 255, 0.08)';
+    ctx.fillRect(drawX + 1, this.y + 1, this.width - 2, 2);
+    ctx.fillRect(drawX + 1, this.y + 1, 2, this.height - 2);
 
-    // Button Text
-    ctx.fillStyle = active ? '#ffffff' : '#94a3b8';
-    ctx.font = '8px "Press Start 2P", monospace';
+    // 5. Active Corner Cyber-Accents
+    if (active) {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(drawX, this.y, 2, 2);
+      ctx.fillRect(drawX + this.width - 2, this.y, 2, 2);
+      ctx.fillRect(drawX, this.y + this.height - 2, 2, 2);
+      ctx.fillRect(drawX + this.width - 2, this.y + this.height - 2, 2, 2);
+    }
+
+    // 6. Button Typography & Animated Side Indicators
+    ctx.font = `8px ${UITokens.fontFamily}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    const textToDraw = active ? `▶ ${this.label} ◀` : this.label;
-    ctx.fillText(textToDraw, this.x + this.width / 2, this.y + this.height / 2 + 1);
+    const textY = this.y + this.height / 2 + 1;
 
-    ctx.textAlign = 'start';
+    if (active && !this.disabled) {
+      // Animated Chevrons pulsing horizontally
+      const chevronPulse = Math.sin(this.animTimer * 8) * 1.5;
+      ctx.fillStyle = theme.accent;
+      ctx.fillText('▶', drawX + 10 - chevronPulse, textY);
+      ctx.fillText('◀', drawX + this.width - 10 + chevronPulse, textY);
+
+      // Bright white label with drop shadow
+      ctx.fillStyle = '#020617';
+      ctx.fillText(this.label, centerX + 1, textY + 1);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(this.label, centerX, textY);
+    } else {
+      ctx.fillStyle = this.disabled ? UITokens.disabled : UITokens.textMuted;
+      ctx.fillText(this.label, centerX, textY);
+    }
+
+    // 7. Optional Badge (e.g. [ON] / [OFF] / [LVL 1])
+    if (this.badge) {
+      ctx.font = `6px ${UITokens.fontFamily}`;
+      ctx.textAlign = 'end';
+      ctx.fillStyle = active ? '#ffffff' : theme.accent;
+      ctx.fillText(this.badge, drawX + this.width - 8, textY);
+    }
+
+    ctx.restore();
   }
 }
 
+// =============================================================================
+// 5. REUSABLE MODERN PANEL / MODAL CARD COMPONENT
+// =============================================================================
+export class UIPanel {
+  /**
+   * Renders a modern glassmorphic card frame with cyber-tech corner brackets and header
+   */
+  static render(ctx, {
+    x,
+    y,
+    width,
+    height,
+    title = '',
+    subtitle = '',
+    variant = 'primary',
+    customColor = null,
+    badge = '',
+    showBackdrop = true,
+    screenWidth = 400,
+    screenHeight = 240
+  }) {
+    ctx.save();
+
+    // 1. Fullscreen Dimming Backdrop
+    if (showBackdrop) {
+      ctx.fillStyle = 'rgba(4, 6, 14, 0.85)';
+      ctx.fillRect(0, 0, screenWidth, screenHeight);
+    }
+
+    // 2. Resolve Border & Accent Theme
+    let accentColor = UITokens.primary;
+    let glowColor = UITokens.primaryGlow;
+
+    if (customColor) {
+      accentColor = customColor;
+      glowColor = customColor.startsWith('#') ? `${customColor}55` : UITokens.primaryGlow;
+    } else if (variant === 'success') {
+      accentColor = UITokens.success;
+      glowColor = UITokens.successGlow;
+    } else if (variant === 'danger') {
+      accentColor = UITokens.danger;
+      glowColor = UITokens.dangerGlow;
+    } else if (variant === 'gold') {
+      accentColor = UITokens.gold;
+      glowColor = UITokens.goldGlow;
+    } else if (variant === 'secondary') {
+      accentColor = UITokens.secondary;
+      glowColor = UITokens.secondaryGlow;
+    }
+
+    // 3. Card Ambient Shadow
+    ctx.shadowColor = glowColor;
+    ctx.shadowBlur = 12;
+
+    // 4. Panel Surface (Dark Glassmorphic Fill)
+    ctx.fillStyle = UITokens.bgPanelOverlay;
+    ctx.fillRect(x, y, width, height);
+
+    ctx.shadowBlur = 0;
+
+    // 5. Double Beveled Border Frame
+    ctx.strokeStyle = accentColor;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y, width, height);
+
+    // Inner subtle specular border
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x + 3, y + 3, width - 6, height - 6);
+
+    // 6. Corner Cyber-Tech Accents (L-Brackets)
+    ctx.fillStyle = '#ffffff';
+    // Top-Left
+    ctx.fillRect(x, y, 4, 2);
+    ctx.fillRect(x, y, 2, 4);
+    // Top-Right
+    ctx.fillRect(x + width - 4, y, 4, 2);
+    ctx.fillRect(x + width - 2, y, 2, 4);
+    // Bottom-Left
+    ctx.fillRect(x, y + height - 2, 4, 2);
+    ctx.fillRect(x, y + height - 4, 2, 4);
+    // Bottom-Right
+    ctx.fillRect(x + width - 4, y + height - 2, 4, 2);
+    ctx.fillRect(x + width - 2, y + height - 4, 2, 4);
+
+    // 7. Title Header & Divider
+    if (title) {
+      const headerCenterY = y + 22;
+
+      // Drop shadow
+      UITypography.drawText(ctx, title, x + width / 2, headerCenterY, {
+        size: '10px',
+        color: accentColor,
+        align: 'center',
+        shadow: true,
+        glow: true,
+        glowColor: glowColor
+      });
+
+      // Subtitle if provided
+      if (subtitle) {
+        UITypography.drawText(ctx, subtitle, x + width / 2, y + 36, {
+          size: '7px',
+          color: UITokens.textMuted,
+          align: 'center',
+          shadow: false
+        });
+      }
+
+      // Glowing Accent Header Divider Line
+      ctx.strokeStyle = glowColor;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x + 16, y + (subtitle ? 46 : 34));
+      ctx.lineTo(x + width - 16, y + (subtitle ? 46 : 34));
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+}
+
+// =============================================================================
+// 6. UI MANAGER & SCREEN RENDERERS
+// =============================================================================
 export class UIManager {
   constructor() {
     this.animTimer = 0;
+    this.menuTimer = 0;
+    this.levelSelectTimer = 0;
+    this.instructionsTimer = 0;
+    this.settingsTimer = 0;
+    this.pauseTimer = 0;
+    this.gameOverTimer = 0;
     this.settings = {
       soundFX: true,
       music: true,
       crtFilter: true
     };
+
+    // HUD Dynamic Animation States
+    this.scorePulseTimer = 0;
+    this.trophyAcquiredTimer = 0;
+    this.levelIntroTimer = 0;
+    this.levelIntroNumber = 1;
+    this.checkpointBannerTimer = 0;
+    this.checkpointBannerText = '';
+    this.lastObservedScore = 0;
+    this.lastObservedTrophy = false;
+
+    // Pre-allocated particles for atmospheric background
+    this.bgParticles = [];
+    for (let i = 0; i < 28; i++) {
+      this.bgParticles.push({
+        x: (i * 14.5 + Math.sin(i * 1.7) * 40 + 400) % 400,
+        y: (i * 8.7 + Math.cos(i * 2.3) * 30 + 240) % 240,
+        vx: (i % 3 === 0 ? 9 : 5) * ((i % 2 === 0) ? 1 : 0.7),
+        vy: -3 - (i % 4) * 1.2,
+        size: (i % 5 === 0) ? 2 : 1,
+        color: (i % 4 === 0) ? UITokens.gold : (i % 3 === 0 ? UITokens.secondary : UITokens.primary),
+        phase: i * 0.4
+      });
+    }
+  }
+
+  resetMenuAnimation() {
+    this.menuTimer = 0;
+  }
+
+  resetLevelSelectAnimation() {
+    this.levelSelectTimer = 0;
+  }
+
+  resetInstructionsAnimation() {
+    this.instructionsTimer = 0;
+  }
+
+  resetSettingsAnimation() {
+    this.settingsTimer = 0;
+  }
+
+  resetPauseAnimation() {
+    this.pauseTimer = 0;
+  }
+
+  resetGameOverAnimation() {
+    this.gameOverTimer = 0;
+  }
+
+  triggerScorePulse() {
+    this.scorePulseTimer = 0.35;
+  }
+
+  triggerTrophyAcquisition() {
+    this.trophyAcquiredTimer = 1.5;
+  }
+
+  triggerLevelIntro(levelNumber = 1) {
+    this.levelIntroNumber = levelNumber;
+    this.levelIntroTimer = 2.8;
+  }
+
+  triggerCheckpointNotification(text = 'CHECKPOINT ACTIVATED') {
+    this.checkpointBannerText = text;
+    this.checkpointBannerTimer = 2.0;
   }
 
   update(dt) {
     this.animTimer += dt;
+    this.menuTimer += dt;
+    this.levelSelectTimer += dt;
+    this.instructionsTimer += dt;
+    this.settingsTimer += dt;
+    this.pauseTimer += dt;
+    this.gameOverTimer += dt;
+
+    if (this.scorePulseTimer > 0) this.scorePulseTimer = Math.max(0, this.scorePulseTimer - dt);
+    if (this.trophyAcquiredTimer > 0) this.trophyAcquiredTimer = Math.max(0, this.trophyAcquiredTimer - dt);
+    if (this.levelIntroTimer > 0) this.levelIntroTimer = Math.max(0, this.levelIntroTimer - dt);
+    if (this.checkpointBannerTimer > 0) this.checkpointBannerTimer = Math.max(0, this.checkpointBannerTimer - dt);
+
+    // Update background particles with smooth wrap-around
+    for (let i = 0; i < this.bgParticles.length; i++) {
+      const p = this.bgParticles[i];
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+
+      if (p.x > 405) p.x = -5;
+      if (p.y < -5) p.y = 245;
+    }
   }
 
   /**
-   * Screen 1: Retro Main Menu with Golden Glowing Title & Floating Stars
+   * Screen 1: Cinematic Modern Retro Main Menu with Hero Preview & Cyber Accents
    */
   renderMainMenu(ctx, width, height, selectedIndex, buttons) {
-    // Backdrop
-    ctx.fillStyle = '#060813';
+    // 1. Layered Atmospheric Background with Radial Gradient
+    const bgGradient = ctx.createRadialGradient(
+      width * 0.5, height * 0.4, 10,
+      width * 0.5, height * 0.5, width * 0.75
+    );
+    bgGradient.addColorStop(0, '#0f172a');
+    bgGradient.addColorStop(0.5, '#080d1a');
+    bgGradient.addColorStop(1, '#03050a');
+
+    ctx.fillStyle = bgGradient;
     ctx.fillRect(0, 0, width, height);
 
-    // Ambient floating starfield
-    for (let i = 0; i < 24; i++) {
-      const sx = (i * 37 + this.animTimer * 5) % width;
-      const sy = (i * 23) % height;
-      const twinkle = Math.sin(this.animTimer * 4 + i) > 0.3;
-      if (twinkle) {
-        ctx.fillStyle = i % 2 === 0 ? '#38bdf8' : '#facc15';
-        ctx.fillRect(sx, sy, 1, 1);
-      }
+    // 2. Subtle Isometric Perspective Cyber Floor Grid
+    ctx.save();
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.06)';
+    ctx.lineWidth = 1;
+
+    const horizonY = 135;
+    const vpX = 200;
+    for (let angle = -1.2; angle <= 1.2; angle += 0.3) {
+      ctx.beginPath();
+      ctx.moveTo(vpX, horizonY);
+      ctx.lineTo(vpX + Math.tan(angle) * (height - horizonY) * 2.2, height);
+      ctx.stroke();
     }
 
-    // Outer decorative frame
-    ctx.strokeStyle = '#1e3a8a';
-    ctx.lineWidth = 2;
+    const hGridLines = [150, 168, 188, 210, 234];
+    for (let y of hGridLines) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(width, y);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // 3. Floating Atmospheric Energy Motes / Star Particles
+    ctx.save();
+    for (let i = 0; i < this.bgParticles.length; i++) {
+      const p = this.bgParticles[i];
+      const pulseAlpha = 0.25 + 0.6 * (Math.sin(this.animTimer * 3 + p.phase) * 0.5 + 0.5);
+      ctx.globalAlpha = pulseAlpha;
+      ctx.fillStyle = p.color;
+      ctx.fillRect(Math.round(p.x), Math.round(p.y), p.size, p.size);
+    }
+    ctx.restore();
+
+    // 4. Outer Cyber Frame & Corner L-Brackets
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.22)';
+    ctx.lineWidth = 1;
     ctx.strokeRect(8, 8, width - 16, height - 16);
 
-    // Inner subtle border
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.2)';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(12, 12, width - 24, height - 24);
+    ctx.fillStyle = UITokens.primary;
+    // Top-Left
+    ctx.fillRect(8, 8, 6, 2);
+    ctx.fillRect(8, 8, 2, 6);
+    // Top-Right
+    ctx.fillRect(width - 14, 8, 6, 2);
+    ctx.fillRect(width - 10, 8, 2, 6);
+    // Bottom-Left
+    ctx.fillRect(8, height - 10, 6, 2);
+    ctx.fillRect(8, height - 14, 2, 6);
+    // Bottom-Right
+    ctx.fillRect(width - 14, height - 10, 6, 2);
+    ctx.fillRect(width - 10, height - 14, 2, 6);
 
-    // Title: "DANGEROUS ADVENTURE"
+    // 5. Minimal Cyber-HUD Header Status Badges
+    UITypography.drawText(ctx, '● SYSTEM: READY', 18, 16, {
+      size: '6px',
+      color: UITokens.success,
+      align: 'left',
+      shadow: false
+    });
+
+    UITypography.drawText(ctx, 'DAVE-ENGINE v2.4 PRO', width - 18, 16, {
+      size: '6px',
+      color: UITokens.textMuted,
+      align: 'right',
+      shadow: false
+    });
+
+    // 6. Animated Title Entrance & Settle
+    const titleEnter = Math.min(1, this.menuTimer / 0.55);
+    const titleEase = UIAnimation.easeOutBack(titleEnter, 1.15);
+    const titleScale = UIAnimation.lerp(0.85, 1.0, titleEase);
+    const titleY = UIAnimation.lerp(20, 36, titleEase);
+    const titleAlpha = UIAnimation.easeOutQuad(titleEnter);
+
     ctx.save();
-    ctx.textAlign = 'center';
+    ctx.globalAlpha = titleAlpha;
+    ctx.translate(width / 2, titleY);
+    ctx.scale(titleScale, titleScale);
 
-    const titleGlow = (Math.sin(this.animTimer * 4) + 1) * 0.5;
+    // Ambient gold glow behind title
+    const glowPulse = UIAnimation.getPulse(this.animTimer, 2.5, 0.4, 0.85);
+    ctx.shadowColor = `rgba(250, 204, 21, ${glowPulse})`;
+    ctx.shadowBlur = 12;
+
+    // Dual-layer crisp title typography
+    ctx.font = '13px "Press Start 2P", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
 
     // Drop shadow
     ctx.fillStyle = '#020617';
-    ctx.font = '14px "Press Start 2P", monospace';
-    ctx.fillText('DANGEROUS ADVENTURE', width / 2 + 2, 42);
+    ctx.fillText('DANGEROUS ADVENTURE', 1.5, 1.5);
 
-    // Glowing main title
-    ctx.fillStyle = titleGlow > 0.4 ? '#fef08a' : '#facc15';
-    ctx.fillText('DANGEROUS ADVENTURE', width / 2, 40);
+    // Radiant Gold Fill
+    ctx.fillStyle = UITokens.gold;
+    ctx.fillText('DANGEROUS ADVENTURE', 0, 0);
 
-    // Subtitle: "A Retro Platformer"
-    ctx.fillStyle = '#38bdf8';
+    ctx.shadowBlur = 0;
+
+    // Subtitle
     ctx.font = '7px "Press Start 2P", monospace';
-    ctx.fillText('~ A Retro Platformer ~', width / 2, 58);
+    ctx.fillStyle = UITokens.primary;
+    ctx.fillText('~ A RETRO PLATFORMER ~', 0, 16);
 
-    // Edition Badge
-    ctx.fillStyle = '#c084fc';
+    // Glowing divider line with diamond pip
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(-110, 24);
+    ctx.lineTo(-12, 24);
+    ctx.moveTo(12, 24);
+    ctx.lineTo(110, 24);
+    ctx.stroke();
+
+    ctx.fillStyle = UITokens.gold;
     ctx.font = '6px "Press Start 2P", monospace';
-    ctx.fillText('COLLEGE MINI-PROJECT EDITION', width / 2, 72);
+    ctx.fillText('✦', 0, 24);
 
     ctx.restore();
 
-    // Render Buttons
+    // 7. Hero Preview Character on Floating Hologram Pedestal (Left Side)
+    this.renderHeroPreview(ctx, 82, 134, this.animTimer);
+
+    // 8. Staggered Animated Menu Buttons (Right Side)
     for (let i = 0; i < buttons.length; i++) {
-      buttons[i].render(ctx, i === selectedIndex, false);
+      const btn = buttons[i];
+      btn.update(0.016, i === selectedIndex);
+
+      const btnEnterDelay = 0.12 + i * 0.07;
+      const btnProgress = Math.min(1, Math.max(0, (this.menuTimer - btnEnterDelay) / 0.3));
+      const btnEase = UIAnimation.easeOutQuad(btnProgress);
+      const slideOffsetX = (1 - btnEase) * 35;
+      const btnAlpha = btnEase;
+
+      btn.render(ctx, i === selectedIndex, false, slideOffsetX, btnAlpha);
     }
 
-    // Footer legend
-    ctx.fillStyle = '#64748b';
-    ctx.font = '6px "Press Start 2P", monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText('[▲/▼] NAVIGATE   [ENTER/SPACE] SELECT   MOUSE CLICK', width / 2, height - 16);
-    ctx.textAlign = 'start';
+    // 9. Footer Navigation Legend
+    UITypography.drawText(ctx, '[▲/▼] NAVIGATE   [ENTER/SPACE] SELECT   MOUSE CLICK', width / 2, height - 16, {
+      size: '6px',
+      color: UITokens.textMuted,
+      align: 'center',
+      shadow: true
+    });
   }
 
   /**
-   * Screen 2: Top Screen-Space HUD Bar
+   * Renders decorative Dave hero character on a floating tech hologram pedestal
    */
-  renderHUD(ctx, width, height, { lives = 3, score = 0, level = 1, hasTrophy = false, gemCount = 0 }) {
-    // HUD Bar Background (Retro Navy DOS banner)
-    ctx.fillStyle = '#0a1026';
-    ctx.fillRect(0, 0, width, 18);
+  renderHeroPreview(ctx, x, y, animTimer) {
+    ctx.save();
 
-    // Top subtle highlight & bottom border
-    ctx.fillStyle = '#38bdf8';
-    ctx.fillRect(0, 17, width, 1);
+    // 1. Floating Hologram Base Pedestal
+    const baseBob = Math.sin(animTimer * 2) * 1.5;
+    const baseY = y + 42 + baseBob;
 
+    // Upward soft blue light beam
+    const beamGrad = ctx.createLinearGradient(x, baseY, x, y - 10);
+    beamGrad.addColorStop(0, 'rgba(56, 189, 248, 0.22)');
+    beamGrad.addColorStop(0.6, 'rgba(56, 189, 248, 0.07)');
+    beamGrad.addColorStop(1, 'rgba(56, 189, 248, 0.0)');
+    ctx.fillStyle = beamGrad;
+    ctx.beginPath();
+    ctx.moveTo(x - 30, baseY);
+    ctx.lineTo(x - 18, y - 10);
+    ctx.lineTo(x + 18, y - 10);
+    ctx.lineTo(x + 30, baseY);
+    ctx.closePath();
+    ctx.fill();
+
+    // Pedestal Plate (Glassmorphic ellipse)
+    ctx.fillStyle = '#0b1329';
+    ctx.beginPath();
+    ctx.ellipse(x, baseY, 28, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = UITokens.primary;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Inner specular ring
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.ellipse(x, baseY, 22, 5, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // 2. Decorative Hero Sprite (Scaled Pixel Character with Idle Bobbing)
+    const charBobY = Math.sin(animTimer * 3.2) * 2;
+    const px = Math.round(x - 12);
+    const py = Math.round(y + charBobY);
+
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.scale(1.8, 1.8);
+
+    // Red Cap
+    ctx.fillStyle = '#ef4444';
+    ctx.fillRect(2, 0, 9, 3);
+    ctx.fillRect(0, 2, 13, 2);
+    // Cap peak
+    ctx.fillStyle = '#b91c1c';
+    ctx.fillRect(8, 3, 5, 1);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(4, 1, 2, 1);
+
+    // Face / Skin
+    ctx.fillStyle = '#fed7aa';
+    ctx.fillRect(2, 4, 8, 4);
+    // Eye
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(7, 4, 1, 2);
+    // Nose / smile
+    ctx.fillStyle = '#ea580c';
+    ctx.fillRect(8, 6, 2, 1);
+
+    // White Undershirt
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(2, 7, 8, 3);
+
+    // Blue Denim Overalls
+    ctx.fillStyle = '#2563eb';
+    ctx.fillRect(1, 8, 10, 4);
+    ctx.fillStyle = '#1d4ed8';
+    ctx.fillRect(3, 7, 2, 4);
+    ctx.fillRect(7, 7, 2, 4);
+    // Brass buckles
+    ctx.fillStyle = '#facc15';
+    ctx.fillRect(3, 8, 1, 1);
+    ctx.fillRect(7, 8, 1, 1);
+
+    // Pants / Legs
+    ctx.fillStyle = '#1e40af';
+    ctx.fillRect(2, 12, 3, 2);
+    ctx.fillRect(7, 12, 3, 2);
+
+    // Boots
+    ctx.fillStyle = '#78350f';
+    ctx.fillRect(1, 14, 4, 2);
+    ctx.fillRect(7, 14, 4, 2);
+
+    // Plasma Blaster in hand
+    ctx.fillStyle = '#64748b';
+    ctx.fillRect(8, 8, 6, 2);
+    ctx.fillStyle = '#334155';
+    ctx.fillRect(7, 9, 2, 3);
+    // Blaster tip spark
+    const sparkPulse = Math.sin(animTimer * 8) > 0;
+    ctx.fillStyle = sparkPulse ? '#38bdf8' : '#67e8f9';
+    ctx.fillRect(14, 8, 2, 2);
+
+    ctx.restore();
+
+    // 3. Hero Label & Subtitle
+    UITypography.drawText(ctx, 'AGENT DAVE', x, baseY + 14, {
+      size: '7px',
+      color: UITokens.gold,
+      align: 'center',
+      shadow: true
+    });
+
+    UITypography.drawText(ctx, 'COMBAT READY', x, baseY + 23, {
+      size: '6px',
+      color: UITokens.textSecondary,
+      align: 'center',
+      shadow: false
+    });
+
+    ctx.restore();
+  }
+
+  /**
+   * Screen 1.5: Dedicated Modern Level Selection Screen with Interactive Mission Cards
+   */
+  renderLevelSelect(ctx, width, height, selectedLevelIndex, backButton, {
+    unlockedLevels = 1,
+    completedLevels = new Set(),
+    highScores = {}
+  } = {}) {
+    // 1. Atmosphere Shift Background based on selected level
+    const themeHues = ['#0c2338', '#1c1038', '#330e18'];
+    const activeHue = themeHues[selectedLevelIndex] || '#0f172a';
+
+    const bgGradient = ctx.createRadialGradient(
+      width * 0.5, height * 0.4, 10,
+      width * 0.5, height * 0.5, width * 0.75
+    );
+    bgGradient.addColorStop(0, activeHue);
+    bgGradient.addColorStop(0.5, '#080d1a');
+    bgGradient.addColorStop(1, '#03050a');
+
+    ctx.fillStyle = bgGradient;
+    ctx.fillRect(0, 0, width, height);
+
+    // 2. Perspective Floor Grid
+    ctx.save();
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.05)';
+    ctx.lineWidth = 1;
+    const horizonY = 145;
+    const vpX = 200;
+    for (let angle = -1.2; angle <= 1.2; angle += 0.3) {
+      ctx.beginPath();
+      ctx.moveTo(vpX, horizonY);
+      ctx.lineTo(vpX + Math.tan(angle) * (height - horizonY) * 2.2, height);
+      ctx.stroke();
+    }
+    const hGridLines = [160, 180, 205, 235];
+    for (let y of hGridLines) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(width, y);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // 3. Floating Background Particles
+    ctx.save();
+    for (let i = 0; i < this.bgParticles.length; i++) {
+      const p = this.bgParticles[i];
+      const pulseAlpha = 0.2 + 0.5 * (Math.sin(this.animTimer * 3 + p.phase) * 0.5 + 0.5);
+      ctx.globalAlpha = pulseAlpha;
+      ctx.fillStyle = p.color;
+      ctx.fillRect(Math.round(p.x), Math.round(p.y), p.size, p.size);
+    }
+    ctx.restore();
+
+    // 4. Outer Cyber Frame & Corner L-Brackets
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.22)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(8, 8, width - 16, height - 16);
+
+    ctx.fillStyle = UITokens.primary;
+    ctx.fillRect(8, 8, 6, 2); ctx.fillRect(8, 8, 2, 6);
+    ctx.fillRect(width - 14, 8, 6, 2); ctx.fillRect(width - 10, 8, 2, 6);
+    ctx.fillRect(8, height - 10, 6, 2); ctx.fillRect(8, height - 14, 2, 6);
+    ctx.fillRect(width - 14, height - 10, 6, 2); ctx.fillRect(width - 10, height - 14, 2, 6);
+
+    // 5. Header: "SELECT MISSION" & "CHOOSE YOUR NEXT ADVENTURE"
+    const headerEnter = Math.min(1, this.levelSelectTimer / 0.45);
+    const headerEase = UIAnimation.easeOutBack(headerEnter, 1.1);
+    const headerY = UIAnimation.lerp(12, 22, headerEase);
+    const headerAlpha = UIAnimation.easeOutQuad(headerEnter);
+
+    ctx.save();
+    ctx.globalAlpha = headerAlpha;
+    UITypography.drawText(ctx, 'SELECT MISSION', width / 2, headerY, {
+      size: '11px',
+      color: UITokens.gold,
+      align: 'center',
+      shadow: true,
+      glow: true,
+      glowColor: UITokens.goldGlow
+    });
+
+    UITypography.drawText(ctx, 'CHOOSE YOUR NEXT ADVENTURE', width / 2, headerY + 14, {
+      size: '7px',
+      color: UITokens.primary,
+      align: 'center',
+      shadow: false
+    });
+
+    // Header divider line
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(width / 2 - 120, headerY + 21);
+    ctx.lineTo(width / 2 - 12, headerY + 21);
+    ctx.moveTo(width / 2 + 12, headerY + 21);
+    ctx.lineTo(width / 2 + 120, headerY + 21);
+    ctx.stroke();
+
+    ctx.fillStyle = UITokens.gold;
+    ctx.font = '6px "Press Start 2P", monospace';
+    ctx.fillText('✦', width / 2, headerY + 21);
+    ctx.restore();
+
+    // 6. Level Cards Configuration
+    const levelCards = [
+      {
+        level: 1,
+        num: '01',
+        title: 'TRAINING VAULT',
+        themeColor: UITokens.primary,
+        glowColor: UITokens.primaryGlow,
+        stars: '★☆☆☆☆',
+        starsColor: '#38bdf8',
+        desc: 'Master platforming, gather diamonds & collect the Golden Trophy.',
+        x: 18,
+        y: 48,
+        w: 114,
+        h: 142
+      },
+      {
+        level: 2,
+        num: '02',
+        title: 'CYBER FACTORY',
+        themeColor: UITokens.secondary,
+        glowColor: UITokens.secondaryGlow,
+        stars: '★★★☆☆',
+        starsColor: '#a855f7',
+        desc: 'Traverse moving girders, toxic pipes & patrolling slime guards.',
+        x: 143,
+        y: 48,
+        w: 114,
+        h: 142
+      },
+      {
+        level: 3,
+        num: '03',
+        title: 'DAVE FORTRESS',
+        themeColor: UITokens.danger,
+        glowColor: UITokens.dangerGlow,
+        stars: '★★★★★',
+        starsColor: '#ef4444',
+        desc: 'Ascend fortress spires over deep molten lava to final victory.',
+        x: 268,
+        y: 48,
+        w: 114,
+        h: 142
+      }
+    ];
+
+    // Render 3 Level Cards
+    for (let i = 0; i < levelCards.length; i++) {
+      const card = levelCards[i];
+      const isSelected = (i === selectedLevelIndex);
+      const isUnlocked = card.level <= unlockedLevels;
+      const isCompleted = completedLevels && (completedLevels.has ? completedLevels.has(card.level) : (completedLevels.includes && completedLevels.includes(card.level)));
+      const bestScore = (highScores && highScores[card.level]) || 0;
+
+      // Staggered Entrance Animation
+      const cardDelay = 0.08 + i * 0.08;
+      const cardProgress = Math.min(1, Math.max(0, (this.levelSelectTimer - cardDelay) / 0.35));
+      const cardEase = UIAnimation.easeOutBack(cardProgress, 1.05);
+      const slideOffsetY = (1 - cardEase) * 25;
+      const cardAlpha = UIAnimation.easeOutQuad(cardProgress);
+
+      this.renderLevelCard(ctx, {
+        ...card,
+        y: card.y + slideOffsetY,
+        isSelected,
+        isUnlocked,
+        isCompleted,
+        bestScore,
+        alpha: cardAlpha,
+        animTimer: this.animTimer
+      });
+    }
+
+    // 7. Back Button & Controls Legend
+    if (backButton) {
+      backButton.update(0.016, selectedLevelIndex === 3);
+      backButton.render(ctx, selectedLevelIndex === 3, false);
+    }
+
+    // Navigation guide
+    UITypography.drawText(ctx, '[◄/►] SELECT MISSION   [ENTER] LAUNCH   [ESC] BACK', width / 2 + 35, height - 16, {
+      size: '6px',
+      color: UITokens.textMuted,
+      align: 'center',
+      shadow: true
+    });
+  }
+
+  /**
+   * Renders an individual stylized Level Card
+   */
+  renderLevelCard(ctx, {
+    level,
+    num,
+    title,
+    themeColor,
+    glowColor,
+    stars,
+    starsColor,
+    desc,
+    x,
+    y,
+    w,
+    h,
+    isSelected,
+    isUnlocked,
+    isCompleted,
+    bestScore,
+    alpha = 1.0,
+    animTimer = 0
+  }) {
+    if (alpha <= 0.01) return;
+
+    ctx.save();
+    if (alpha < 1.0) ctx.globalAlpha *= alpha;
+
+    const scale = isSelected ? 1.03 : 1.0;
+    const cx = x + w / 2;
+    const cy = y + h / 2;
+
+    ctx.translate(cx, cy);
+    ctx.scale(scale, scale);
+    ctx.translate(-cx, -cy);
+
+    // 1. Ambient Glow when Selected
+    if (isSelected && isUnlocked) {
+      ctx.shadowColor = glowColor;
+      ctx.shadowBlur = 12;
+    }
+
+    // 2. Card Surface Fill
+    ctx.fillStyle = isSelected
+      ? (isUnlocked ? 'rgba(15, 23, 42, 0.96)' : 'rgba(15, 23, 42, 0.7)')
+      : 'rgba(8, 12, 22, 0.92)';
+    ctx.fillRect(x, y, w, h);
+    ctx.shadowBlur = 0;
+
+    // 3. Card Border Frame
+    ctx.strokeStyle = isSelected
+      ? (isUnlocked ? themeColor : UITokens.disabled)
+      : (isUnlocked ? 'rgba(56, 189, 248, 0.3)' : '#1e293b');
+    ctx.lineWidth = isSelected ? 2 : 1;
+    ctx.strokeRect(x, y, w, h);
+
+    // Specular inner sheen
+    ctx.fillStyle = isSelected ? 'rgba(255, 255, 255, 0.16)' : 'rgba(255, 255, 255, 0.05)';
+    ctx.fillRect(x + 1, y + 1, w - 2, 1);
+    ctx.fillRect(x + 1, y + 1, 1, h - 2);
+
+    // 4. Corner Cyber-Tech Accents
+    if (isSelected) {
+      ctx.fillStyle = isUnlocked ? '#ffffff' : UITokens.disabled;
+      ctx.fillRect(x, y, 3, 2); ctx.fillRect(x, y, 2, 3);
+      ctx.fillRect(x + w - 3, y, 3, 2); ctx.fillRect(x + w - 2, y, 2, 3);
+      ctx.fillRect(x, y + h - 2, 3, 2); ctx.fillRect(x, y + h - 3, 2, 3);
+      ctx.fillRect(x + w - 3, y + h - 2, 3, 2); ctx.fillRect(x + w - 2, y + h - 3, 2, 3);
+    }
+
+    // 5. Header: LEVEL number & status badge
     ctx.font = '7px "Press Start 2P", monospace';
-    ctx.textBaseline = 'middle';
+    ctx.textBaseline = 'top';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = isUnlocked ? UITokens.textPrimary : UITokens.disabled;
+    ctx.fillText(`LVL ${num}`, x + 6, y + 6);
 
-    // 1. TOP-LEFT: ❤️ Health/Lives with beating animation
-    const heartBeat = Math.sin(this.animTimer * 6) > 0.6 ? 1 : 0;
+    ctx.textAlign = 'right';
+    if (isCompleted) {
+      ctx.fillStyle = UITokens.gold;
+      ctx.fillText('★ CLEARED', x + w - 6, y + 6);
+    } else if (isUnlocked) {
+      ctx.fillStyle = UITokens.success;
+      ctx.fillText('ACTIVE', x + w - 6, y + 6);
+    } else {
+      ctx.fillStyle = UITokens.disabled;
+      ctx.fillText('🔒 LOCKED', x + w - 6, y + 6);
+    }
+
+    // Title
+    ctx.textAlign = 'center';
+    ctx.fillStyle = isUnlocked ? themeColor : UITokens.disabled;
+    ctx.font = '6.5px "Press Start 2P", monospace';
+    ctx.fillText(title, cx, y + 18);
+
+    // 6. Stylized Mini-Environment Thumbnail
+    this.renderMiniThumbnail(ctx, x + 6, y + 28, w - 12, 32, level, isUnlocked, animTimer);
+
+    // 7. Difficulty & Best Score
+    ctx.font = '6px "Press Start 2P", monospace';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = UITokens.textMuted;
+    ctx.fillText('DIFF:', x + 6, y + 66);
+    ctx.fillStyle = isUnlocked ? starsColor : UITokens.disabled;
+    ctx.fillText(stars, x + 38, y + 66);
+
+    ctx.fillStyle = UITokens.textMuted;
+    ctx.fillText('BEST:', x + 6, y + 76);
+    ctx.fillStyle = bestScore > 0 ? UITokens.gold : UITokens.textSecondary;
+    ctx.fillText(bestScore > 0 ? `${bestScore} PTS` : '---', x + 38, y + 76);
+
+    // 8. Description lines (Compact multi-line rendering)
+    ctx.fillStyle = isUnlocked ? UITokens.textSecondary : UITokens.disabled;
+    ctx.font = '5.5px "Press Start 2P", monospace';
+    const words = desc.split(' ');
+    let line1 = '';
+    let line2 = '';
+    for (let w of words) {
+      if ((line1 + w).length < 18) {
+        line1 += (line1 ? ' ' : '') + w;
+      } else {
+        line2 += (line2 ? ' ' : '') + w;
+      }
+    }
+    ctx.fillText(line1, x + 6, y + 88);
+    if (line2) ctx.fillText(line2, x + 6, y + 97);
+
+    // 9. Bottom Launch Prompt / Status Tag
+    const tagY = y + h - 18;
+    ctx.textAlign = 'center';
+    if (isSelected && isUnlocked) {
+      ctx.fillStyle = UITokens.bgButtonHover;
+      ctx.fillRect(x + 6, tagY, w - 12, 14);
+      ctx.strokeStyle = themeColor;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x + 6, tagY, w - 12, 14);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '6px "Press Start 2P", monospace';
+      ctx.fillText('▶ LAUNCH [ENTER]', cx, tagY + 4);
+    } else if (isUnlocked) {
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+      ctx.fillRect(x + 6, tagY, w - 12, 14);
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x + 6, tagY, w - 12, 14);
+
+      ctx.fillStyle = UITokens.textMuted;
+      ctx.font = '5.5px "Press Start 2P", monospace';
+      ctx.fillText('[CLICK / ENTER]', cx, tagY + 4);
+    } else {
+      ctx.fillStyle = 'rgba(71, 85, 105, 0.1)';
+      ctx.fillRect(x + 6, tagY, w - 12, 14);
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x + 6, tagY, w - 12, 14);
+
+      ctx.fillStyle = UITokens.disabled;
+      ctx.font = '5px "Press Start 2P", monospace';
+      ctx.fillText(`BEAT LVL ${level - 1}`, cx, tagY + 4);
+    }
+
+    ctx.restore();
+  }
+
+  /**
+   * Renders pixel-art stylized environment thumbnail for level cards
+   */
+  renderMiniThumbnail(ctx, tx, ty, tw, th, level, isUnlocked, animTimer) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(tx, ty, tw, th);
+    ctx.clip();
+
+    if (level === 1) {
+      // Level 1: Vault / Ruins
+      ctx.fillStyle = '#061324';
+      ctx.fillRect(tx, ty, tw, th);
+
+      ctx.fillStyle = '#0f2942';
+      ctx.fillRect(tx, ty + 18, tw, th - 18);
+
+      ctx.fillStyle = '#991b1b';
+      ctx.fillRect(tx + 6, ty + 20, 30, 6);
+      ctx.fillRect(tx + 42, ty + 12, 28, 6);
+      ctx.fillRect(tx + 75, ty + 22, 22, 6);
+
+      ctx.fillStyle = '#dc2626';
+      ctx.fillRect(tx + 6, ty + 20, 30, 2);
+      ctx.fillRect(tx + 42, ty + 12, 28, 2);
+      ctx.fillRect(tx + 75, ty + 22, 22, 2);
+
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(tx + 18, ty + 15, 3, 3);
+      ctx.fillStyle = '#facc15';
+      ctx.fillRect(tx + 54, ty + 7, 3, 3);
+    } else if (level === 2) {
+      // Level 2: Cyber Factory
+      ctx.fillStyle = '#150a26';
+      ctx.fillRect(tx, ty, tw, th);
+
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(tx + 4, ty + 20, 40, 5);
+      ctx.fillRect(tx + 50, ty + 14, 46, 5);
+      ctx.fillStyle = '#64748b';
+      ctx.fillRect(tx + 4, ty + 20, 40, 1);
+      ctx.fillRect(tx + 50, ty + 14, 46, 1);
+
+      ctx.fillStyle = '#a855f7';
+      ctx.fillRect(tx + 70, ty + 4, 8, 10);
+      ctx.fillStyle = '#22c55e';
+      ctx.fillRect(tx + 73, ty + 14, 2, 4);
+
+      ctx.fillStyle = '#facc15';
+      ctx.fillRect(tx + 20, ty + 28, 4, 4);
+      ctx.fillRect(tx + 30, ty + 28, 4, 4);
+    } else if (level === 3) {
+      // Level 3: Dave Fortress
+      ctx.fillStyle = '#22080d';
+      ctx.fillRect(tx, ty, tw, th);
+
+      ctx.fillStyle = '#3b0713';
+      ctx.fillRect(tx + 8, ty + 8, 20, 24);
+      ctx.fillRect(tx + 48, ty + 12, 34, 20);
+
+      ctx.fillStyle = '#7f1d1d';
+      ctx.fillRect(tx + 8, ty + 8, 4, 3);
+      ctx.fillRect(tx + 16, ty + 8, 4, 3);
+      ctx.fillRect(tx + 24, ty + 8, 4, 3);
+
+      ctx.fillStyle = '#ea580c';
+      ctx.fillRect(tx, ty + 26, tw, 6);
+      ctx.fillStyle = '#facc15';
+      const lavaPulse = Math.sin(animTimer * 6) * 1.5;
+      ctx.fillRect(tx + 24 + lavaPulse, ty + 27, 16, 2);
+
+      ctx.fillStyle = '#facc15';
+      ctx.fillRect(tx + 62, ty + 5, 6, 6);
+    }
+
+    if (!isUnlocked) {
+      ctx.fillStyle = 'rgba(4, 6, 14, 0.78)';
+      ctx.fillRect(tx, ty, tw, th);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '7px "Press Start 2P", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🔒 LOCKED', tx + tw / 2, ty + th / 2);
+    }
+
+    ctx.restore();
+
+    ctx.strokeStyle = isUnlocked ? 'rgba(56, 189, 248, 0.4)' : '#1e293b';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(tx, ty, tw, th);
+  }
+
+  /**
+   * Screen 2: Modern Animated In-Game HUD
+   */
+  renderHUD(ctx, width, height, { lives = 3, score = 0, level = 1, hasTrophy = false }) {
+    // Detect score changes automatically if triggerScorePulse wasn't called directly
+    if (score !== this.lastObservedScore) {
+      if (score > this.lastObservedScore) {
+        this.scorePulseTimer = 0.35;
+      }
+      this.lastObservedScore = score;
+    }
+    // Detect trophy state change
+    if (hasTrophy && !this.lastObservedTrophy) {
+      this.trophyAcquiredTimer = 1.5;
+    }
+    this.lastObservedTrophy = hasTrophy;
+
+    ctx.save();
+
+    // 1. TOP HUD GLASSMORPHIC BAR
+    const barH = 20;
+    ctx.fillStyle = 'rgba(8, 13, 26, 0.92)';
+    ctx.fillRect(0, 0, width, barH);
+
+    // Specular top edge highlight
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+    ctx.fillRect(0, 0, width, 1);
+
+    // Bottom accent border
+    ctx.fillStyle = 'rgba(56, 189, 248, 0.35)';
+    ctx.fillRect(0, barH - 1, width, 1);
+
+    // Accent corner badges
+    ctx.fillStyle = UITokens.primary;
+    ctx.fillRect(0, 0, 3, 2);
+    ctx.fillRect(width - 3, 0, 3, 2);
+
+    // =========================================================================
+    // 2. LEFT: ❤️ LIVES & HEALTH STATUS
+    // =========================================================================
+    const isLowLife = (lives <= 1);
+    const lifePulse = isLowLife ? (Math.sin(this.animTimer * 10) * 0.5 + 0.5) : 0;
+
+    const heartStartX = 8;
+    const heartY = 6;
     for (let i = 0; i < 3; i++) {
-      const hx = 8 + i * 12;
-      const hy = 6 - (i < lives ? heartBeat : 0);
-      if (i < lives) {
-        // Red pixel heart
-        ctx.fillStyle = '#ef4444';
-        ctx.fillRect(hx + 1, hy, 2, 2);
-        ctx.fillRect(hx + 5, hy, 2, 2);
-        ctx.fillRect(hx, hy + 2, 8, 3);
-        ctx.fillRect(hx + 1, hy + 5, 6, 2);
-        ctx.fillRect(hx + 3, hy + 7, 2, 1);
+      const hx = heartStartX + i * 11;
+      const isAlive = i < lives;
+      const isCurrentHeart = (i === lives - 1);
+      const bobY = (isAlive && isLowLife && isCurrentHeart) ? Math.round(Math.sin(this.animTimer * 10) * 1.5) : 0;
+
+      if (isAlive) {
+        ctx.fillStyle = isLowLife ? `rgba(239, 68, 68, ${0.7 + lifePulse * 0.3})` : UITokens.danger;
+        // Draw crisp 7x7 pixel heart
+        ctx.fillRect(hx + 1, heartY + bobY, 2, 2);
+        ctx.fillRect(hx + 4, heartY + bobY, 2, 2);
+        ctx.fillRect(hx, heartY + 2 + bobY, 7, 3);
+        ctx.fillRect(hx + 1, heartY + 5 + bobY, 5, 1);
+        ctx.fillRect(hx + 2, heartY + 6 + bobY, 3, 1);
+        ctx.fillRect(hx + 3, heartY + 7 + bobY, 1, 1);
+
+        // Specular highlight
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(hx + 2, hy + 1, 1, 1);
+        ctx.fillRect(hx + 1, heartY + 1 + bobY, 1, 1);
       } else {
         // Empty heart outline
-        ctx.fillStyle = '#475569';
-        ctx.fillRect(hx + 1, hy, 2, 2);
-        ctx.fillRect(hx + 5, hy, 2, 2);
-        ctx.fillRect(hx, hy + 2, 8, 3);
-        ctx.fillRect(hx + 1, hy + 5, 6, 2);
-        ctx.fillRect(hx + 3, hy + 7, 2, 1);
-        ctx.fillStyle = '#0a1026';
-        ctx.fillRect(hx + 2, hy + 2, 4, 3);
+        ctx.fillStyle = 'rgba(100, 116, 139, 0.4)';
+        ctx.fillRect(hx + 1, heartY, 2, 2);
+        ctx.fillRect(hx + 4, heartY, 2, 2);
+        ctx.fillRect(hx, heartY + 2, 7, 3);
+        ctx.fillRect(hx + 1, heartY + 5, 5, 1);
+        ctx.fillRect(hx + 3, heartY + 6, 1, 1);
+        ctx.fillStyle = 'rgba(8, 13, 26, 0.9)';
+        ctx.fillRect(hx + 1, heartY + 2, 5, 2);
       }
     }
 
-    ctx.fillStyle = '#f87171';
-    ctx.fillText(`x${lives}`, 48, 9);
+    // Lives counter text
+    ctx.font = '6.5px "Press Start 2P", monospace';
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = isLowLife ? '#fca5a5' : UITokens.textPrimary;
+    ctx.fillText(`x${lives}`, heartStartX + 36, barH / 2);
 
-    // 2. TOP-CENTER: ⭐ Score & Level
-    ctx.fillStyle = '#facc15';
-    ctx.textAlign = 'center';
-    ctx.fillText(`⭐ SCORE:${String(score).padStart(5, '0')}  [LVL ${level}]`, width / 2, 9);
-
-    // 3. TOP-RIGHT: 💎 Collectibles (Trophy status)
-    ctx.textAlign = 'end';
-    if (hasTrophy) {
-      ctx.fillStyle = '#facc15';
-      ctx.fillText(`🏆 TROPHY:YES`, width - 8, 9);
-    } else {
-      ctx.fillStyle = '#94a3b8';
-      ctx.fillText(`💎 TROPHY:NO`, width - 8, 9);
+    if (isLowLife) {
+      ctx.fillStyle = `rgba(239, 68, 68, ${0.4 + lifePulse * 0.6})`;
+      ctx.font = '5px "Press Start 2P", monospace';
+      ctx.fillText(`WARN`, heartStartX + 54, barH / 2);
     }
 
-    ctx.textAlign = 'start';
-  }
+    // =========================================================================
+    // 3. CENTER: 💎 SCORE WITH DYNAMIC INCREASE PULSE
+    // =========================================================================
+    const scoreText = `SCORE ${String(score).padStart(5, '0')}`;
+    const scoreCenterX = width / 2;
 
-  /**
-   * Screen 3: Pause Menu
-   */
-  renderPauseMenu(ctx, width, height, selectedIndex, buttons) {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-    ctx.fillRect(0, 0, width, height);
+    ctx.save();
+    if (this.scorePulseTimer > 0) {
+      const pulseProgress = this.scorePulseTimer / 0.35;
+      const scoreScale = 1.0 + 0.15 * Math.sin(pulseProgress * Math.PI);
+      ctx.translate(scoreCenterX, barH / 2);
+      ctx.scale(scoreScale, scoreScale);
+      ctx.translate(-scoreCenterX, -barH / 2);
 
-    const boxW = 240;
-    const boxH = 150;
-    const boxX = (width - boxW) / 2;
-    const boxY = (height - boxH) / 2;
-
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(boxX, boxY, boxW, boxH);
-
-    ctx.strokeStyle = '#38bdf8';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(boxX, boxY, boxW, boxH);
-
-    ctx.fillStyle = '#38bdf8';
-    ctx.font = '10px "Press Start 2P", monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText('*** GAME PAUSED ***', width / 2, boxY + 24);
-
-    for (let i = 0; i < buttons.length; i++) {
-      buttons[i].render(ctx, i === selectedIndex, false);
+      ctx.shadowColor = UITokens.goldGlow;
+      ctx.shadowBlur = 8;
     }
 
-    ctx.fillStyle = '#64748b';
+    // Score pill background
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.6)';
+    ctx.fillRect(scoreCenterX - 52, 2, 104, 16);
+    ctx.strokeStyle = this.scorePulseTimer > 0 ? UITokens.gold : 'rgba(56, 189, 248, 0.25)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(scoreCenterX - 52, 2, 104, 16);
+
+    ctx.font = '6.5px "Press Start 2P", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = this.scorePulseTimer > 0 ? '#fef08a' : UITokens.gold;
+    ctx.fillText(scoreText, scoreCenterX, barH / 2);
+    ctx.restore();
+
+    // =========================================================================
+    // 4. RIGHT: LEVEL BADGE & TROPHY OBJECTIVE
+    // =========================================================================
+    const lvlText = `LVL ${level}`;
+    const lvlX = width - 122;
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.6)';
+    ctx.fillRect(lvlX, 2, 40, 16);
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(lvlX, 2, 40, 16);
+
     ctx.font = '6px "Press Start 2P", monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('PRESS [P] OR [ESC] TO RESUME', width / 2, boxY + boxH - 12);
-    ctx.textAlign = 'start';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = UITokens.primary;
+    ctx.fillText(lvlText, lvlX + 20, barH / 2);
+
+    // Trophy Status Badge
+    const trophyX = width - 78;
+    const trophyW = 72;
+    const isTrophyFlashing = this.trophyAcquiredTimer > 0;
+    const trophyPulse = isTrophyFlashing ? (Math.sin(this.animTimer * 16) * 0.5 + 0.5) : 0;
+
+    ctx.save();
+    if (hasTrophy) {
+      ctx.fillStyle = isTrophyFlashing ? `rgba(34, 197, 94, ${0.3 + trophyPulse * 0.4})` : 'rgba(34, 197, 94, 0.15)';
+      ctx.fillRect(trophyX, 2, trophyW, 16);
+      ctx.strokeStyle = isTrophyFlashing ? '#4ade80' : UITokens.success;
+      ctx.lineWidth = 1;
+      if (isTrophyFlashing) {
+        ctx.shadowColor = UITokens.goldGlow;
+        ctx.shadowBlur = 10;
+      }
+      ctx.strokeRect(trophyX, 2, trophyW, 16);
+
+      ctx.font = '5.5px "Press Start 2P", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = isTrophyFlashing ? '#ffffff' : '#4ade80';
+      ctx.fillText('🏆 [ACQUIRED]', trophyX + trophyW / 2, barH / 2);
+    } else {
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.6)';
+      ctx.fillRect(trophyX, 2, trophyW, 16);
+      ctx.strokeStyle = 'rgba(148, 163, 184, 0.25)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(trophyX, 2, trophyW, 16);
+
+      ctx.font = '5.5px "Press Start 2P", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = UITokens.textMuted;
+      ctx.fillText('🏆 [SEEK]', trophyX + trophyW / 2, barH / 2);
+    }
+    ctx.restore();
+
+    // =========================================================================
+    // 5. CINEMATIC LEVEL INTRO NOTIFICATION BANNER
+    // =========================================================================
+    if (this.levelIntroTimer > 0) {
+      const introProgress = this.levelIntroTimer / 2.8;
+      let introAlpha = 1.0;
+      if (introProgress < 0.2) {
+        introAlpha = introProgress / 0.2;
+      } else if (introProgress > 0.85) {
+        introAlpha = (1.0 - introProgress) / 0.15;
+      }
+
+      const cardW = 232;
+      const cardH = 26;
+      const cardX = (width - cardW) / 2;
+      const cardY = 26;
+
+      const levelNames = {
+        1: 'THE LOST VAULT',
+        2: 'CYBER FACTORY',
+        3: 'DAVE FORTRESS'
+      };
+      const currentLevelName = levelNames[level] || `SECTOR ${level}`;
+
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, Math.max(0, introAlpha));
+
+      ctx.fillStyle = 'rgba(11, 17, 32, 0.94)';
+      ctx.fillRect(cardX, cardY, cardW, cardH);
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
+      ctx.lineWidth = 1;
+      ctx.shadowColor = UITokens.primaryGlow;
+      ctx.shadowBlur = 8;
+      ctx.strokeRect(cardX, cardY, cardW, cardH);
+      ctx.shadowBlur = 0;
+
+      UITypography.drawText(ctx, `MISSION 0${level}: ${currentLevelName}`, width / 2, cardY + 7, {
+        size: '6px',
+        color: UITokens.gold,
+        align: 'center',
+        shadow: true
+      });
+
+      UITypography.drawText(ctx, 'OBJECTIVE: RETRIEVE GOLDEN TROPHY & ESCAPE', width / 2, cardY + 17, {
+        size: '5px',
+        color: UITokens.primary,
+        align: 'center',
+        shadow: false
+      });
+
+      ctx.restore();
+    }
+
+    // =========================================================================
+    // 6. TEMPORARY CHECKPOINT ACTIVATION NOTIFICATION
+    // =========================================================================
+    if (this.checkpointBannerTimer > 0) {
+      const bannerProgress = this.checkpointBannerTimer / 2.0;
+      const bannerAlpha = bannerProgress < 0.25 ? (bannerProgress / 0.25) : (bannerProgress > 0.85 ? (1.0 - bannerProgress) / 0.15 : 1.0);
+
+      const bannerW = 210;
+      const bannerH = 20;
+      const bannerX = (width - bannerW) / 2;
+      const bannerY = 28;
+
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, Math.max(0, bannerAlpha));
+
+      ctx.fillStyle = 'rgba(6, 78, 59, 0.92)';
+      ctx.fillRect(bannerX, bannerY, bannerW, bannerH);
+      ctx.strokeStyle = '#34d399';
+      ctx.lineWidth = 1;
+      ctx.shadowColor = 'rgba(52, 211, 153, 0.6)';
+      ctx.shadowBlur = 10;
+      ctx.strokeRect(bannerX, bannerY, bannerW, bannerH);
+      ctx.shadowBlur = 0;
+
+      UITypography.drawText(ctx, '⚡ CHECKPOINT ACTIVATED • SPAWN SAVED', width / 2, bannerY + 10, {
+        size: '5.5px',
+        color: '#a7f3d0',
+        align: 'center',
+        shadow: true
+      });
+
+      ctx.restore();
+    }
+
+    // =========================================================================
+    // 7. SUBTLE PAUSE HINT IN BOTTOM CORNER
+    // =========================================================================
+    ctx.font = '5px "Press Start 2P", monospace';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'bottom';
+    ctx.fillStyle = 'rgba(148, 163, 184, 0.35)';
+    ctx.fillText('[P / ESC] PAUSE', width - 6, height - 4);
+
+    ctx.restore();
   }
 
   /**
-   * Screen 4: Game Over
+   * Screen 3: Modern Cinematic Pause Menu Overlay
    */
-  renderGameOver(ctx, width, height, selectedIndex, buttons, finalScore = 0) {
-    ctx.fillStyle = 'rgba(25, 5, 5, 0.88)';
+  renderPauseMenu(ctx, width, height, selectedIndex, buttons, meta = {}) {
+    const currentLevel = meta.currentLevel || 1;
+    const score = meta.score || 0;
+    const hasTrophy = meta.hasTrophy || false;
+    const hasCheckpoint = meta.hasCheckpoint || false;
+
+    const levelNames = {
+      1: 'THE LOST VAULT',
+      2: 'CYBER FACTORY',
+      3: 'DAVE FORTRESS'
+    };
+    const levelTitle = levelNames[currentLevel] || `SECTOR 0${currentLevel}`;
+
+    // 1. Dark Translucent Backdrop with Vignette
+    ctx.save();
+    ctx.fillStyle = 'rgba(3, 7, 18, 0.76)';
     ctx.fillRect(0, 0, width, height);
 
-    const boxW = 260;
-    const boxH = 145;
+    // 2. Entrance Animation
+    const pauseEnter = Math.min(1, this.pauseTimer / 0.35);
+    const pauseEase = UIAnimation.easeOutBack(pauseEnter, 1.08);
+    const pauseScale = UIAnimation.lerp(0.92, 1.0, pauseEase);
+    const pauseAlpha = UIAnimation.easeOutQuad(pauseEnter);
+
+    const boxW = 270;
+    const boxH = 184;
     const boxX = (width - boxW) / 2;
     const boxY = (height - boxH) / 2;
 
-    ctx.fillStyle = '#1a0d0d';
+    ctx.globalAlpha = pauseAlpha;
+    ctx.translate(width / 2, height / 2);
+    ctx.scale(pauseScale, pauseScale);
+    ctx.translate(-width / 2, -height / 2);
+
+    // 3. Glassmorphic Modal Panel
+    ctx.fillStyle = 'rgba(11, 17, 32, 0.94)';
     ctx.fillRect(boxX, boxY, boxW, boxH);
-
-    ctx.strokeStyle = '#ef4444';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+    ctx.lineWidth = 1;
+    ctx.shadowColor = UITokens.primaryGlow;
+    ctx.shadowBlur = 12;
     ctx.strokeRect(boxX, boxY, boxW, boxH);
+    ctx.shadowBlur = 0;
 
-    ctx.fillStyle = '#ef4444';
-    ctx.font = '12px "Press Start 2P", monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText('*** GAME OVER ***', width / 2, boxY + 26);
+    // Specular highlight
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.fillRect(boxX + 1, boxY + 1, boxW - 2, 1);
 
-    ctx.fillStyle = '#facc15';
-    ctx.font = '8px "Press Start 2P", monospace';
-    ctx.fillText(`FINAL SCORE: ${finalScore}`, width / 2, boxY + 48);
+    // Corner Tech Accents
+    ctx.fillStyle = UITokens.primary;
+    ctx.fillRect(boxX, boxY, 5, 2); ctx.fillRect(boxX, boxY, 2, 5);
+    ctx.fillRect(boxX + boxW - 5, boxY, 5, 2); ctx.fillRect(boxX + boxW - 2, boxY, 2, 5);
+    ctx.fillRect(boxX, boxY + boxH - 2, 5, 2); ctx.fillRect(boxX, boxY + boxH - 5, 2, 5);
+    ctx.fillRect(boxX + boxW - 5, boxY + boxH - 2, 5, 2); ctx.fillRect(boxX + boxW - 2, boxY + boxH - 5, 2, 5);
 
+    // 4. Header Section
+    UITypography.drawText(ctx, 'GAME PAUSED', width / 2, boxY + 16, {
+      size: '10px',
+      color: UITokens.gold,
+      align: 'center',
+      shadow: true,
+      glow: true,
+      glowColor: UITokens.goldGlow
+    });
+
+    UITypography.drawText(ctx, 'SYSTEM STANDBY', width / 2, boxY + 28, {
+      size: '6px',
+      color: UITokens.primary,
+      align: 'center',
+      shadow: false
+    });
+
+    // Status indicator with pulsing LED dot
+    const dotPulse = Math.sin(this.animTimer * 6) * 0.4 + 0.6;
+    ctx.fillStyle = `rgba(34, 197, 94, ${dotPulse})`;
+    ctx.beginPath();
+    ctx.arc(width / 2 - 58, boxY + 39, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    UITypography.drawText(ctx, 'GAMEPLAY SUSPENDED', width / 2 + 4, boxY + 39, {
+      size: '5px',
+      color: '#86efac',
+      align: 'center',
+      shadow: false
+    });
+
+    // Divider Line
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.3)';
+    ctx.beginPath();
+    ctx.moveTo(boxX + 12, boxY + 46);
+    ctx.lineTo(boxX + boxW - 12, boxY + 46);
+    ctx.stroke();
+
+    // 5. Telemetry / Mission Info Strip
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.65)';
+    ctx.fillRect(boxX + 12, boxY + 50, boxW - 24, 28);
+    ctx.strokeStyle = '#1e293b';
+    ctx.strokeRect(boxX + 12, boxY + 50, boxW - 24, 28);
+
+    ctx.font = '5.5px "Press Start 2P", monospace';
+    ctx.textBaseline = 'top';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = UITokens.textMuted;
+    ctx.fillText(`MISSION:`, boxX + 18, boxY + 55);
+    ctx.fillStyle = UITokens.textPrimary;
+    ctx.fillText(`0${currentLevel} ${levelTitle}`, boxX + 72, boxY + 55);
+
+    ctx.fillStyle = UITokens.textMuted;
+    ctx.fillText(`SCORE:`, boxX + 18, boxY + 67);
+    ctx.fillStyle = UITokens.gold;
+    ctx.fillText(`${String(score).padStart(5, '0')}`, boxX + 72, boxY + 67);
+
+    ctx.fillStyle = UITokens.textMuted;
+    ctx.fillText(`TROPHY:`, boxX + 140, boxY + 67);
+    ctx.fillStyle = hasTrophy ? '#4ade80' : UITokens.disabled;
+    ctx.fillText(hasTrophy ? `FOUND` : `SEEKING`, boxX + 192, boxY + 67);
+
+    // Divider Line
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.3)';
+    ctx.beginPath();
+    ctx.moveTo(boxX + 12, boxY + 83);
+    ctx.lineTo(boxX + boxW - 12, boxY + 83);
+    ctx.stroke();
+
+    // 6. Pause Menu Buttons
     for (let i = 0; i < buttons.length; i++) {
-      buttons[i].render(ctx, i === selectedIndex, false);
+      const btn = buttons[i];
+      btn.update(0.016, i === selectedIndex);
+      btn.render(ctx, i === selectedIndex, false);
     }
 
-    ctx.textAlign = 'start';
+    // 7. Footer Hint
+    UITypography.drawText(ctx, '[P / ESC] RESUME   [ENTER/SPACE] SELECT', width / 2, boxY + boxH - 8, {
+      size: '5px',
+      color: UITokens.textMuted,
+      align: 'center',
+      shadow: false
+    });
+
+    ctx.restore();
+  }
+
+  /**
+   * Screen 4: Modern Animated Game Over Screen
+   */
+  renderGameOver(ctx, width, height, selectedIndex, buttons, metaOrScore = {}) {
+    let finalScore = 0;
+    let currentLevel = 1;
+    let hasTrophy = false;
+    let hasCheckpoint = false;
+
+    if (typeof metaOrScore === 'number') {
+      finalScore = metaOrScore;
+    } else if (typeof metaOrScore === 'object' && metaOrScore !== null) {
+      finalScore = metaOrScore.finalScore || metaOrScore.score || 0;
+      currentLevel = metaOrScore.currentLevel || 1;
+      hasTrophy = metaOrScore.hasTrophy || false;
+      hasCheckpoint = metaOrScore.hasCheckpoint || false;
+    }
+
+    const levelNames = {
+      1: 'THE LOST VAULT',
+      2: 'CYBER FACTORY',
+      3: 'DAVE FORTRESS'
+    };
+    const levelTitle = levelNames[currentLevel] || `SECTOR 0${currentLevel}`;
+
+    // 1. Dark Crimson Backdrop with Edge Vignette
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 3, 6, 0.86)';
+    ctx.fillRect(0, 0, width, height);
+
+    // 2. Entrance Animation
+    const goEnter = Math.min(1, this.gameOverTimer / 0.4);
+    const goEase = UIAnimation.easeOutBack(goEnter, 1.1);
+    const goScale = UIAnimation.lerp(0.9, 1.0, goEase);
+    const goAlpha = UIAnimation.easeOutQuad(goEnter);
+
+    const boxW = 270;
+    const boxH = 176;
+    const boxX = (width - boxW) / 2;
+    const boxY = (height - boxH) / 2;
+
+    ctx.globalAlpha = goAlpha;
+    ctx.translate(width / 2, height / 2);
+    ctx.scale(goScale, goScale);
+    ctx.translate(-width / 2, -height / 2);
+
+    // 3. Glassmorphic Modal Panel
+    ctx.fillStyle = 'rgba(18, 8, 14, 0.96)';
+    ctx.fillRect(boxX, boxY, boxW, boxH);
+    ctx.strokeStyle = 'rgba(239, 68, 68, 0.55)';
+    ctx.lineWidth = 1;
+    ctx.shadowColor = UITokens.dangerGlow;
+    ctx.shadowBlur = 14;
+    ctx.strokeRect(boxX, boxY, boxW, boxH);
+    ctx.shadowBlur = 0;
+
+    // Top sheen
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.fillRect(boxX + 1, boxY + 1, boxW - 2, 1);
+
+    // Corner Red Brackets
+    ctx.fillStyle = UITokens.danger;
+    ctx.fillRect(boxX, boxY, 5, 2); ctx.fillRect(boxX, boxY, 2, 5);
+    ctx.fillRect(boxX + boxW - 5, boxY, 5, 2); ctx.fillRect(boxX + boxW - 2, boxY, 2, 5);
+    ctx.fillRect(boxX, boxY + boxH - 2, 5, 2); ctx.fillRect(boxX, boxY + boxH - 5, 2, 5);
+    ctx.fillRect(boxX + boxW - 5, boxY + boxH - 2, 5, 2); ctx.fillRect(boxX + boxW - 2, boxY + boxH - 5, 2, 5);
+
+    // 4. Header Section
+    UITypography.drawText(ctx, 'SYSTEM FAILURE', width / 2, boxY + 16, {
+      size: '10px',
+      color: UITokens.danger,
+      align: 'center',
+      shadow: true,
+      glow: true,
+      glowColor: UITokens.dangerGlow
+    });
+
+    UITypography.drawText(ctx, 'DAVE HAS FALLEN', width / 2, boxY + 28, {
+      size: '6px',
+      color: '#fca5a5',
+      align: 'center',
+      shadow: false
+    });
+
+    const warnPulse = Math.sin(this.animTimer * 8) * 0.4 + 0.6;
+    UITypography.drawText(ctx, '⚠ CRITICAL LIFE FORCE DEPLETED', width / 2, boxY + 39, {
+      size: '5px',
+      color: `rgba(248, 113, 113, ${warnPulse})`,
+      align: 'center',
+      shadow: false
+    });
+
+    // Divider Line
+    ctx.strokeStyle = 'rgba(239, 68, 68, 0.35)';
+    ctx.beginPath();
+    ctx.moveTo(boxX + 12, boxY + 46);
+    ctx.lineTo(boxX + boxW - 12, boxY + 46);
+    ctx.stroke();
+
+    // 5. Debrief Results Card
+    ctx.fillStyle = 'rgba(24, 10, 16, 0.75)';
+    ctx.fillRect(boxX + 12, boxY + 50, boxW - 24, 38);
+    ctx.strokeStyle = '#450a0a';
+    ctx.strokeRect(boxX + 12, boxY + 50, boxW - 24, 38);
+
+    ctx.font = '5.5px "Press Start 2P", monospace';
+    ctx.textBaseline = 'top';
+    ctx.textAlign = 'left';
+
+    ctx.fillStyle = UITokens.textMuted;
+    ctx.fillText(`SECTOR:`, boxX + 18, boxY + 56);
+    ctx.fillStyle = UITokens.textPrimary;
+    ctx.fillText(`0${currentLevel} ${levelTitle}`, boxX + 76, boxY + 56);
+
+    ctx.fillStyle = UITokens.textMuted;
+    ctx.fillText(`FINAL SCORE:`, boxX + 18, boxY + 68);
+    ctx.fillStyle = UITokens.gold;
+    ctx.fillText(`${String(finalScore).padStart(5, '0')}`, boxX + 104, boxY + 68);
+
+    ctx.fillStyle = UITokens.textMuted;
+    ctx.fillText(`TROPHY:`, boxX + 18, boxY + 79);
+    ctx.fillStyle = hasTrophy ? '#4ade80' : UITokens.disabled;
+    ctx.fillText(hasTrophy ? `ACQUIRED` : `NOT FOUND`, boxX + 76, boxY + 79);
+
+    // Divider Line
+    ctx.strokeStyle = 'rgba(239, 68, 68, 0.35)';
+    ctx.beginPath();
+    ctx.moveTo(boxX + 12, boxY + 94);
+    ctx.lineTo(boxX + boxW - 12, boxY + 94);
+    ctx.stroke();
+
+    // 6. Action Buttons
+    for (let i = 0; i < buttons.length; i++) {
+      const btn = buttons[i];
+      btn.update(0.016, i === selectedIndex);
+      btn.render(ctx, i === selectedIndex, false);
+    }
+
+    // 7. Footer Hint
+    UITypography.drawText(ctx, '[▲/▼] NAVIGATE   [ENTER / SPACE] SELECT', width / 2, boxY + boxH - 8, {
+      size: '5px',
+      color: UITokens.textMuted,
+      align: 'center',
+      shadow: false
+    });
+
+    ctx.restore();
   }
 
   /**
    * Screen 5: Level Complete
    */
   renderLevelComplete(ctx, width, height, selectedIndex, buttons, { currentLevel = 1, score = 0, bonus = 500 }) {
-    ctx.fillStyle = 'rgba(0, 20, 10, 0.82)';
-    ctx.fillRect(0, 0, width, height);
-
     const boxW = 280;
     const boxH = 150;
     const boxX = (width - boxW) / 2;
     const boxY = (height - boxH) / 2;
 
-    ctx.fillStyle = '#062817';
-    ctx.fillRect(boxX, boxY, boxW, boxH);
+    UIPanel.render(ctx, {
+      x: boxX,
+      y: boxY,
+      width: boxW,
+      height: boxH,
+      title: `*** LEVEL ${currentLevel} COMPLETE! ***`,
+      variant: 'success',
+      screenWidth: width,
+      screenHeight: height
+    });
 
-    ctx.strokeStyle = '#22c55e';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(boxX, boxY, boxW, boxH);
+    UITypography.drawText(ctx, `CURRENT SCORE: ${score}`, width / 2, boxY + 46, {
+      size: '8px',
+      color: UITokens.gold,
+      align: 'center'
+    });
 
-    ctx.fillStyle = '#4ade80';
-    ctx.font = '10px "Press Start 2P", monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText(`*** LEVEL ${currentLevel} COMPLETE! ***`, width / 2, boxY + 26);
-
-    ctx.fillStyle = '#facc15';
-    ctx.font = '8px "Press Start 2P", monospace';
-    ctx.fillText(`CURRENT SCORE: ${score}`, width / 2, boxY + 46);
-
-    ctx.fillStyle = '#86efac';
-    ctx.font = '7px "Press Start 2P", monospace';
-    ctx.fillText(`LEVEL BONUS: +${bonus} PTS`, width / 2, boxY + 62);
+    UITypography.drawText(ctx, `LEVEL BONUS: +${bonus} PTS`, width / 2, boxY + 62, {
+      size: '7px',
+      color: '#86efac',
+      align: 'center'
+    });
 
     for (let i = 0; i < buttons.length; i++) {
+      buttons[i].update(0.016, i === selectedIndex);
       buttons[i].render(ctx, i === selectedIndex, false);
     }
-
-    ctx.textAlign = 'start';
   }
 
   /**
    * Screen 6: Final Victory
    */
   renderFinalVictory(ctx, width, height, selectedIndex, buttons, finalScore = 0) {
-    ctx.fillStyle = 'rgba(10, 5, 30, 0.9)';
-    ctx.fillRect(0, 0, width, height);
-
     const boxW = 300;
     const boxH = 155;
     const boxX = (width - boxW) / 2;
     const boxY = (height - boxH) / 2;
 
-    ctx.fillStyle = '#1e1b4b';
-    ctx.fillRect(boxX, boxY, boxW, boxH);
+    UIPanel.render(ctx, {
+      x: boxX,
+      y: boxY,
+      width: boxW,
+      height: boxH,
+      title: '*** YOU WIN! ***',
+      subtitle: 'ALL 3 LEVELS CONQUERED!',
+      variant: 'gold',
+      screenWidth: width,
+      screenHeight: height
+    });
 
-    ctx.strokeStyle = '#fbbf24';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(boxX, boxY, boxW, boxH);
-
-    ctx.fillStyle = '#facc15';
-    ctx.font = '12px "Press Start 2P", monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText('*** YOU WIN! ***', width / 2, boxY + 26);
-
-    ctx.fillStyle = '#38bdf8';
-    ctx.font = '7px "Press Start 2P", monospace';
-    ctx.fillText('ALL 3 LEVELS CONQUERED!', width / 2, boxY + 45);
-
-    ctx.fillStyle = '#4ade80';
-    ctx.font = '8px "Press Start 2P", monospace';
-    ctx.fillText(`FINAL SCORE: ${finalScore}`, width / 2, boxY + 63);
+    UITypography.drawText(ctx, `FINAL SCORE: ${finalScore}`, width / 2, boxY + 63, {
+      size: '8px',
+      color: '#4ade80',
+      align: 'center'
+    });
 
     for (let i = 0; i < buttons.length; i++) {
+      buttons[i].update(0.016, i === selectedIndex);
       buttons[i].render(ctx, i === selectedIndex, false);
     }
-
-    ctx.textAlign = 'start';
   }
 
   /**
-   * Screen 7: Instructions Screen
+   * Screen 7: Modernized "HOW TO PLAY: MASTER THE DAVE PROTOCOL" Screen
    */
   renderInstructions(ctx, width, height, selectedIndex, buttons) {
-    ctx.fillStyle = '#060d1a';
+    // 1. Layered Atmospheric Background with Radial Gradient
+    const bgGradient = ctx.createRadialGradient(
+      width * 0.5, height * 0.4, 10,
+      width * 0.5, height * 0.5, width * 0.75
+    );
+    bgGradient.addColorStop(0, '#0c1b33');
+    bgGradient.addColorStop(0.5, '#080d1a');
+    bgGradient.addColorStop(1, '#03050a');
+
+    ctx.fillStyle = bgGradient;
     ctx.fillRect(0, 0, width, height);
 
-    const boxW = 340;
-    const boxH = 200;
-    const boxX = (width - boxW) / 2;
-    const boxY = (height - boxH) / 2;
+    // 2. Perspective Floor Grid
+    ctx.save();
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.05)';
+    ctx.lineWidth = 1;
+    const horizonY = 145;
+    const vpX = 200;
+    for (let angle = -1.2; angle <= 1.2; angle += 0.3) {
+      ctx.beginPath();
+      ctx.moveTo(vpX, horizonY);
+      ctx.lineTo(vpX + Math.tan(angle) * (height - horizonY) * 2.2, height);
+      ctx.stroke();
+    }
+    const hGridLines = [160, 180, 205, 235];
+    for (let y of hGridLines) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(width, y);
+      ctx.stroke();
+    }
+    ctx.restore();
 
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(boxX, boxY, boxW, boxH);
+    // 3. Floating Background Particles
+    ctx.save();
+    for (let i = 0; i < this.bgParticles.length; i++) {
+      const p = this.bgParticles[i];
+      const pulseAlpha = 0.2 + 0.5 * (Math.sin(this.animTimer * 3 + p.phase) * 0.5 + 0.5);
+      ctx.globalAlpha = pulseAlpha;
+      ctx.fillStyle = p.color;
+      ctx.fillRect(Math.round(p.x), Math.round(p.y), p.size, p.size);
+    }
+    ctx.restore();
 
-    ctx.strokeStyle = '#38bdf8';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(boxX, boxY, boxW, boxH);
+    // 4. Outer Cyber Frame & Corner L-Brackets
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.22)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(8, 8, width - 16, height - 16);
 
-    ctx.fillStyle = '#38bdf8';
-    ctx.font = '10px "Press Start 2P", monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText('*** INSTRUCTIONS ***', width / 2, boxY + 22);
+    ctx.fillStyle = UITokens.primary;
+    ctx.fillRect(8, 8, 6, 2); ctx.fillRect(8, 8, 2, 6);
+    ctx.fillRect(width - 14, 8, 6, 2); ctx.fillRect(width - 10, 8, 2, 6);
+    ctx.fillRect(8, height - 10, 6, 2); ctx.fillRect(8, height - 14, 2, 6);
+    ctx.fillRect(width - 14, height - 10, 6, 2); ctx.fillRect(width - 10, height - 14, 2, 6);
 
+    // 5. Animated Header: "HOW TO PLAY" & "MASTER THE DAVE PROTOCOL"
+    const headerEnter = Math.min(1, this.instructionsTimer / 0.45);
+    const headerEase = UIAnimation.easeOutBack(headerEnter, 1.1);
+    const headerY = UIAnimation.lerp(12, 22, headerEase);
+    const headerAlpha = UIAnimation.easeOutQuad(headerEnter);
+
+    ctx.save();
+    ctx.globalAlpha = headerAlpha;
+    UITypography.drawText(ctx, 'HOW TO PLAY', width / 2, headerY, {
+      size: '11px',
+      color: UITokens.gold,
+      align: 'center',
+      shadow: true,
+      glow: true,
+      glowColor: UITokens.goldGlow
+    });
+
+    UITypography.drawText(ctx, 'MASTER THE DAVE PROTOCOL', width / 2, headerY + 14, {
+      size: '7px',
+      color: UITokens.primary,
+      align: 'center',
+      shadow: false
+    });
+
+    // Header divider line
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(width / 2 - 120, headerY + 21);
+    ctx.lineTo(width / 2 - 12, headerY + 21);
+    ctx.moveTo(width / 2 + 12, headerY + 21);
+    ctx.lineTo(width / 2 + 120, headerY + 21);
+    ctx.stroke();
+
+    ctx.fillStyle = UITokens.gold;
     ctx.font = '6px "Press Start 2P", monospace';
-    ctx.textAlign = 'start';
-    const leftX = boxX + 24;
-    let lineY = boxY + 44;
+    ctx.fillText('✦', width / 2, headerY + 21);
+    ctx.restore();
 
-    const instructions = [
-      { key: 'A / Left Arrow', desc: '= Move Left' },
-      { key: 'D / Right Arrow', desc: '= Move Right' },
-      { key: 'Space / W / Up', desc: '= Jump & Stomp' },
-      { key: 'F', desc: '= Shoot Blaster Bolt' },
-      { key: 'P / ESC', desc: '= Pause Menu' }
+    // 6. Left Card: Combat Controls & 3D Keycaps with Stagger Entry
+    const leftEnter = Math.min(1, Math.max(0, (this.instructionsTimer - 0.1) / 0.35));
+    const leftEase = UIAnimation.easeOutBack(leftEnter, 1.05);
+    const leftOffsetY = UIAnimation.lerp(12, 0, leftEase);
+    const leftAlpha = UIAnimation.easeOutQuad(leftEnter);
+
+    const leftCardX = 18;
+    const leftCardY = 48 + leftOffsetY;
+    const leftCardW = 176;
+    const leftCardH = 144;
+
+    ctx.save();
+    ctx.globalAlpha = leftAlpha;
+    ctx.fillStyle = 'rgba(11, 17, 32, 0.94)';
+    ctx.fillRect(leftCardX, leftCardY, leftCardW, leftCardH);
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(leftCardX, leftCardY, leftCardW, leftCardH);
+
+    // Header tag
+    UITypography.drawText(ctx, '🎮 TACTICAL CONTROLS', leftCardX + leftCardW / 2, leftCardY + 12, {
+      size: '6.5px',
+      color: UITokens.primary,
+      align: 'center',
+      shadow: true
+    });
+
+    // Control rows with 3D Keycaps
+    const controls = [
+      { keys: ['A', 'D'], label: 'MOVE LEFT / RIGHT', sub: 'or [◄] [►] ARROWS' },
+      { keys: ['SPACE', 'W'], label: 'JUMP / HIGH JUMP', sub: 'or [▲] UP ARROW' },
+      { keys: ['F'], label: 'PLASMA BLASTER', sub: 'SHOOT ENEMIES' },
+      { keys: ['P', 'ESC'], label: 'PAUSE / RESUME', sub: 'QUICK TOGGLE' }
     ];
 
-    for (const item of instructions) {
-      ctx.fillStyle = '#facc15';
-      ctx.fillText(item.key.padEnd(18, ' '), leftX, lineY);
-      ctx.fillStyle = '#e2e8f0';
-      ctx.fillText(item.desc, leftX + 110, lineY);
-      lineY += 14;
+    let rowY = leftCardY + 24;
+    for (let i = 0; i < controls.length; i++) {
+      const c = controls[i];
+      const keyEnter = Math.min(1, Math.max(0, (this.instructionsTimer - 0.15 - i * 0.05) / 0.25));
+      const keyScale = keyEnter > 0 ? UIAnimation.easeOutBack(keyEnter, 1.15) : 0;
+
+      let kx = leftCardX + 8;
+      for (let k = 0; k < c.keys.length; k++) {
+        const keyText = c.keys[k];
+        const kw = keyText.length > 2 ? 38 : 16;
+        if (keyScale > 0) {
+          this.drawKeycap(ctx, keyText, kx, rowY, kw, 13, keyScale);
+        }
+        kx += kw + 4;
+      }
+
+      ctx.font = '6px "Press Start 2P", monospace';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillStyle = UITokens.textPrimary;
+      ctx.fillText(c.label, leftCardX + 78, rowY + 1);
+
+      ctx.fillStyle = UITokens.textMuted;
+      ctx.font = '5px "Press Start 2P", monospace';
+      ctx.fillText(c.sub, leftCardX + 78, rowY + 9);
+
+      rowY += 24;
     }
 
-    ctx.fillStyle = '#4ade80';
-    ctx.fillText('GOAL: Find Golden Trophy to open Exit Portal!', leftX, lineY + 6);
+    ctx.fillStyle = UITokens.success;
+    ctx.font = '5.5px "Press Start 2P", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('⚡ BEACONS AUTO-SAVE MIDWAY', leftCardX + leftCardW / 2, leftCardY + leftCardH - 10);
+    ctx.restore();
 
+    // 7. Right Card: Objectives & Tactical Tips with Stagger Entry
+    const rightEnter = Math.min(1, Math.max(0, (this.instructionsTimer - 0.2) / 0.35));
+    const rightEase = UIAnimation.easeOutBack(rightEnter, 1.05);
+    const rightOffsetY = UIAnimation.lerp(12, 0, rightEase);
+    const rightAlpha = UIAnimation.easeOutQuad(rightEnter);
+
+    const rightCardX = 202;
+    const rightCardY = 48 + rightOffsetY;
+    const rightCardW = 180;
+    const rightCardH = 144;
+
+    ctx.save();
+    ctx.globalAlpha = rightAlpha;
+    ctx.fillStyle = 'rgba(11, 17, 32, 0.94)';
+    ctx.fillRect(rightCardX, rightCardY, rightCardW, rightCardH);
+    ctx.strokeStyle = 'rgba(168, 85, 247, 0.35)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(rightCardX, rightCardY, rightCardW, rightCardH);
+
+    UITypography.drawText(ctx, '🎯 MISSION DIRECTIVES', rightCardX + rightCardW / 2, rightCardY + 11, {
+      size: '6.5px',
+      color: UITokens.secondary,
+      align: 'center',
+      shadow: true
+    });
+
+    const objectives = [
+      { tag: '1. EXPLORE', desc: 'Navigate platforms, hazards & spike pits.', col: UITokens.primary },
+      { tag: '2. COLLECT', desc: 'Coins (+100), Gems (+250/+500 pts).', col: UITokens.gold },
+      { tag: '3. SURVIVE', desc: 'Stomp guards (+200) or fire blaster (+200).', col: UITokens.danger },
+      { tag: '4. ESCAPE', desc: 'Collect Golden Trophy (+1000) to open Exit!', col: UITokens.success }
+    ];
+
+    let objY = rightCardY + 21;
+    for (let item of objectives) {
+      ctx.font = '6px "Press Start 2P", monospace';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillStyle = item.col;
+      ctx.fillText(item.tag, rightCardX + 8, objY);
+
+      ctx.fillStyle = UITokens.textSecondary;
+      ctx.font = '5px "Press Start 2P", monospace';
+      ctx.fillText(item.desc, rightCardX + 8, objY + 7);
+      objY += 16;
+    }
+
+    ctx.strokeStyle = 'rgba(168, 85, 247, 0.3)';
+    ctx.beginPath();
+    ctx.moveTo(rightCardX + 10, objY + 2);
+    ctx.lineTo(rightCardX + rightCardW - 10, objY + 2);
+    ctx.stroke();
+
+    UITypography.drawText(ctx, '💡 TACTICAL TIPS', rightCardX + rightCardW / 2, objY + 10, {
+      size: '6px',
+      color: UITokens.gold,
+      align: 'center',
+      shadow: false
+    });
+
+    const tips = [
+      '• Stomp enemies from above (+200 pts).',
+      '• Jump near ledge edges for max clearance.',
+      '• Golden Trophy unlocks the exit door.',
+      '• Checkpoints auto-save mid-level progress.'
+    ];
+
+    let tipY = objY + 19;
+    for (let t = 0; t < tips.length; t++) {
+      const tipEnter = Math.min(1, Math.max(0, (this.instructionsTimer - 0.3 - t * 0.05) / 0.25));
+      ctx.globalAlpha = rightAlpha * UIAnimation.easeOutQuad(tipEnter);
+      ctx.fillStyle = UITokens.textMuted;
+      ctx.font = '5px "Press Start 2P", monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(tips[t], rightCardX + 8, tipY);
+      tipY += 8.5;
+    }
+    ctx.restore();
+
+    // 8. Back Button & Footer Legend
     for (let i = 0; i < buttons.length; i++) {
+      buttons[i].update(0.016, i === selectedIndex);
       buttons[i].render(ctx, i === selectedIndex, false);
     }
+
+    UITypography.drawText(ctx, '[ENTER / SPACE / ESC] RETURN TO MAIN MENU', width / 2 + 40, height - 16, {
+      size: '6px',
+      color: UITokens.textMuted,
+      align: 'center',
+      shadow: true
+    });
   }
 
   /**
-   * Screen 8: Settings Screen
+   * Helper to draw a modern 3D keycap badge
+   */
+  drawKeycap(ctx, text, x, y, w, h, scale = 1.0) {
+    ctx.save();
+    if (scale !== 1.0) {
+      ctx.translate(x + w / 2, y + h / 2);
+      ctx.scale(scale, scale);
+      ctx.translate(-(x + w / 2), -(y + h / 2));
+    }
+
+    ctx.fillStyle = '#020617';
+    ctx.fillRect(x, y + 2, w, h);
+
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(x, y, w, h);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.fillRect(x + 1, y + 1, w - 2, 1);
+
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x, y, w, h);
+
+    ctx.font = '6px "Press Start 2P", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillText(text, x + w / 2, y + h / 2);
+    ctx.restore();
+  }
+
+  /**
+   * Screen 8: Modernized "SETTINGS: CONFIGURE YOUR EXPERIENCE" Screen
    */
   renderSettings(ctx, width, height, selectedIndex, buttons) {
-    ctx.fillStyle = '#060d1a';
+    // 1. Layered Atmospheric Background with Radial Gradient
+    const bgGradient = ctx.createRadialGradient(
+      width * 0.5, height * 0.4, 10,
+      width * 0.5, height * 0.5, width * 0.75
+    );
+    bgGradient.addColorStop(0, '#1a0c2e');
+    bgGradient.addColorStop(0.5, '#080d1a');
+    bgGradient.addColorStop(1, '#03050a');
+
+    ctx.fillStyle = bgGradient;
     ctx.fillRect(0, 0, width, height);
 
-    const boxW = 320;
-    const boxH = 190;
-    const boxX = (width - boxW) / 2;
-    const boxY = (height - boxH) / 2;
-
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(boxX, boxY, boxW, boxH);
-
-    ctx.strokeStyle = '#a855f7';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(boxX, boxY, boxW, boxH);
-
-    ctx.fillStyle = '#c084fc';
-    ctx.font = '10px "Press Start 2P", monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText('*** SETTINGS ***', width / 2, boxY + 22);
-
-    ctx.font = '7px "Press Start 2P", monospace';
-    ctx.textAlign = 'start';
-    const leftX = boxX + 24;
-    let lineY = boxY + 46;
-
-    ctx.fillStyle = '#e2e8f0';
-    ctx.fillText(`SOUND FX : ${this.settings.soundFX ? 'ON' : 'OFF'}`, leftX, lineY);
-    lineY += 16;
-    ctx.fillText(`MUSIC    : ${this.settings.music ? 'ON' : 'OFF'}`, leftX, lineY);
-    lineY += 16;
-    ctx.fillText(`CRT SCAN : ${this.settings.crtFilter ? 'ON' : 'OFF'}`, leftX, lineY);
-
-    for (let i = 0; i < buttons.length; i++) {
-      buttons[i].render(ctx, i === selectedIndex, false);
+    // 2. Perspective Floor Grid
+    ctx.save();
+    ctx.strokeStyle = 'rgba(168, 85, 247, 0.06)';
+    ctx.lineWidth = 1;
+    const horizonY = 145;
+    const vpX = 200;
+    for (let angle = -1.2; angle <= 1.2; angle += 0.3) {
+      ctx.beginPath();
+      ctx.moveTo(vpX, horizonY);
+      ctx.lineTo(vpX + Math.tan(angle) * (height - horizonY) * 2.2, height);
+      ctx.stroke();
     }
+    const hGridLines = [160, 180, 205, 235];
+    for (let y of hGridLines) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(width, y);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // 3. Floating Background Particles
+    ctx.save();
+    for (let i = 0; i < this.bgParticles.length; i++) {
+      const p = this.bgParticles[i];
+      const pulseAlpha = 0.2 + 0.5 * (Math.sin(this.animTimer * 3 + p.phase) * 0.5 + 0.5);
+      ctx.globalAlpha = pulseAlpha;
+      ctx.fillStyle = p.color;
+      ctx.fillRect(Math.round(p.x), Math.round(p.y), p.size, p.size);
+    }
+    ctx.restore();
+
+    // 4. Outer Cyber Frame & Corner L-Brackets
+    ctx.strokeStyle = 'rgba(168, 85, 247, 0.25)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(8, 8, width - 16, height - 16);
+
+    ctx.fillStyle = UITokens.secondary;
+    ctx.fillRect(8, 8, 6, 2); ctx.fillRect(8, 8, 2, 6);
+    ctx.fillRect(width - 14, 8, 6, 2); ctx.fillRect(width - 10, 8, 2, 6);
+    ctx.fillRect(8, height - 10, 6, 2); ctx.fillRect(8, height - 14, 2, 6);
+    ctx.fillRect(width - 14, height - 10, 6, 2); ctx.fillRect(width - 10, height - 14, 2, 6);
+
+    // 5. Header: "SETTINGS" & "CONFIGURE YOUR EXPERIENCE"
+    const headerEnter = Math.min(1, this.settingsTimer / 0.45);
+    const headerEase = UIAnimation.easeOutBack(headerEnter, 1.1);
+    const headerY = UIAnimation.lerp(12, 22, headerEase);
+    const headerAlpha = UIAnimation.easeOutQuad(headerEnter);
+
+    ctx.save();
+    ctx.globalAlpha = headerAlpha;
+    UITypography.drawText(ctx, 'SETTINGS', width / 2, headerY, {
+      size: '11px',
+      color: UITokens.gold,
+      align: 'center',
+      shadow: true,
+      glow: true,
+      glowColor: UITokens.goldGlow
+    });
+
+    UITypography.drawText(ctx, 'CONFIGURE YOUR EXPERIENCE', width / 2, headerY + 14, {
+      size: '7px',
+      color: UITokens.secondary,
+      align: 'center',
+      shadow: false
+    });
+
+    // Header divider line
+    ctx.strokeStyle = 'rgba(168, 85, 247, 0.35)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(width / 2 - 120, headerY + 21);
+    ctx.lineTo(width / 2 - 12, headerY + 21);
+    ctx.moveTo(width / 2 + 12, headerY + 21);
+    ctx.lineTo(width / 2 + 120, headerY + 21);
+    ctx.stroke();
+
+    ctx.fillStyle = UITokens.gold;
+    ctx.font = '6px "Press Start 2P", monospace';
+    ctx.fillText('✦', width / 2, headerY + 21);
+    ctx.restore();
+
+    // 6. Interactive Setting Rows with Stagger Animation
+    const settingRows = [
+      {
+        id: 'toggle_sfx',
+        icon: '🔊',
+        title: 'SOUND EFFECTS',
+        desc: 'Blaster plasma, stomp impacts, gem pickups & jump audio',
+        state: this.settings.soundFX,
+        btnIndex: 0
+      },
+      {
+        id: 'toggle_music',
+        icon: '🎵',
+        title: 'BGM CHIPTUNE',
+        desc: 'Atmospheric retro arcade background soundtrack',
+        state: this.settings.music,
+        btnIndex: 1
+      },
+      {
+        id: 'toggle_crt',
+        icon: '📺',
+        title: 'CRT SCANLINES',
+        desc: 'Authentic retro arcade cabinet scanlines & curvature',
+        state: this.settings.crtFilter,
+        btnIndex: 2
+      }
+    ];
+
+    const rowX = 18;
+    const rowW = 364;
+    const rowH = 34;
+
+    for (let i = 0; i < settingRows.length; i++) {
+      const row = settingRows[i];
+      const rowEnter = Math.min(1, Math.max(0, (this.settingsTimer - 0.08 * i) / 0.3));
+      const rowEase = UIAnimation.easeOutBack(rowEnter, 1.05);
+      const rowOffsetY = UIAnimation.lerp(10, 0, rowEase);
+      const rowAlpha = UIAnimation.easeOutQuad(rowEnter);
+
+      const ry = 48 + i * 38 + rowOffsetY;
+      const isFocused = (selectedIndex === row.btnIndex);
+
+      ctx.save();
+      ctx.globalAlpha = rowAlpha;
+      ctx.fillStyle = isFocused ? 'rgba(30, 41, 59, 0.95)' : 'rgba(11, 17, 32, 0.9)';
+      ctx.fillRect(rowX, ry, rowW, rowH);
+
+      ctx.strokeStyle = isFocused ? UITokens.secondary : '#1e293b';
+      ctx.lineWidth = isFocused ? 2 : 1;
+      if (isFocused) {
+        ctx.shadowColor = UITokens.secondaryGlow;
+        ctx.shadowBlur = 8;
+      }
+      ctx.strokeRect(rowX, ry, rowW, rowH);
+      ctx.shadowBlur = 0;
+
+      ctx.font = '7px "Press Start 2P", monospace';
+      ctx.textBaseline = 'top';
+      ctx.textAlign = 'left';
+      ctx.fillStyle = isFocused ? '#ffffff' : UITokens.textPrimary;
+      ctx.fillText(`${row.icon} ${row.title}`, rowX + 10, ry + 7);
+
+      ctx.font = '5.5px "Press Start 2P", monospace';
+      ctx.fillStyle = UITokens.textMuted;
+      ctx.fillText(row.desc, rowX + 10, ry + 20);
+
+      if (isFocused) {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(rowX, ry, 3, 2);
+        ctx.fillRect(rowX + rowW - 3, ry, 3, 2);
+        ctx.fillRect(rowX, ry + rowH - 2, 3, 2);
+        ctx.fillRect(rowX + rowW - 3, ry + rowH - 2, 3, 2);
+      }
+      ctx.restore();
+    }
+
+    // Hardware Audio Status Banner
+    const statusY = 162;
+    ctx.save();
+    ctx.fillStyle = 'rgba(11, 17, 32, 0.85)';
+    ctx.fillRect(rowX, statusY, rowW, 26);
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(rowX, statusY, rowW, 26);
+
+    UITypography.drawText(ctx, '⚡ HARDWARE SYNTH: WEB AUDIO API READY', rowX + rowW / 2, statusY + 8, {
+      size: '6px',
+      color: UITokens.primary,
+      align: 'center',
+      shadow: false
+    });
+    UITypography.drawText(ctx, 'Real-time procedural 8-bit chiptune synthesis • Zero lag', rowX + rowW / 2, statusY + 18, {
+      size: '5px',
+      color: UITokens.textMuted,
+      align: 'center',
+      shadow: false
+    });
+    ctx.restore();
+
+    // 7. Render Buttons (Toggle Buttons on Right + Back Button on Bottom Left)
+    for (let i = 0; i < buttons.length; i++) {
+      const btn = buttons[i];
+      btn.update(0.016, i === selectedIndex);
+
+      if (btn.id === 'toggle_sfx') {
+        btn.label = this.settings.soundFX ? 'SOUND FX' : 'SOUND FX';
+        btn.badge = this.settings.soundFX ? '[ ON ]' : '[ OFF ]';
+        btn.customColor = this.settings.soundFX ? UITokens.success : UITokens.disabled;
+      } else if (btn.id === 'toggle_music') {
+        btn.label = this.settings.music ? 'MUSIC' : 'MUSIC';
+        btn.badge = this.settings.music ? '[ ON ]' : '[ OFF ]';
+        btn.customColor = this.settings.music ? UITokens.success : UITokens.disabled;
+      } else if (btn.id === 'toggle_crt') {
+        btn.label = this.settings.crtFilter ? 'CRT FILTER' : 'CRT FILTER';
+        btn.badge = this.settings.crtFilter ? '[ ON ]' : '[ OFF ]';
+        btn.customColor = this.settings.crtFilter ? UITokens.success : UITokens.disabled;
+      }
+
+      btn.render(ctx, i === selectedIndex, false);
+    }
+
+    // 8. Footer Legend
+    UITypography.drawText(ctx, '[▲/▼] NAVIGATE ROWS   [ENTER/SPACE] TOGGLE   [ESC] BACK', width / 2 + 40, height - 16, {
+      size: '6px',
+      color: UITokens.textMuted,
+      align: 'center',
+      shadow: true
+    });
   }
 
   /**
-   * Screen 9: Quit Farewell
+   * Screen 9: Quit Screen
    */
   renderQuit(ctx, width, height, selectedIndex, buttons) {
-    ctx.fillStyle = '#05070f';
+    ctx.fillStyle = UITokens.bgApp;
     ctx.fillRect(0, 0, width, height);
 
-    ctx.fillStyle = '#facc15';
-    ctx.font = '11px "Press Start 2P", monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText('*** DANGEROUS ADVENTURE ***', width / 2, height / 2 - 30);
+    UITypography.drawText(ctx, '*** DANGEROUS ADVENTURE ***', width / 2, height / 2 - 30, {
+      size: '11px',
+      color: UITokens.gold,
+      align: 'center'
+    });
 
-    ctx.fillStyle = '#38bdf8';
-    ctx.font = '8px "Press Start 2P", monospace';
-    ctx.fillText('THANKS FOR PLAYING!', width / 2, height / 2 - 10);
+    UITypography.drawText(ctx, 'THANKS FOR PLAYING!', width / 2, height / 2 - 10, {
+      size: '8px',
+      color: UITokens.primary,
+      align: 'center'
+    });
 
     for (let i = 0; i < buttons.length; i++) {
+      buttons[i].update(0.016, i === selectedIndex);
       buttons[i].render(ctx, i === selectedIndex, false);
     }
-
-    ctx.textAlign = 'start';
   }
 
   /**
@@ -476,3 +2477,4 @@ export class UIManager {
     }
   }
 }
+
