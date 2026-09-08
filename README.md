@@ -1,40 +1,41 @@
 # 2D Retro Platformer Game (Dave-Inspired Mini-Project)
 
-An authentic 2D retro platformer engine built with **HTML5 Canvas, Vanilla JavaScript (ES6+), and CSS3**. Inspired by classic DOS platformers such as *Dangerous Dave*, featuring original pixel art graphics, axis-separated AABB physics, tile-based level collision, and retro arcade presentation.
+An authentic 2D retro platformer engine built with **HTML5 Canvas, Vanilla JavaScript (ES6+), and CSS3**. Inspired by classic DOS platformers such as *Dangerous Dave*, featuring original pixel art graphics, axis-separated AABB physics, tile-based level collision, smooth horizontal camera side-scrolling, hazards, collectibles, and retro arcade presentation.
 
 ---
 
 ## 🎮 Features Implemented
 
-### 1. Enhanced Player Character System
-- **Comprehensive State Machine**:
-  - `IDLE`: Stationary grounded state with classic standing pose.
-  - `WALKING`: Active left/right locomotion with 3-frame animated walk cycle.
-  - `JUMPING`: Ascending in-air state (`vy < 0`) with bent knees and raised arms.
-  - `FALLING`: Descending in-air state (`vy >= 0`) with extended fall pose.
-  - `DEAD`: Death animation foundation (upward hop, tumbling spin with shocked "X" eyes, input lock, and auto-respawn timer).
-- **Directional Facing**:
-  - Seamless horizontal mirroring (`LEFT` / `RIGHT`) for all animations.
-- **Responsive Platformer Feel**:
-  - Snappy acceleration (`1100 px/s²`) and crisp friction stopping (`1300 px/s²`, no ice-skating).
-  - **Coyote Time** (90ms grace period to jump after stepping off a platform edge).
-  - **Jump Buffering** (120ms pre-landing jump window).
-  - **Variable Jump Height** (tap jump for a short hop, hold jump for full height).
-  - Strict anti-air jump protection (no infinite jumps).
+### 1. Complete Playable Level 1 Design ([src/map.js](file:///c:/Users/shrey/OneDrive/Desktop/dave_game/src/map.js))
+- **70×15 Tile Map Layout (1120px wide)**:
+  - **Starting Area (Cols 0..9)**: Safe spawn zone, intro jumping platform, and first Sapphire Gem.
+  - **Section 1: The Fire Pit & Stepping Stones (Cols 10..22)**: Gentle gap challenge, high platform, and first enemy station marker.
+  - **Section 2: Multi-Tier Platforms & Spikes (Cols 23..44)**: Spike hazard pit, elevated wood girder platforms, secret high ledge, and gems.
+  - **Section 3: The High Trophy Chamber (Cols 45..58)**: Lava pit crossing leading up to the high altar holding the **Golden Trophy (Key Item)**.
+  - **Section 4: The Goal & Exit Portal (Cols 59..69)**: Victory pillars and the arched golden exit door.
+- **Fair & Achievable Level Geometry**:
+  - Max jump height is 43px (~2.7 tiles); all platform steps are <= 2 tiles high (32px).
+  - Horizontal jump reach is ~84px; all jump gaps are <= 3.5 tiles (56px) for fair, satisfying platforming.
 
-### 2. Physics & Level Engine
-- **Axis-Separated AABB Collision Solver**:
-  - Independent X and Y axis collision resolution against solid tile maps.
-  - Guarantees zero clipping through floors or walls, smooth traversal under overhead platforms, and solid ceiling bonks.
-- **25×15 Tile Map Layout (400×240 native retro resolution)**:
-  - Procedurally textured EGA-style red bricks with mortar lines.
-  - Metallic steel blocks with corner rivets.
-  - Floating platforms, ledges, and steps.
+### 2. Smooth Horizontal Camera / Side-Scrolling ([src/camera.js](file:///c:/Users/shrey/OneDrive/Desktop/dave_game/src/camera.js))
+- Smooth horizontal lerp camera that centers on the player as they traverse the world.
+- Viewport boundary clamping (`0` to `720px`).
+- Subpixel rounding (`Math.round`) to eliminate pixel jitter and shimmering.
+- Viewport tile culling in the renderer for high-performance 60 FPS gameplay.
 
-### 3. Retro Presentation & Diagnostics
-- **Arcade Bezel & Scanlines**: Responsive retro cabinet frame with CRT scanline overlays.
-- **Authentic Top HUD**: Top banner with `SCORE`, `LEVEL`, and `DAVES` (lives).
-- **Developer / Viva Diagnostics**: Press `B` to toggle live telemetry (State, Facing, Pos, Vel, Grounded, FPS, and hitboxes).
+### 3. Collectibles, Hazards, and Exit Mechanics ([src/physics.js](file:///c:/Users/shrey/OneDrive/Desktop/dave_game/src/physics.js))
+- **Sapphire Gems**: Shimmering blue gems (+100 pts) placed across risk/reward routes.
+- **Golden Trophy (Key Item)**: Classic Dave chalice item (+1000 pts) needed to unlock the exit door.
+- **Hazards (Fire & Spikes)**: Animated flickering fire and sharp spikes that trigger the death sequence on touch.
+- **Exit Door & Objective Flow**:
+  - Approaching the exit door without the trophy prompts: *"GO FIND THE GOLDEN TROPHY FIRST!"*.
+  - Reaching the door with the trophy triggers: *"LEVEL 1 COMPLETE! EXCELLENT!"*.
+
+### 4. Player Character System ([src/player.js](file:///c:/Users/shrey/OneDrive/Desktop/dave_game/src/player.js))
+- Complete state machine: `IDLE`, `WALKING`, `JUMPING`, `FALLING`, `DEAD`.
+- Directional facing (`LEFT` / `RIGHT`) with sprite flipping.
+- Coyote time (90ms) and jump buffering (120ms).
+- Anti-infinite jump prevention and zero platform clipping.
 
 ---
 
@@ -52,33 +53,11 @@ An authentic 2D retro platformer engine built with **HTML5 Canvas, Vanilla JavaS
 
 ## 🚀 How to Run the Game
 
-### Method 1: Using Python (Recommended)
-```bash
-python -m http.server 8000
-```
-Open your browser and navigate to:
-```
-http://localhost:8000
-```
-
-### Method 2: Using Node.js
-```bash
-npx serve .
-```
-
----
-
-## 📂 Project Structure
-
-```
-dave_game/
-├── index.html         # HTML5 canvas container and arcade cabinet wrapper
-├── style.css          # Retro styling, arcade frame, and CRT scanlines
-├── README.md          # Project documentation and guide
-└── src/
-    ├── main.js        # Engine initialization, game loop, and HUD renderer
-    ├── input.js       # Keyboard event manager and input state handler
-    ├── player.js      # Player state machine, physics parameters, and sprite renderer
-    ├── map.js         # Tile grid definitions, layout, and pixel textures
-    └── physics.js     # Axis-separated AABB tile collision solver
-```
+1. Start a local server:
+   ```powershell
+   python -m http.server 8000
+   ```
+2. Navigate in browser to:
+   ```
+   http://localhost:8000
+   ```

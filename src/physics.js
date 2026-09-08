@@ -1,6 +1,7 @@
 /**
  * Physics & Collision Engine
- * Implements axis-separated AABB collision detection against tile maps
+ * Implements axis-separated AABB collision detection against tile maps,
+ * hazard triggers, collectible pickup detection, and exit door checks.
  */
 
 import { PlayerState } from './player.js';
@@ -11,21 +12,28 @@ export class PhysicsEngine {
   }
 
   /**
-   * Updates player physics, applies gravity, moves player, and resolves all collisions
+   * Updates player physics, applies gravity, moves player, and resolves all collisions and triggers
    * @param {Player} player 
    * @param {number} dt Delta time in seconds
+   * @returns {Object} Frame interaction events (collectedItems, hitHazard, reachedExit)
    */
   update(player, dt) {
+    const events = {
+      collectedItems: [],
+      hitHazard: false,
+      reachedExit: false
+    };
+
     // 1. If Dead, apply free-fall gravity for death animation without tile collision
     if (player.state === PlayerState.DEAD) {
       player.y += player.vy * dt;
       player.vy = Math.min(player.vy + player.gravity * dt, player.terminalVelocity);
-      return;
+      return events;
     }
 
     const tileSize = this.map.tileSize;
 
-    // 2. Resolve Horizontal Movement & Collisions
+    // 2. Resolve Horizontal Movement & Solid Collisions
     player.x += player.vx * dt;
 
     let minCol = Math.floor(player.x / tileSize);
@@ -53,7 +61,7 @@ export class PhysicsEngine {
       }
     }
 
-    // 3. Apply Gravity & Resolve Vertical Movement & Collisions
+    // 3. Apply Gravity & Resolve Vertical Movement & Solid Collisions
     player.vy = Math.min(player.vy + player.gravity * dt, player.terminalVelocity);
     player.y += player.vy * dt;
 
@@ -99,7 +107,7 @@ export class PhysicsEngine {
       player.isGrounded = groundUnderfoot;
     }
 
-    // 4. Screen Boundary Enforcements (Alive state only)
+    // 4. Screen / Map Boundary Enforcements (Alive state only)
     const maxX = this.map.cols * tileSize - player.width;
     const maxY = this.map.rows * tileSize - player.height;
 
@@ -119,5 +127,35 @@ export class PhysicsEngine {
       player.vy = 0;
       player.isGrounded = true;
     }
+
+    // 5. Trigger Queries (Hazards, Collectibles, Exit Portal)
+    minCol = Math.floor(player.x / tileSize);
+    maxCol = Math.floor((player.x + player.width - 0.001) / tileSize);
+    minRow = Math.floor(player.y / tileSize);
+    maxRow = Math.floor((player.y + player.height - 0.001) / tileSize);
+
+    for (let r = minRow; r <= maxRow; r++) {
+      for (let c = minCol; c <= maxCol; c++) {
+        // A. Hazard Check
+        if (this.map.isHazard(c, r)) {
+          player.die();
+          events.hitHazard = true;
+          return events;
+        }
+
+        // B. Collectible Check
+        const item = this.map.collectTile(c, r);
+        if (item) {
+          events.collectedItems.push(item);
+        }
+
+        // C. Exit Portal Check
+        if (this.map.isExit(c, r)) {
+          events.reachedExit = true;
+        }
+      }
+    }
+
+    return events;
   }
 }
