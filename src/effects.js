@@ -126,6 +126,27 @@ export class EffectManager {
   }
 
   /**
+   * Spawns small cyan sparks when a projectile hits a solid wall
+   */
+  addWallImpact(x, y, direction = 1) {
+    for (let i = 0; i < 4; i++) {
+      const angle = (direction > 0 ? Math.PI : 0) + (Math.random() - 0.5) * 1.2;
+      const speed = 20 + Math.random() * 30;
+      this.effects.push({
+        type: 'SPARKLE',
+        x: x,
+        y: y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        color: i % 2 === 0 ? '#38bdf8' : '#ffffff',
+        timer: 0,
+        duration: 0.25,
+        size: 1
+      });
+    }
+  }
+
+  /**
    * Spawns celebratory victory confetti shower
    */
   addVictoryConfetti(x, y) {

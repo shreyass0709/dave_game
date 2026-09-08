@@ -13,18 +13,20 @@ export class Camera {
 
     // Camera smoothing factor (0.1 = smooth lerp, 1.0 = instant lock)
     this.smoothSpeed = 0.12;
+    this.lookAheadDistance = 24; // Forward visibility lead in player's facing direction
   }
 
   /**
-   * Follows player smoothly within map boundaries
+   * Follows player smoothly within map boundaries with directional lookahead
    * @param {Player} player 
    * @param {number} mapWidth Total width of the map in pixels
    * @param {number} dt Delta time
    */
   update(player, mapWidth, dt) {
-    // Target position centers the player horizontally
+    // Target position centers the player horizontally with directional lead
     const playerCenterX = player.x + player.width / 2;
-    this.targetX = playerCenterX - this.viewportWidth / 2;
+    const leadOffset = player.facing === 1 ? this.lookAheadDistance : -this.lookAheadDistance;
+    this.targetX = playerCenterX - this.viewportWidth / 2 + leadOffset;
 
     // Smooth linear interpolation (lerp) towards target
     this.x += (this.targetX - this.x) * Math.min(1, this.smoothSpeed * (dt * 60));
@@ -40,7 +42,9 @@ export class Camera {
    */
   snapTo(player, mapWidth) {
     const playerCenterX = player.x + player.width / 2;
-    this.x = playerCenterX - this.viewportWidth / 2;
+    const leadOffset = player.facing === 1 ? this.lookAheadDistance : -this.lookAheadDistance;
+    this.targetX = playerCenterX - this.viewportWidth / 2 + leadOffset;
+    this.x = this.targetX;
     const maxCameraX = Math.max(0, mapWidth - this.viewportWidth);
     if (this.x < 0) this.x = 0;
     if (this.x > maxCameraX) this.x = maxCameraX;

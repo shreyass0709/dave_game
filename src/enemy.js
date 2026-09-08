@@ -155,9 +155,10 @@ export class Enemy {
   /**
    * Check collision against player
    * @param {Player} player 
+   * @param {number} dt Delta time
    * @returns {'NONE' | 'STOMP' | 'DAMAGE'}
    */
-  checkPlayerCollision(player) {
+  checkPlayerCollision(player, dt = 0.016) {
     if (this.state === EnemyState.DEAD || player.state === 'DEAD') {
       return 'NONE';
     }
@@ -171,11 +172,13 @@ export class Enemy {
     }
 
     // Check if player landed on top of enemy (Stomp Defeat)
-    // Player's feet must be near top of enemy and moving downwards
+    // Dynamic stomp tolerance prevents tunneling on high falls
     const playerBottom = player.y + player.height;
     const enemyTop = this.y;
+    const prevPlayerBottom = playerBottom - player.vy * dt;
+    const maxStompDepth = Math.max(7, Math.abs(player.vy * dt) + 3);
 
-    if (player.vy > 0 && playerBottom <= enemyTop + 6) {
+    if (player.vy > 0 && (playerBottom <= enemyTop + maxStompDepth || prevPlayerBottom <= enemyTop + 2)) {
       return 'STOMP';
     }
 

@@ -47,6 +47,8 @@ export class Projectile {
 
     if (map.isSolid(col, row)) {
       this.isRemoved = true;
+      this.hitWall = true;
+      this.wallHitPos = { x: checkX, y: checkY };
     }
   }
 

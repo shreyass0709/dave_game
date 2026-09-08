@@ -34,17 +34,23 @@ export class Player {
     // Movement & Physics parameters
     this.vx = 0;
     this.vy = 0;
-    this.speed = 115;            // Max horizontal speed (px/sec)
-    this.acceleration = 1100;    // Ground acceleration
-    this.friction = 1300;        // Ground deceleration
-    this.gravity = 640;          // Downward gravitational acceleration
-    this.jumpForce = -235;       // Initial jump impulse
-    this.terminalVelocity = 380; // Max fall speed
+    this.speed = 115;                  // Max horizontal speed (px/sec)
+    this.acceleration = 1100;          // Default acceleration
+    this.groundAcceleration = 1100;    // Ground acceleration
+    this.airAcceleration = 850;        // Air acceleration (balanced air control)
+    this.friction = 1300;              // Default deceleration
+    this.groundFriction = 1300;        // Ground deceleration
+    this.airFriction = 400;            // Gentle air drag
+    this.gravity = 640;                // Downward gravitational acceleration
+    this.jumpForce = -235;             // Initial jump impulse
+    this.terminalVelocity = 380;       // Max fall speed
 
-    // State Management
+    // State Management & Combat
     this.state = PlayerState.IDLE;
     this.facing = Direction.RIGHT;
     this.isGrounded = false;
+    this.invulnerableTimer = 0;        // Grace period i-frames timer
+    this.landingSquashTimer = 0;       // Landing impact squash duration
 
     // Platformer "Feel" Helpers: Coyote time & Jump buffering
     this.coyoteTimer = 0;
@@ -94,19 +100,22 @@ export class Player {
     const moveLeft = input.isLeft ? input.isLeft() : false;
     const moveRight = input.isRight ? input.isRight() : false;
 
-    // 1. Horizontal Movement & Facing Direction
+    // 1. Horizontal Movement & Facing Direction (Ground vs Air Control)
+    const currentAccel = this.isGrounded ? this.groundAcceleration : this.airAcceleration;
+    const currentFriction = this.isGrounded ? this.groundFriction : this.airFriction;
+
     if (moveLeft && !moveRight) {
-      this.vx = Math.max(this.vx - this.acceleration * dt, -this.speed);
+      this.vx = Math.max(this.vx - currentAccel * dt, -this.speed);
       this.facing = Direction.LEFT;
     } else if (moveRight && !moveLeft) {
-      this.vx = Math.min(this.vx + this.acceleration * dt, this.speed);
+      this.vx = Math.min(this.vx + currentAccel * dt, this.speed);
       this.facing = Direction.RIGHT;
     } else {
       // Apply friction when no movement key held
       if (this.vx > 0) {
-        this.vx = Math.max(0, this.vx - this.friction * dt);
+        this.vx = Math.max(0, this.vx - currentFriction * dt);
       } else if (this.vx < 0) {
-        this.vx = Math.min(0, this.vx + this.friction * dt);
+        this.vx = Math.min(0, this.vx + currentFriction * dt);
       }
     }
 
@@ -157,6 +166,14 @@ export class Player {
    * Advance animations and update state machine
    */
   updateAnimation(dt) {
+    // Advance combat & feedback timers
+    if (this.invulnerableTimer > 0) {
+      this.invulnerableTimer = Math.max(0, this.invulnerableTimer - dt);
+    }
+    if (this.landingSquashTimer > 0) {
+      this.landingSquashTimer = Math.max(0, this.landingSquashTimer - dt);
+    }
+
     // Handle Death State Progression
     if (this.state === PlayerState.DEAD) {
       this.deathTimer += dt;
@@ -167,6 +184,8 @@ export class Player {
       return;
     }
 
+    const wasFalling = this.state === PlayerState.FALLING;
+
     // Determine State
     if (!this.isGrounded) {
       if (this.vy < 0) {
@@ -175,6 +194,10 @@ export class Player {
         this.state = PlayerState.FALLING;
       }
     } else {
+      if (wasFalling) {
+        this.landingSquashTimer = 0.08; // Brief landing squash
+      }
+
       if (Math.abs(this.vx) > 5) {
         this.state = PlayerState.WALKING;
       } else {
@@ -208,6 +231,7 @@ export class Player {
     this.deathRotation = 0;
     this.isGrounded = false;
     this.isShooting = false;
+    this.invulnerableTimer = 0;
   }
 
   /**
@@ -225,6 +249,8 @@ export class Player {
     this.shootCooldownTimer = 0;
     this.deathTimer = 0;
     this.isShooting = false;
+    this.invulnerableTimer = 1.2; // 1.2s post-respawn grace period i-frames
+    this.landingSquashTimer = 0;
   }
 
   /**
@@ -237,6 +263,12 @@ export class Player {
     const py = Math.round(this.y);
     const centerX = px + this.width / 2;
     const centerY = py + this.height / 2;
+
+    // Handle Invulnerability Blinking Effect
+    if (this.invulnerableTimer > 0 && this.state !== PlayerState.DEAD) {
+      const flash = Math.sin(this.invulnerableTimer * 30) > 0;
+      ctx.globalAlpha = flash ? 0.35 : 0.95;
+    }
 
     // Handle Death Render (Rotation + Hop)
     if (this.state === PlayerState.DEAD) {
@@ -255,8 +287,12 @@ export class Player {
       ctx.translate(-centerX, -centerY);
     }
 
-    // Jump Stretch / Fall Dynamics
-    if (this.state === PlayerState.JUMPING) {
+    // Jump Stretch / Fall / Landing Squash Dynamics
+    if (this.landingSquashTimer > 0 && this.isGrounded) {
+      ctx.translate(centerX, centerY);
+      ctx.scale(1.12, 0.88); // Landing squash
+      ctx.translate(-centerX, -centerY);
+    } else if (this.state === PlayerState.JUMPING) {
       ctx.translate(centerX, centerY);
       ctx.scale(0.92, 1.08); // Vertical stretch
       ctx.translate(-centerX, -centerY);

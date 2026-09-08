@@ -27,7 +27,8 @@ export class PhysicsEngine {
       reachedExit: false,
       stompedEnemies: [],
       shotEnemies: [],
-      hitEnemy: false
+      hitEnemy: false,
+      activatedCheckpoint: null
     };
 
     // 1. If Dead, apply free-fall gravity for death animation without tile collision
@@ -134,7 +135,7 @@ export class PhysicsEngine {
       player.isGrounded = true;
     }
 
-    // 5. Trigger Queries (Hazards, Collectibles, Exit Portal)
+    // 5. Trigger Queries (Hazards, Collectibles, Exit Portal, Checkpoints)
     minCol = Math.floor(player.x / tileSize);
     maxCol = Math.floor((player.x + player.width - 0.001) / tileSize);
     minRow = Math.floor(player.y / tileSize);
@@ -142,11 +143,21 @@ export class PhysicsEngine {
 
     for (let r = minRow; r <= maxRow; r++) {
       for (let c = minCol; c <= maxCol; c++) {
-        // A. Hazard Check
+        // A. Hazard Check (Accurate active danger zone within tile)
         if (this.map.isHazard(c, r)) {
-          player.die();
-          events.hitHazard = true;
-          return events;
+          const hazardLeft = c * tileSize + 2;
+          const hazardRight = (c + 1) * tileSize - 2;
+          const hazardTop = r * tileSize + 5;
+          const hazardBottom = (r + 1) * tileSize;
+
+          const overlapX = player.x < hazardRight && (player.x + player.width) > hazardLeft;
+          const overlapY = player.y < hazardBottom && (player.y + player.height) > hazardTop;
+
+          if (overlapX && overlapY) {
+            player.die();
+            events.hitHazard = true;
+            return events;
+          }
         }
 
         // B. Collectible Check
@@ -155,7 +166,15 @@ export class PhysicsEngine {
           events.collectedItems.push(item);
         }
 
-        // C. Exit Portal Check (Strict overlap check)
+        // C. Checkpoint Check
+        if (this.map.isCheckpoint(c, r)) {
+          const cp = this.map.activateCheckpoint(c, r);
+          if (cp) {
+            events.activatedCheckpoint = cp;
+          }
+        }
+
+        // D. Exit Portal Check (Strict overlap check)
         if (this.map.isExit(c, r)) {
           const doorLeft = c * tileSize;
           const doorRight = (c + 1) * tileSize;
@@ -189,16 +208,19 @@ export class PhysicsEngine {
       for (const enemy of enemies) {
         if (enemy.isRemoved) continue;
 
-        const interaction = enemy.checkPlayerCollision(player);
+        const interaction = enemy.checkPlayerCollision(player, dt);
         if (interaction === 'STOMP') {
           enemy.defeat();
           player.vy = -190;
           player.isGrounded = false;
           events.stompedEnemies.push(enemy);
         } else if (interaction === 'DAMAGE') {
-          player.die();
-          events.hitEnemy = true;
-          return events;
+          // Grant immunity during post-respawn invulnerability timer
+          if (player.invulnerableTimer <= 0) {
+            player.die();
+            events.hitEnemy = true;
+            return events;
+          }
         }
       }
     }

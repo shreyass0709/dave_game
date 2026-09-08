@@ -1,3 +1,29 @@
+:root {
+  /* Modern Indie Game Palette & Tokens */
+  --color-primary: #38bdf8;
+  --color-primary-glow: rgba(56, 189, 248, 0.45);
+  --color-primary-dark: #0284c7;
+  --color-secondary: #a855f7;
+  --color-secondary-glow: rgba(168, 85, 247, 0.45);
+  --color-gold: #facc15;
+  --color-gold-glow: rgba(250, 204, 21, 0.45);
+  --color-success: #22c55e;
+  --color-success-glow: rgba(34, 197, 94, 0.45);
+  --color-danger: #ef4444;
+  --color-danger-glow: rgba(239, 68, 68, 0.45);
+  --color-disabled: #475569;
+
+  /* Surfaces & Backgrounds */
+  --color-bg-dark: #070a14;
+  --color-cabinet: #111726;
+  --color-card: #0f172a;
+  --color-card-border: #1e293b;
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #cbd5e1;
+  --color-text-muted: #94a3b8;
+  --font-retro: 'Press Start 2P', monospace, sans-serif;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -5,9 +31,9 @@
 }
 
 body {
-  background: radial-gradient(circle at center, #1b2028 0%, #0d1117 100%);
-  color: #e6edf3;
-  font-family: 'Press Start 2P', monospace, sans-serif;
+  background: radial-gradient(circle at center, #172033 0%, #060913 100%);
+  color: var(--color-text-primary);
+  font-family: var(--font-retro);
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -20,15 +46,16 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: #161b22;
-  border: 4px solid #30363d;
+  background: var(--color-cabinet);
+  border: 3px solid #1e293b;
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8),
-              0 0 30px rgba(78, 140, 255, 0.15),
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85),
+              0 0 40px rgba(56, 189, 248, 0.12),
               inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  max-width: 860px;
+  max-width: 880px;
   width: 100%;
+  transition: box-shadow 0.3s ease;
 }
 
 .game-header {
@@ -40,14 +67,14 @@ body {
 .game-title {
   font-size: 22px;
   letter-spacing: 3px;
-  color: #58a6ff;
-  text-shadow: 0 0 12px rgba(88, 166, 255, 0.6), 2px 2px 0 #0d1117;
+  color: var(--color-primary);
+  text-shadow: 0 0 14px var(--color-primary-glow), 2px 2px 0 #020617;
   margin-bottom: 8px;
 }
 
 .game-subtitle {
-  font-size: 10px;
-  color: #8b949e;
+  font-size: 9px;
+  color: var(--color-text-muted);
   letter-spacing: 1px;
 }
 
@@ -55,18 +82,19 @@ body {
   position: relative;
   background: #000;
   padding: 10px;
-  border-radius: 8px;
-  border: 3px solid #21262d;
-  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.9),
-              0 4px 15px rgba(0, 0, 0, 0.5);
+  border-radius: 10px;
+  border: 3px solid #1e293b;
+  box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.95),
+              0 6px 20px rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
   align-items: center;
   overflow: hidden;
 }
 
-/* Subtle retro CRT scanline effect over canvas */
-.screen-frame::after {
+/* Subtle retro CRT scanline effect over canvas (toggled by Settings) */
+.screen-frame:not(.crt-off)::after,
+.screen-frame.crt-active::after {
   content: "";
   position: absolute;
   top: 0;
@@ -82,6 +110,10 @@ body {
   border-radius: 8px;
 }
 
+.screen-frame.crt-off::after {
+  display: none !important;
+}
+
 #gameCanvas {
   display: block;
   width: 800px;
@@ -90,6 +122,7 @@ body {
   image-rendering: crisp-edges;
   background-color: #000000;
   border-radius: 4px;
+  cursor: default;
 }
 
 @media (max-width: 860px) {
@@ -103,9 +136,9 @@ body {
 .controls-panel {
   margin-top: 20px;
   width: 100%;
-  background: #0d1117;
-  border: 1px solid #30363d;
-  border-radius: 8px;
+  background: #090e1a;
+  border: 1px solid #1e293b;
+  border-radius: 10px;
   padding: 14px 18px;
   display: flex;
   flex-direction: column;
@@ -116,22 +149,22 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 10px;
-  font-size: 9px;
+  font-size: 8px;
   line-height: 1.6;
 }
 
 .control-item {
-  color: #c9d1d9;
+  color: var(--color-text-secondary);
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
 .key-badge {
-  background: #21262d;
-  color: #f0f6fc;
-  border: 1px solid #484f58;
-  border-bottom: 2px solid #30363d;
+  background: #1e293b;
+  color: #f8fafc;
+  border: 1px solid #334155;
+  border-bottom: 2px solid #0f172a;
   border-radius: 4px;
   padding: 3px 6px;
   font-size: 8px;
@@ -139,21 +172,21 @@ body {
 }
 
 .status-indicator {
-  font-size: 9px;
-  color: #7ee787;
+  font-size: 8px;
+  color: #86efac;
   display: flex;
   align-items: center;
   gap: 8px;
-  border-top: 1px solid #21262d;
+  border-top: 1px solid #1e293b;
   padding-top: 10px;
 }
 
 .status-dot {
   width: 8px;
   height: 8px;
-  background-color: #2ea043;
+  background-color: var(--color-success);
   border-radius: 50%;
-  box-shadow: 0 0 8px #2ea043;
+  box-shadow: 0 0 8px var(--color-success-glow);
   animation: pulse 2s infinite ease-in-out;
 }
 

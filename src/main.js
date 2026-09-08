@@ -31,10 +31,12 @@ export class Game {
   constructor(canvasElement = null) {
     if (typeof document !== 'undefined') {
       this.canvas = canvasElement || document.getElementById('gameCanvas');
-      this.ctx = this.canvas ? this.canvas.getContext('2d') : null;
+      this.ctx = this.canvas && this.canvas.getContext ? this.canvas.getContext('2d') : null;
       if (this.ctx) this.ctx.imageSmoothingEnabled = false;
       this.input = new InputHandler(this.canvas);
-      this.camera = new Camera(this.canvas.width, this.canvas.height);
+      const canvasW = this.canvas && this.canvas.width ? this.canvas.width : 400;
+      const canvasH = this.canvas && this.canvas.height ? this.canvas.height : 240;
+      this.camera = new Camera(canvasW, canvasH);
     } else {
       this.canvas = { width: 400, height: 240 };
       this.ctx = null;
@@ -52,9 +54,11 @@ export class Game {
 
     // Persistent Game State & Multi-Level Management
     this.score = 0;
+    this.levelStartScore = 0;
     this.currentLevel = 1;
     this.maxLevels = 3;
     this.lives = 3;
+    this.activeCheckpoint = null;
     this.gameState = GameState.MAIN_MENU;
     this.selectedMenuIndex = 0;
     this.messageBanner = "LEVEL 1: FIND TROPHY & GO TO EXIT!";
@@ -62,11 +66,30 @@ export class Game {
 
     this.initButtons();
     this.loadLevel(1);
+    this.updateCRTClass();
 
     // Start game loop in browser environment
     if (typeof window !== 'undefined') {
       this.loop = this.loop.bind(this);
       requestAnimationFrame(this.loop);
+    }
+  }
+
+  /**
+   * Synchronizes CRT scanlines CSS class with settings
+   */
+  updateCRTClass() {
+    if (typeof document !== 'undefined') {
+      const screenFrame = document.querySelector('.screen-frame');
+      if (screenFrame) {
+        if (this.ui.settings.crtFilter) {
+          screenFrame.classList.add('crt-active');
+          screenFrame.classList.remove('crt-off');
+        } else {
+          screenFrame.classList.remove('crt-active');
+          screenFrame.classList.add('crt-off');
+        }
+      }
     }
   }
 
@@ -120,6 +143,7 @@ export class Game {
     this.currentLevel = levelNumber;
     this.map = new GameMap(levelNumber);
     this.screenFadeAlpha = 1.0; // Trigger smooth fade transition
+    this.activeCheckpoint = { x: this.map.playerSpawn.x, y: this.map.playerSpawn.y };
 
     if (!this.player) {
       this.player = new Player(this.map.playerSpawn.x, this.map.playerSpawn.y);
@@ -242,6 +266,7 @@ export class Game {
         this.gameState = GameState.PLAYING;
         break;
       case 'restart_level':
+        this.score = this.levelStartScore;
         this.loadLevel(this.currentLevel);
         this.gameState = GameState.PLAYING;
         break;
@@ -252,6 +277,7 @@ export class Game {
       case 'next_level':
         if (this.currentLevel < this.maxLevels) {
           this.loadLevel(this.currentLevel + 1);
+          this.levelStartScore = this.score;
           this.gameState = GameState.PLAYING;
         } else {
           this.gameState = GameState.FINAL_VICTORY;
@@ -272,6 +298,7 @@ export class Game {
         break;
       case 'toggle_crt':
         this.ui.settings.crtFilter = !this.ui.settings.crtFilter;
+        this.updateCRTClass();
         break;
     }
   }
@@ -345,12 +372,15 @@ export class Game {
       }
     }
 
-    // 6. Update Projectiles
+    // 6. Update Projectiles & Wall Impact Sparks
     for (const proj of this.projectiles) {
       proj.update(this.map, dt);
+      if (proj.hitWall && proj.wallHitPos) {
+        this.effects.addWallImpact(proj.wallHitPos.x, proj.wallHitPos.y, proj.direction);
+      }
     }
 
-    // 7. Track previous death state for life decrement
+    // 7. Track previous death state for life decrement & checkpoint respawn
     const wasDeadBefore = this.player.state === PlayerState.DEAD;
 
     // Update Physics & Process Collisions
@@ -365,6 +395,10 @@ export class Game {
         this.selectedMenuIndex = 0;
         if (this.input) this.input.clearFrame();
         return;
+      } else {
+        const respawnPos = this.activeCheckpoint || this.map.playerSpawn;
+        this.player.respawn(respawnPos.x, respawnPos.y);
+        this.camera.snapTo(this.player, this.map.cols * TILE_SIZE);
       }
     }
 
@@ -382,6 +416,13 @@ export class Game {
           this.effects.addVictoryConfetti(item.x, item.y);
         }
       }
+    }
+
+    // Checkpoint Activation Feedback
+    if (events.activatedCheckpoint) {
+      this.activeCheckpoint = { x: events.activatedCheckpoint.x, y: events.activatedCheckpoint.y - 2 };
+      this.showMessage("CHECKPOINT ACTIVATED!", 2.5);
+      this.effects.addVictoryConfetti(events.activatedCheckpoint.x + 8, events.activatedCheckpoint.y + 4);
     }
 
     // Stomp & Shooting Combat Rewards
@@ -430,7 +471,9 @@ export class Game {
           this.selectedMenuIndex = 0;
         }
       } else {
-        this.showMessage("FIND THE GOLDEN TROPHY TO OPEN EXIT!", 2.5);
+        if (this.messageBanner !== "FIND THE GOLDEN TROPHY TO OPEN EXIT!" || this.messageTimer <= 0.5) {
+          this.showMessage("FIND THE GOLDEN TROPHY TO OPEN EXIT!", 2.5);
+        }
       }
     }
 

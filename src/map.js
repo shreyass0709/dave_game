@@ -19,7 +19,8 @@ export const TILE_TYPES = {
   COLLECTIBLE_SAPPHIRE: 8,
   COLLECTIBLE_TROPHY: 9,
   EXIT_DOOR: 10,
-  ENEMY_SPAWN: 11
+  ENEMY_SPAWN: 11,
+  CHECKPOINT: 12
 };
 
 export class GameMap {
@@ -28,6 +29,7 @@ export class GameMap {
     this.rows = MAP_ROWS;
     this.animTimer = 0;
     this.hasTrophy = false;
+    this.checkpoints = [];
     this.loadLevel(levelNumber);
   }
 
@@ -37,6 +39,7 @@ export class GameMap {
   loadLevel(levelNumber) {
     this.levelNumber = levelNumber;
     this.hasTrophy = false;
+    this.checkpoints = [];
 
     if (levelNumber === 1) {
       this.buildLevel1();
@@ -105,6 +108,11 @@ export class GameMap {
     this.grid[8][28] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
     this.grid[8][29] = TILE_TYPES.COLLECTIBLE_COIN;
     this.grid[12][32] = TILE_TYPES.RED_BRICK;
+
+    // Checkpoint 1 (Midpoint Flag)
+    this.grid[13][33] = TILE_TYPES.CHECKPOINT;
+    this.checkpoints.push({ col: 33, row: 13, x: 33 * this.tileSize, y: 13 * this.tileSize, activated: false });
+
     this.grid[13][34] = TILE_TYPES.COLLECTIBLE_COIN;
     this.grid[13][35] = TILE_TYPES.COLLECTIBLE_COIN;
 
@@ -207,6 +215,11 @@ export class GameMap {
 
     // Section 3: High Secret Tower & Hazard crossing
     this.grid[11][37] = TILE_TYPES.STEEL_BLOCK;
+
+    // Checkpoint 1 (Cyber Tower Flag)
+    this.grid[10][37] = TILE_TYPES.CHECKPOINT;
+    this.checkpoints.push({ col: 37, row: 10, x: 37 * this.tileSize, y: 10 * this.tileSize, activated: false });
+
     this.grid[7][40] = TILE_TYPES.STEEL_BLOCK;
     this.grid[7][41] = TILE_TYPES.STEEL_BLOCK;
     this.grid[6][40] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
@@ -301,6 +314,11 @@ export class GameMap {
 
     // Section 2: Ascending Fortress Spires
     this.grid[12][32] = TILE_TYPES.STEEL_BLOCK;
+
+    // Checkpoint 1 (Fortress Spires Midway Flag)
+    this.grid[11][32] = TILE_TYPES.CHECKPOINT;
+    this.checkpoints.push({ col: 32, row: 11, x: 32 * this.tileSize, y: 11 * this.tileSize, activated: false });
+
     this.grid[9][34] = TILE_TYPES.STEEL_BLOCK;
     this.grid[6][36] = TILE_TYPES.WOOD_PLATFORM;
     this.grid[6][37] = TILE_TYPES.WOOD_PLATFORM;
@@ -319,6 +337,11 @@ export class GameMap {
 
     // Section 3: Deep Lava Chasm & The Grand Trophy Spire
     this.grid[12][54] = TILE_TYPES.STEEL_BLOCK;
+
+    // Checkpoint 2 (Chasm Approach Flag)
+    this.grid[11][54] = TILE_TYPES.CHECKPOINT;
+    this.checkpoints.push({ col: 54, row: 11, x: 54 * this.tileSize, y: 11 * this.tileSize, activated: false });
+
     this.grid[9][57] = TILE_TYPES.WOOD_PLATFORM;
     this.grid[9][58] = TILE_TYPES.WOOD_PLATFORM;
     this.grid[8][58] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
@@ -412,6 +435,25 @@ export class GameMap {
     return null;
   }
 
+  isCheckpoint(col, row) {
+    if (col < 0 || col >= this.cols || row < 0 || row >= this.rows) return false;
+    return this.grid[row][col] === TILE_TYPES.CHECKPOINT;
+  }
+
+  getCheckpoint(col, row) {
+    if (col < 0 || col >= this.cols || row < 0 || row >= this.rows) return null;
+    return this.checkpoints.find(cp => cp.col === col && cp.row === row) || null;
+  }
+
+  activateCheckpoint(col, row) {
+    const cp = this.getCheckpoint(col, row);
+    if (cp && !cp.activated) {
+      cp.activated = true;
+      return cp;
+    }
+    return null;
+  }
+
   isExit(col, row) {
     if (col < 0 || col >= this.cols || row < 0 || row >= this.rows) return false;
     return this.grid[row][col] === TILE_TYPES.EXIT_DOOR;
@@ -461,6 +503,9 @@ export class GameMap {
             break;
           case TILE_TYPES.COLLECTIBLE_TROPHY:
             this.renderCollectibleTrophy(ctx, x, y);
+            break;
+          case TILE_TYPES.CHECKPOINT:
+            this.renderCheckpoint(ctx, x, y, c, r);
             break;
           case TILE_TYPES.EXIT_DOOR:
             if (r === 12) {
@@ -887,6 +932,59 @@ export class GameMap {
       ctx.fillRect(x + 6, y + 13, 5, 5);
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(x + 8, y + 14, 1, 2);
+    }
+  }
+
+  /**
+   * Cyber-Flag Checkpoint Beacon (Inactive vs Active)
+   */
+  renderCheckpoint(ctx, x, y, col, row) {
+    const cp = this.getCheckpoint(col, row);
+    const isActivated = cp ? cp.activated : false;
+    const s = this.tileSize;
+
+    // Base Stand (Dark steel bracket)
+    ctx.fillStyle = '#334155';
+    ctx.fillRect(x + 2, y + 13, s - 4, 3);
+    ctx.fillStyle = '#64748b';
+    ctx.fillRect(x + 4, y + 12, s - 8, 1);
+
+    // Vertical Chrome Pole
+    ctx.fillStyle = '#cbd5e1';
+    ctx.fillRect(x + 4, y + 1, 2, 12);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(x + 4, y + 1, 1, 12);
+
+    // Top Beacon Light & Banner
+    if (isActivated) {
+      const pulse = (Math.sin(this.animTimer * 8) + 1) * 0.5;
+      ctx.fillStyle = pulse > 0.4 ? '#4ade80' : '#22c55e';
+      ctx.fillRect(x + 3, y - 1, 4, 3);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(x + 4, y, 2, 1);
+
+      // Cyber Beacon Light Ray
+      ctx.fillStyle = 'rgba(74, 222, 128, 0.18)';
+      ctx.fillRect(x + 1, y - 6, 8, 6);
+
+      // Glowing Active Emerald Flag Banner (Waving)
+      const wave = Math.floor(this.animTimer * 8) % 3;
+      ctx.fillStyle = '#16a34a';
+      ctx.fillRect(x + 6, y + 2, 8, 6);
+      ctx.fillStyle = '#22c55e';
+      ctx.fillRect(x + 6, y + 2, 7, 5);
+      ctx.fillStyle = '#86efac';
+      ctx.fillRect(x + 7 + wave, y + 4, 3, 2);
+    } else {
+      // Unactivated Dim Slate/Cyan Flag
+      ctx.fillStyle = '#64748b';
+      ctx.fillRect(x + 3, y - 1, 4, 3);
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(x + 6, y + 2, 8, 6);
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(x + 6, y + 2, 7, 5);
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(x + 7, y + 4, 2, 2);
     }
   }
 }
