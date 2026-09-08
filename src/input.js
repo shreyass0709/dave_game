@@ -1,6 +1,6 @@
 /**
  * Input Manager for Keyboard Controls
- * Tracks key states and provides clean polling methods for game physics
+ * Tracks key states, just-pressed triggers, and buffers
  */
 export class InputHandler {
   constructor() {
@@ -8,8 +8,8 @@ export class InputHandler {
     this.justPressed = new Set();
 
     window.addEventListener('keydown', (e) => {
-      // Prevent default scrolling for game keys
-      if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyS', 'KeyA', 'KeyD'].includes(e.code)) {
+      // Prevent default browser scrolling for game keys
+      if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyS', 'KeyA', 'KeyD', 'KeyK', 'KeyB'].includes(e.code)) {
         e.preventDefault();
       }
 
@@ -23,7 +23,7 @@ export class InputHandler {
       this.keys.delete(e.code);
     });
 
-    // Reset input on window blur to avoid sticky keys
+    // Reset input on window blur to avoid stuck keys
     window.addEventListener('blur', () => {
       this.keys.clear();
       this.justPressed.clear();
@@ -48,6 +48,10 @@ export class InputHandler {
 
   wasDebugToggled() {
     return this.justPressed.has('KeyB');
+  }
+
+  wasDeathTestPressed() {
+    return this.justPressed.has('KeyK');
   }
 
   /**

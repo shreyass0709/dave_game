@@ -4,7 +4,7 @@
  */
 
 import { GameMap, TILE_SIZE } from './map.js';
-import { Player } from './player.js';
+import { Player, PlayerState, Direction } from './player.js';
 import { PhysicsEngine } from './physics.js';
 import { InputHandler } from './input.js';
 
@@ -70,6 +70,11 @@ class Game {
   update(dt) {
     if (this.input.wasDebugToggled()) {
       this.showDebug = !this.showDebug;
+    }
+
+    // Death state test key (K)
+    if (this.input.wasDeathTestPressed()) {
+      this.player.die();
     }
 
     this.player.handleInput(this.input, dt);
@@ -140,22 +145,23 @@ class Game {
     this.player.renderDebug(ctx);
 
     // Draw telemetry overlay in bottom left
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
-    ctx.fillRect(4, 20, 160, 68);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+    ctx.fillRect(4, 20, 175, 80);
 
     ctx.strokeStyle = '#38bdf8';
     ctx.lineWidth = 1;
-    ctx.strokeRect(4, 20, 160, 68);
+    ctx.strokeRect(4, 20, 175, 80);
 
     ctx.fillStyle = '#38bdf8';
     ctx.font = '6px "Press Start 2P", monospace';
     ctx.textBaseline = 'top';
 
     ctx.fillText(`DEBUG TELEMETRY`, 8, 24);
-    ctx.fillText(`X: ${this.player.x.toFixed(1)}  Y: ${this.player.y.toFixed(1)}`, 8, 34);
-    ctx.fillText(`VX: ${this.player.vx.toFixed(1)} VY: ${this.player.vy.toFixed(1)}`, 8, 44);
-    ctx.fillText(`GROUNDED: ${this.player.isGrounded ? 'YES' : 'NO'}`, 8, 54);
-    ctx.fillText(`FPS: ${this.fps}`, 8, 64);
+    ctx.fillText(`STATE: ${this.player.state}`, 8, 34);
+    ctx.fillText(`FACING: ${this.player.facing === Direction.RIGHT ? 'RIGHT' : 'LEFT'}`, 8, 44);
+    ctx.fillText(`POS: ${this.player.x.toFixed(1)}, ${this.player.y.toFixed(1)}`, 8, 54);
+    ctx.fillText(`VEL: ${this.player.vx.toFixed(1)}, ${this.player.vy.toFixed(1)}`, 8, 64);
+    ctx.fillText(`GROUNDED: ${this.player.isGrounded ? 'YES' : 'NO'} | FPS:${this.fps}`, 8, 74);
   }
 }
 

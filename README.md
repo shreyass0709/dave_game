@@ -4,29 +4,37 @@ An authentic 2D retro platformer engine built with **HTML5 Canvas, Vanilla JavaS
 
 ---
 
-## 🎮 Features Implemented (Phase 1 Foundation)
+## 🎮 Features Implemented
 
-1. **Game Canvas & Resolution**:
-   - Native 400x240 retro resolution scaled with crisp, pixel-perfect rendering (`image-rendering: pixelated`).
-   - Authentic CRT scanline overlay and retro arcade cabinet bezel.
-2. **Game Loop**:
-   - Smooth 60 FPS game loop using `requestAnimationFrame` and delta-time (`dt`) physics calculation.
-3. **Physics & Gravity Engine**:
-   - Deterministic gravity, terminal fall velocity, acceleration, and crisp friction braking.
-   - Variable jump height (releasing the jump key early caps jump height).
-4. **Collision Detection System**:
-   - Axis-separated AABB (Axis-Aligned Bounding Box) vs Tile Grid collision solver.
-   - Prevents player from falling through platforms or clipping into walls.
-   - Handles ceiling bonks and overhead platforms seamlessly.
-5. **Player Character & Animation**:
-   - Original pixel-art character sprite (Dave-inspired hero with red cap, peach skin, blue shirt, dark trousers, brown boots).
-   - Animated walk cycle, jumping pose, idle pose, and directional flipping.
-6. **Tile Map & Retro Visuals**:
-   - Red brick platforms with mortar lines and highlights.
-   - Metallic steel blocks with corner rivets.
-   - Dave-inspired retro top status HUD (Score, Level, Lives/Daves).
-7. **Developer / Viva Diagnostics**:
-   - Real-time debug telemetry overlay (`B` key) showing player coordinates, velocities, grounded state, and FPS.
+### 1. Enhanced Player Character System
+- **Comprehensive State Machine**:
+  - `IDLE`: Stationary grounded state with classic standing pose.
+  - `WALKING`: Active left/right locomotion with 3-frame animated walk cycle.
+  - `JUMPING`: Ascending in-air state (`vy < 0`) with bent knees and raised arms.
+  - `FALLING`: Descending in-air state (`vy >= 0`) with extended fall pose.
+  - `DEAD`: Death animation foundation (upward hop, tumbling spin with shocked "X" eyes, input lock, and auto-respawn timer).
+- **Directional Facing**:
+  - Seamless horizontal mirroring (`LEFT` / `RIGHT`) for all animations.
+- **Responsive Platformer Feel**:
+  - Snappy acceleration (`1100 px/s²`) and crisp friction stopping (`1300 px/s²`, no ice-skating).
+  - **Coyote Time** (90ms grace period to jump after stepping off a platform edge).
+  - **Jump Buffering** (120ms pre-landing jump window).
+  - **Variable Jump Height** (tap jump for a short hop, hold jump for full height).
+  - Strict anti-air jump protection (no infinite jumps).
+
+### 2. Physics & Level Engine
+- **Axis-Separated AABB Collision Solver**:
+  - Independent X and Y axis collision resolution against solid tile maps.
+  - Guarantees zero clipping through floors or walls, smooth traversal under overhead platforms, and solid ceiling bonks.
+- **25×15 Tile Map Layout (400×240 native retro resolution)**:
+  - Procedurally textured EGA-style red bricks with mortar lines.
+  - Metallic steel blocks with corner rivets.
+  - Floating platforms, ledges, and steps.
+
+### 3. Retro Presentation & Diagnostics
+- **Arcade Bezel & Scanlines**: Responsive retro cabinet frame with CRT scanline overlays.
+- **Authentic Top HUD**: Top banner with `SCORE`, `LEVEL`, and `DAVES` (lives).
+- **Developer / Viva Diagnostics**: Press `B` to toggle live telemetry (State, Facing, Pos, Vel, Grounded, FPS, and hitboxes).
 
 ---
 
@@ -37,14 +45,14 @@ An authentic 2D retro platformer engine built with **HTML5 Canvas, Vanilla JavaS
 | **Move Left** | `A` | `Left Arrow` (◀) |
 | **Move Right** | `D` | `Right Arrow` (▶) |
 | **Jump** | `W` | `Up Arrow` (▲) / `Space` |
-| **Toggle Debug / Hitbox** | `B` | - |
+| **Test Death State** | `K` | - |
+| **Toggle Telemetry / Hitboxes** | `B` | - |
 
 ---
 
 ## 🚀 How to Run the Game
 
 ### Method 1: Using Python (Recommended)
-From the project folder, start the local server:
 ```bash
 python -m http.server 8000
 ```
@@ -53,13 +61,10 @@ Open your browser and navigate to:
 http://localhost:8000
 ```
 
-### Method 2: Using Node.js (Alternative)
+### Method 2: Using Node.js
 ```bash
 npx serve .
 ```
-
-### Method 3: VS Code Live Server
-Right-click `index.html` and select **"Open with Live Server"**.
 
 ---
 
@@ -73,18 +78,7 @@ dave_game/
 └── src/
     ├── main.js        # Engine initialization, game loop, and HUD renderer
     ├── input.js       # Keyboard event manager and input state handler
-    ├── player.js      # Player state, physics parameters, and sprite renderer
+    ├── player.js      # Player state machine, physics parameters, and sprite renderer
     ├── map.js         # Tile grid definitions, layout, and pixel textures
     └── physics.js     # Axis-separated AABB tile collision solver
 ```
-
----
-
-## 🎓 College Viva / Technical Explanation Points
-
-- **Why use Axis-Separated Collision?**  
-  Separating horizontal and vertical collision steps ensures the solver knows exactly which axis caused an overlap, preventing "corner catching" and guaranteeing zero pass-through glitches.
-- **Why use Delta-Time (`dt`) in Physics?**  
-  Scaling velocities and accelerations by `dt` (`player.x += player.vx * dt`) ensures that game physics and movement speed remain identical across different refresh rate monitors (60Hz, 144Hz, etc.).
-- **Zero External Dependencies**:  
-  Built entirely using standard Web APIs without heavy game engines, making the codebase clean, modular, and easy to explain.

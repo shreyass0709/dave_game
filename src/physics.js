@@ -3,6 +3,8 @@
  * Implements axis-separated AABB collision detection against tile maps
  */
 
+import { PlayerState } from './player.js';
+
 export class PhysicsEngine {
   constructor(gameMap) {
     this.map = gameMap;
@@ -14,12 +16,18 @@ export class PhysicsEngine {
    * @param {number} dt Delta time in seconds
    */
   update(player, dt) {
+    // 1. If Dead, apply free-fall gravity for death animation without tile collision
+    if (player.state === PlayerState.DEAD) {
+      player.y += player.vy * dt;
+      player.vy = Math.min(player.vy + player.gravity * dt, player.terminalVelocity);
+      return;
+    }
+
     const tileSize = this.map.tileSize;
 
-    // 1. Resolve Horizontal Movement & Collisions
+    // 2. Resolve Horizontal Movement & Collisions
     player.x += player.vx * dt;
 
-    // Calculate tile bounding range for player's current position
     let minCol = Math.floor(player.x / tileSize);
     let maxCol = Math.floor((player.x + player.width - 0.001) / tileSize);
     let minRow = Math.floor(player.y / tileSize);
@@ -45,7 +53,7 @@ export class PhysicsEngine {
       }
     }
 
-    // 2. Apply Gravity & Resolve Vertical Movement & Collisions
+    // 3. Apply Gravity & Resolve Vertical Movement & Collisions
     player.vy = Math.min(player.vy + player.gravity * dt, player.terminalVelocity);
     player.y += player.vy * dt;
 
@@ -91,7 +99,7 @@ export class PhysicsEngine {
       player.isGrounded = groundUnderfoot;
     }
 
-    // 3. Screen Boundary Enforcements
+    // 4. Screen Boundary Enforcements (Alive state only)
     const maxX = this.map.cols * tileSize - player.width;
     const maxY = this.map.rows * tileSize - player.height;
 
