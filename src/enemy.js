@@ -215,36 +215,51 @@ export class Enemy {
    * Retro Cyber-Crawler Sprite (Distinct emerald green & neon purple)
    */
   drawEnemySprite(ctx, x, y) {
-    // Outer Shell / Emerald Exoskeleton
-    ctx.fillStyle = '#059669'; // Emerald Green Shell
+    // 1. Armored Emerald Carapace (Base)
+    ctx.fillStyle = '#047857'; // Deep Emerald Green
     ctx.fillRect(x + 2, y + 2, 10, 6);
 
-    // Shell Ridge / Highlight
-    ctx.fillStyle = '#34d399'; // Light Green
+    // 2. Metallic Carapace Ridge & Top Highlight
+    ctx.fillStyle = '#10b981'; // Emerald Bright
     ctx.fillRect(x + 3, y + 1, 8, 2);
+    ctx.fillStyle = '#6ee7b7'; // White-green shine
+    ctx.fillRect(x + 4, y + 1, 3, 1);
 
-    // Inner Mech Core / Purple Accent
-    ctx.fillStyle = '#9333ea'; // Neon Purple
-    ctx.fillRect(x + 4, y + 4, 6, 3);
+    // 3. Inner Mech Energy Core (Pulsing Neon Violet)
+    ctx.fillStyle = '#7c3aed';
+    ctx.fillRect(x + 4, y + 4, 5, 3);
+    ctx.fillStyle = '#c084fc';
+    ctx.fillRect(x + 5, y + 5, 2, 1);
 
-    // Glowing Red Robotic Eye
-    ctx.fillStyle = '#ef4444'; // Bright Red Eye
-    ctx.fillRect(x + 9, y + 3, 3, 2);
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(x + 10, y + 3, 1, 1);
+    // 4. Scanning Robotic Eye (Pulsing / Moving)
+    const scanOffset = Math.sin(this.animTimer * 6) > 0 ? 1 : 0;
+    ctx.fillStyle = '#1e1b4b'; // Eye Socket
+    ctx.fillRect(x + 8, y + 2, 4, 3);
+    ctx.fillStyle = '#ef4444'; // Red Scanner Laser
+    ctx.fillRect(x + 8 + scanOffset, y + 3, 2, 2);
+    ctx.fillStyle = '#fecaca'; // Glint
+    ctx.fillRect(x + 9 + scanOffset, y + 3, 1, 1);
 
-    // Animated Walking Claws / Legs
-    ctx.fillStyle = '#064e3b'; // Dark Green legs
-    if (this.animFrame === 0) {
-      // Leg Frame 0
+    // 5. 4-Frame Animated Mechanical Claws / Legs
+    ctx.fillStyle = '#064e3b'; // Dark Emerald Steel Legs
+    const legFrame = Math.floor(this.animTimer * 10) % 4;
+
+    if (legFrame === 0) {
       ctx.fillRect(x + 1, y + 8, 3, 4);
       ctx.fillRect(x + 6, y + 8, 2, 4);
       ctx.fillRect(x + 10, y + 8, 3, 4);
-    } else {
-      // Leg Frame 1
+    } else if (legFrame === 1) {
       ctx.fillRect(x + 0, y + 8, 3, 4);
       ctx.fillRect(x + 5, y + 8, 3, 4);
       ctx.fillRect(x + 11, y + 8, 2, 4);
+    } else if (legFrame === 2) {
+      ctx.fillRect(x + 1, y + 8, 2, 4);
+      ctx.fillRect(x + 5, y + 8, 3, 4);
+      ctx.fillRect(x + 10, y + 8, 3, 4);
+    } else {
+      ctx.fillRect(x + 2, y + 8, 2, 4);
+      ctx.fillRect(x + 6, y + 8, 3, 4);
+      ctx.fillRect(x + 9, y + 8, 3, 4);
     }
   }
 
@@ -252,18 +267,28 @@ export class Enemy {
    * Defeated / Flattened Sprite with spark burst
    */
   drawDefeatedSprite(ctx, x, y) {
-    // Squashed green shell
-    ctx.fillStyle = '#059669';
-    ctx.fillRect(x + 1, y + 8, 12, 4);
+    const progress = Math.min(1, this.deathTimer / this.deathDuration);
+    const alpha = Math.max(0, 1 - progress);
 
-    // Sparks / Poof effect
-    ctx.fillStyle = '#fbbf24'; // Yellow sparks
-    ctx.fillRect(x + 0, y + 2, 2, 2);
-    ctx.fillRect(x + 12, y + 2, 2, 2);
-    ctx.fillRect(x + 6, y + 0, 2, 2);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+
+    // Squashed green shell
+    ctx.fillStyle = '#047857';
+    ctx.fillRect(x + 0, y + 9, 14, 3);
+    ctx.fillStyle = '#10b981';
+    ctx.fillRect(x + 2, y + 8, 10, 2);
+
+    // Poof spark burst
+    ctx.fillStyle = '#fbbf24'; // Gold sparks
+    ctx.fillRect(x + 1, y + 3, 2, 2);
+    ctx.fillRect(x + 11, y + 3, 2, 2);
+    ctx.fillRect(x + 6, y + 1, 2, 2);
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(x + 3, y + 5, 2, 2);
     ctx.fillRect(x + 9, y + 5, 2, 2);
+
+    ctx.restore();
   }
 
   renderDebug(ctx) {

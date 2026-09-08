@@ -419,11 +419,15 @@ export class GameMap {
 
   render(ctx, camera) {
     const s = this.tileSize;
-    this.animTimer += 0.03;
+    this.animTimer += 0.035;
+
+    // 1. Render Themed Parallax Background
+    this.renderBackground(ctx, camera);
 
     const startCol = Math.max(0, Math.floor(camera.x / s));
     const endCol = Math.min(this.cols - 1, Math.ceil((camera.x + camera.viewportWidth) / s));
 
+    // 2. Render Tile Map
     for (let r = 0; r < this.rows; r++) {
       for (let c = startCol; c <= endCol; c++) {
         const tileType = this.grid[r][c];
@@ -468,157 +472,421 @@ export class GameMap {
     }
   }
 
+  /**
+   * Themed Parallax Backgrounds
+   */
+  renderBackground(ctx, camera) {
+    const vw = camera.viewportWidth;
+    const vh = camera.viewportHeight;
+
+    if (this.levelNumber === 1) {
+      // Level 1: Deep Cosmic Vault with Twinkling Starfield & Distant Pillars
+      ctx.fillStyle = '#070a16';
+      ctx.fillRect(camera.x, 0, vw, vh);
+
+      // Parallax starfield (0.2x scroll)
+      ctx.fillStyle = '#38bdf8';
+      for (let i = 0; i < 20; i++) {
+        const starX = ((i * 53 + 17) - camera.x * 0.2) % (vw + 40);
+        const actualX = starX < 0 ? starX + vw + 40 : starX;
+        const starY = (i * 29 + 11) % (vh - 40) + 10;
+        const twinkle = Math.sin(this.animTimer * 3 + i) > 0.2;
+        if (twinkle) {
+          ctx.fillRect(camera.x + actualX, starY, 1, 1);
+        }
+      }
+
+      // Distant Arch Silhouettes (0.3x scroll)
+      ctx.fillStyle = '#0e172e';
+      for (let i = 0; i < 6; i++) {
+        const archX = (i * 120 - camera.x * 0.3) % (vw + 120);
+        const actualX = archX < -120 ? archX + vw + 240 : archX;
+        ctx.fillRect(camera.x + actualX, 40, 24, vh - 40);
+        ctx.fillRect(camera.x + actualX - 8, 40, 40, 8);
+      }
+    } else if (this.levelNumber === 2) {
+      // Level 2: Cyber Factory with Circuit Grids & Industrial Girders
+      ctx.fillStyle = '#080c14';
+      ctx.fillRect(camera.x, 0, vw, vh);
+
+      // Cyber Grid Lines (0.25x scroll)
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.05)';
+      ctx.lineWidth = 1;
+      const offsetX = (camera.x * 0.25) % 32;
+      for (let x = -32; x < vw + 32; x += 32) {
+        ctx.beginPath();
+        ctx.moveTo(camera.x + x - offsetX, 0);
+        ctx.lineTo(camera.x + x - offsetX, vh);
+        ctx.stroke();
+      }
+
+      // Background Steel Girders (0.35x scroll)
+      ctx.fillStyle = '#111827';
+      for (let i = 0; i < 5; i++) {
+        const girderX = (i * 140 - camera.x * 0.35) % (vw + 140);
+        const actualX = girderX < -140 ? girderX + vw + 280 : girderX;
+        ctx.fillRect(camera.x + actualX, 30, 16, vh - 30);
+        ctx.fillRect(camera.x + actualX - 10, 60, 36, 6);
+      }
+    } else {
+      // Level 3: Dave Fortress with Obsidian Spires & Rising Embers
+      ctx.fillStyle = '#100609';
+      ctx.fillRect(camera.x, 0, vw, vh);
+
+      // Distant Fortress Spire Silhouettes (0.25x scroll)
+      ctx.fillStyle = '#1f0d14';
+      for (let i = 0; i < 5; i++) {
+        const spireX = (i * 130 - camera.x * 0.25) % (vw + 130);
+        const actualX = spireX < -130 ? spireX + vw + 260 : spireX;
+        ctx.fillRect(camera.x + actualX, 20, 28, vh - 20);
+        // Spire Roof
+        ctx.beginPath();
+        ctx.moveTo(camera.x + actualX, 20);
+        ctx.lineTo(camera.x + actualX + 14, 4);
+        ctx.lineTo(camera.x + actualX + 28, 20);
+        ctx.fill();
+      }
+
+      // Rising Lava Embers
+      for (let i = 0; i < 15; i++) {
+        const emberX = ((i * 47 + 23) - camera.x * 0.4) % (vw + 30);
+        const actualX = emberX < 0 ? emberX + vw + 30 : emberX;
+        const emberY = (vh - ((this.animTimer * 20 + i * 24) % vh));
+        ctx.fillStyle = i % 2 === 0 ? '#f97316' : '#facc15';
+        ctx.fillRect(camera.x + actualX, emberY, 1, 1);
+      }
+    }
+  }
+
+  /**
+   * 3D Beveled Red Brick
+   */
   renderRedBrick(ctx, x, y) {
     const s = this.tileSize;
-    ctx.fillStyle = '#b81414';
+    // Brick Base Body
+    ctx.fillStyle = '#991b1b';
     ctx.fillRect(x, y, s, s);
-    ctx.fillStyle = '#e54545';
-    ctx.fillRect(x, y, s, 2);
-    ctx.fillRect(x, y + 8, s, 2);
-    ctx.fillStyle = '#4a0000';
+
+    // Top Highlight Lip
+    ctx.fillStyle = '#dc2626';
+    ctx.fillRect(x + 1, y, s - 1, 2);
+    ctx.fillRect(x + 1, y + 8, s - 1, 1);
+
+    // Brick Texture Fills
+    ctx.fillStyle = '#b91c1c';
+    ctx.fillRect(x + 1, y + 2, 6, 5);
+    ctx.fillRect(x + 8, y + 2, 7, 5);
+    ctx.fillRect(x + 1, y + 9, 14, 5);
+
+    // Dark Mortar Seams
+    ctx.fillStyle = '#450a0a';
     ctx.fillRect(x, y + 7, s, 1);
     ctx.fillRect(x, y + 15, s, 1);
     ctx.fillRect(x + 7, y, 1, 7);
-    ctx.fillRect(x + 15, y + 8, 1, 7);
+    ctx.fillRect(x, y, 1, s);
   }
 
+  /**
+   * High-Tech Metallic Steel Block
+   */
   renderSteelBlock(ctx, x, y) {
     const s = this.tileSize;
-    ctx.fillStyle = '#1f2937';
+    // Dark Frame
+    ctx.fillStyle = '#1e293b';
     ctx.fillRect(x, y, s, s);
-    ctx.fillStyle = '#374151';
+
+    // Chrome Face
+    ctx.fillStyle = '#334155';
     ctx.fillRect(x + 1, y + 1, s - 2, s - 2);
-    ctx.fillStyle = '#6b7280';
+
+    // Top & Left Chrome Highlights
+    ctx.fillStyle = '#64748b';
     ctx.fillRect(x + 1, y + 1, s - 2, 1);
     ctx.fillRect(x + 1, y + 1, 1, s - 2);
-    ctx.fillStyle = '#111827';
+
+    // Bottom & Right Shadows
+    ctx.fillStyle = '#0f172a';
     ctx.fillRect(x + 1, y + s - 2, s - 2, 1);
     ctx.fillRect(x + s - 2, y + 1, 1, s - 2);
-    ctx.fillStyle = '#9ca3af';
-    ctx.fillRect(x + 3, y + 3, 1, 1);
-    ctx.fillRect(x + s - 4, y + 3, 1, 1);
-    ctx.fillRect(x + 3, y + s - 4, 1, 1);
-    ctx.fillRect(x + s - 4, y + s - 4, 1, 1);
+
+    // Center Metallic Ventilation Louvers
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(x + 4, y + 5, s - 8, 1);
+    ctx.fillRect(x + 4, y + 8, s - 8, 1);
+    ctx.fillRect(x + 4, y + 11, s - 8, 1);
+
+    // Corner Hex Rivets
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillRect(x + 2, y + 2, 1, 1);
+    ctx.fillRect(x + s - 3, y + 2, 1, 1);
+    ctx.fillRect(x + 2, y + s - 3, 1, 1);
+    ctx.fillRect(x + s - 3, y + s - 3, 1, 1);
   }
 
+  /**
+   * Polished Hardwood Platform
+   */
   renderWoodPlatform(ctx, x, y) {
     const s = this.tileSize;
+    // Wood Planks Base
     ctx.fillStyle = '#78350f';
     ctx.fillRect(x, y, s, s);
-    ctx.fillStyle = '#b45309';
-    ctx.fillRect(x, y + 2, s, 3);
+
+    // Polished Amber Top Lip
+    ctx.fillStyle = '#d97706';
+    ctx.fillRect(x, y, s, 2);
+
+    // Grain Texture
+    ctx.fillStyle = '#92400e';
+    ctx.fillRect(x, y + 3, s, 3);
+    ctx.fillRect(x, y + 8, s, 3);
+
+    // Gold Trim Brackets
+    ctx.fillStyle = '#facc15';
+    ctx.fillRect(x + 1, y + 1, 2, 2);
+    ctx.fillRect(x + s - 3, y + 1, 2, 2);
+
+    // Deep Base Shadow
     ctx.fillStyle = '#451a03';
     ctx.fillRect(x, y + s - 2, s, 2);
   }
 
+  /**
+   * Dynamic 4-Frame Roaring Flame Hazards
+   */
   renderHazardFire(ctx, x, y) {
     const s = this.tileSize;
-    const flicker = Math.floor(this.animTimer * 10) % 3;
-    ctx.fillStyle = '#450a0a';
-    ctx.fillRect(x, y + 10, s, 6);
-    ctx.fillStyle = '#ea580c';
-    ctx.fillRect(x + 1, y + 4 + (flicker === 0 ? 1 : 0), 4, 10);
-    ctx.fillRect(x + 6, y + 2 + (flicker === 1 ? 1 : 0), 4, 12);
-    ctx.fillRect(x + 11, y + 5 + (flicker === 2 ? 1 : 0), 4, 9);
-    ctx.fillStyle = '#facc15';
-    ctx.fillRect(x + 2, y + 7, 2, 7);
-    ctx.fillRect(x + 7, y + 5, 2, 9);
-    ctx.fillRect(x + 12, y + 8, 2, 6);
+    const flameFrame = Math.floor(this.animTimer * 12) % 4;
+
+    // Fire Pit Hearth
+    ctx.fillStyle = '#292524';
+    ctx.fillRect(x, y + 12, s, 4);
+    ctx.fillStyle = '#78350f';
+    ctx.fillRect(x + 1, y + 12, s - 2, 2);
+
+    // Outer Red Roar
+    ctx.fillStyle = '#dc2626';
+    if (flameFrame === 0) {
+      ctx.fillRect(x + 1, y + 4, 4, 9);
+      ctx.fillRect(x + 6, y + 2, 4, 11);
+      ctx.fillRect(x + 11, y + 5, 4, 8);
+    } else if (flameFrame === 1) {
+      ctx.fillRect(x + 2, y + 2, 4, 11);
+      ctx.fillRect(x + 7, y + 5, 4, 8);
+      ctx.fillRect(x + 11, y + 3, 4, 10);
+    } else if (flameFrame === 2) {
+      ctx.fillRect(x + 1, y + 5, 4, 8);
+      ctx.fillRect(x + 6, y + 1, 4, 12);
+      ctx.fillRect(x + 10, y + 4, 4, 9);
+    } else {
+      ctx.fillRect(x + 2, y + 3, 4, 10);
+      ctx.fillRect(x + 6, y + 4, 4, 9);
+      ctx.fillRect(x + 11, y + 2, 4, 11);
+    }
+
+    // Mid Orange Core
+    ctx.fillStyle = '#f97316';
+    ctx.fillRect(x + 2, y + 6, 3, 7);
+    ctx.fillRect(x + 7, y + 5, 3, 8);
+    ctx.fillRect(x + 11, y + 7, 3, 6);
+
+    // White-Hot Yellow Heart
+    ctx.fillStyle = '#fef08a';
+    ctx.fillRect(x + 3, y + 8, 2, 5);
+    ctx.fillRect(x + 8, y + 7, 2, 6);
   }
 
+  /**
+   * Razor Chrome Spikes with Caution Base
+   */
   renderHazardSpikes(ctx, x, y) {
     const s = this.tileSize;
-    ctx.fillStyle = '#334155';
+
+    // Caution Striped Base (Yellow & Black)
+    ctx.fillStyle = '#facc15';
     ctx.fillRect(x, y + 13, s, 3);
-    ctx.fillStyle = '#cbd5e1';
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(x + 2, y + 13, 2, 3);
+    ctx.fillRect(x + 7, y + 13, 2, 3);
+    ctx.fillRect(x + 12, y + 13, 2, 3);
+
+    // 3 Razor Sharp Chrome Spikes
     for (let i = 0; i < 3; i++) {
       const sx = x + i * 5 + 1;
-      ctx.fillRect(sx + 2, y + 3, 1, 2);
-      ctx.fillRect(sx + 1, y + 5, 3, 3);
+      // Shadow / Back Edge
+      ctx.fillStyle = '#475569';
       ctx.fillRect(sx + 0, y + 8, 5, 5);
+      ctx.fillRect(sx + 1, y + 5, 3, 3);
+      ctx.fillRect(sx + 2, y + 2, 1, 3);
+
+      // Chrome Reflection Highlight
+      ctx.fillStyle = '#f8fafc';
+      ctx.fillRect(sx + 1, y + 6, 1, 6);
+      ctx.fillRect(sx + 2, y + 2, 1, 2);
     }
   }
 
+  /**
+   * 6-Frame Animated Spinning Gold Coin with Bobbing
+   */
   renderCollectibleCoin(ctx, x, y) {
-    const s = this.tileSize;
-    const bob = Math.sin(this.animTimer * 4) * 1.5;
+    const bob = Math.sin(this.animTimer * 5) * 1.5;
     const cy = y + 4 + bob;
-    const spinFrame = Math.floor(this.animTimer * 8) % 4;
+    const frame = Math.floor(this.animTimer * 10) % 6;
 
+    // Outer Gold Rim
     ctx.fillStyle = '#ca8a04';
-    if (spinFrame === 0 || spinFrame === 2) {
+    if (frame === 0 || frame === 3) {
+      // Full Face View
       ctx.fillRect(x + 4, cy, 8, 8);
       ctx.fillStyle = '#facc15';
       ctx.fillRect(x + 5, cy + 1, 6, 6);
       ctx.fillStyle = '#fef08a';
-      ctx.fillRect(x + 6, cy + 2, 2, 2);
-    } else if (spinFrame === 1) {
-      ctx.fillRect(x + 6, cy, 4, 8);
+      ctx.fillRect(x + 6, cy + 2, 2, 3);
+    } else if (frame === 1 || frame === 5) {
+      // 3/4 Perspective View
+      ctx.fillRect(x + 5, cy, 6, 8);
       ctx.fillStyle = '#facc15';
-      ctx.fillRect(x + 7, cy + 1, 2, 6);
+      ctx.fillRect(x + 6, cy + 1, 4, 6);
       ctx.fillStyle = '#fef08a';
-      ctx.fillRect(x + 7, cy + 2, 1, 2);
+      ctx.fillRect(x + 7, cy + 2, 1, 3);
     } else {
+      // Edge-On View
       ctx.fillRect(x + 7, cy, 2, 8);
       ctx.fillStyle = '#fef08a';
-      ctx.fillRect(x + 7, cy + 2, 2, 3);
+      ctx.fillRect(x + 7, cy + 1, 2, 6);
     }
   }
 
+  /**
+   * Faceted Ruby Gem with Sparkle Glint
+   */
   renderCollectibleRuby(ctx, x, y) {
-    const s = this.tileSize;
-    const bob = Math.sin(this.animTimer * 4 + 1) * 1.5;
+    const bob = Math.sin(this.animTimer * 5 + 1) * 1.5;
     const gy = y + 3 + bob;
+
+    // Dark Facet Base
     ctx.fillStyle = '#991b1b';
-    ctx.fillRect(x + 4, gy + 1, 8, 8);
+    ctx.fillRect(x + 5, gy + 1, 6, 2);
+    ctx.fillRect(x + 3, gy + 3, 10, 4);
+    ctx.fillRect(x + 5, gy + 7, 6, 2);
+    ctx.fillRect(x + 7, gy + 9, 2, 1);
+
+    // Crimson Facet Center
     ctx.fillStyle = '#ef4444';
-    ctx.fillRect(x + 5, gy + 2, 6, 6);
-    ctx.fillStyle = '#fca5a5';
-    ctx.fillRect(x + 5, gy + 2, 2, 2);
+    ctx.fillRect(x + 5, gy + 3, 6, 4);
+    ctx.fillRect(x + 6, gy + 2, 4, 1);
+
+    // Diamond Glint Sparkle
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(x + 5, gy + 3, 2, 2);
   }
 
+  /**
+   * Faceted Sapphire Diamond with Sparkle Glint
+   */
   renderCollectibleSapphire(ctx, x, y) {
-    const s = this.tileSize;
-    const bob = Math.sin(this.animTimer * 4 + 2) * 1.5;
+    const bob = Math.sin(this.animTimer * 5 + 2) * 1.5;
     const gy = y + 3 + bob;
+
+    // Dark Cobalt Base
     ctx.fillStyle = '#0369a1';
     ctx.fillRect(x + 5, gy + 1, 6, 2);
-    ctx.fillRect(x + 3, gy + 3, 10, 3);
-    ctx.fillRect(x + 5, gy + 6, 6, 2);
-    ctx.fillRect(x + 7, gy + 8, 2, 2);
+    ctx.fillRect(x + 3, gy + 3, 10, 4);
+    ctx.fillRect(x + 5, gy + 7, 6, 2);
+    ctx.fillRect(x + 7, gy + 9, 2, 1);
+
+    // Cyan Crystal Center
     ctx.fillStyle = '#38bdf8';
-    ctx.fillRect(x + 5, gy + 2, 4, 4);
+    ctx.fillRect(x + 5, gy + 3, 6, 4);
+    ctx.fillRect(x + 6, gy + 2, 4, 1);
+
+    // White Star Reflection
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(x + 5, gy + 2, 2, 2);
+    ctx.fillRect(x + 5, gy + 3, 2, 2);
   }
 
+  /**
+   * Grand Golden Trophy (Radiant Pulsating Halo)
+   */
   renderCollectibleTrophy(ctx, x, y) {
-    const s = this.tileSize;
-    const shimmer = Math.sin(this.animTimer * 6) > 0.5;
-    ctx.fillStyle = shimmer ? '#fef08a' : '#eab308';
+    const pulse = (Math.sin(this.animTimer * 6) + 1) * 0.5;
+
+    // Radiant Aura Glow
+    ctx.fillStyle = pulse > 0.4 ? 'rgba(250, 204, 21, 0.25)' : 'rgba(250, 204, 21, 0.1)';
+    ctx.fillRect(x - 2, y - 2, 20, 18);
+
+    // Golden Chalice Body
+    ctx.fillStyle = '#ca8a04';
     ctx.fillRect(x + 2, y + 1, 12, 5);
     ctx.fillRect(x + 4, y + 6, 8, 3);
     ctx.fillRect(x + 6, y + 9, 4, 3);
     ctx.fillRect(x + 3, y + 12, 10, 3);
+
+    // Golden Handles
     ctx.fillRect(x + 0, y + 2, 2, 4);
     ctx.fillRect(x + 14, y + 2, 2, 4);
-    ctx.fillStyle = '#dc2626';
+
+    // Brilliant Gold Face
+    ctx.fillStyle = pulse > 0.5 ? '#fef08a' : '#facc15';
+    ctx.fillRect(x + 4, y + 2, 8, 3);
+    ctx.fillRect(x + 5, y + 5, 6, 2);
+    ctx.fillRect(x + 4, y + 13, 8, 1);
+
+    // Royal Ruby Jewel in Cup Center
+    ctx.fillStyle = '#ef4444';
     ctx.fillRect(x + 7, y + 3, 2, 2);
   }
 
+  /**
+   * Animated Dimensional Exit Portal (Locked vs Unlocked)
+   */
   renderExitDoor(ctx, x, y) {
     const w = this.tileSize;
     const h = this.tileSize * 2;
-    ctx.fillStyle = this.hasTrophy ? '#fbbf24' : '#71717a';
-    ctx.fillRect(x + 1, y, w - 2, h);
-    ctx.fillStyle = '#050508';
-    ctx.fillRect(x + 3, y + 3, w - 6, h - 3);
 
     if (this.hasTrophy) {
-      ctx.fillStyle = '#67e8f9';
-      ctx.fillRect(x + 6, y + 10, 4, 8);
+      // UNLOCKED: Swirling Animated Neon Portal
+      const vortexFrame = Math.floor(this.animTimer * 10) % 4;
+
+      // Golden Archway Frame
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillRect(x + 1, y, w - 2, h);
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillRect(x + 2, y + 1, w - 4, 2);
+
+      // Deep Void Center
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(x + 3, y + 3, w - 6, h - 3);
+
+      // Swirling Cyan/Magenta Vortex Core
+      ctx.fillStyle = vortexFrame % 2 === 0 ? '#06b6d4' : '#a855f7';
+      ctx.fillRect(x + 5, y + 8, 6, 14);
+
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(x + 6, y + 11, 4, 8);
+
+      // Radiant White Core
       ctx.fillStyle = '#ffffff';
-      ctx.fillRect(x + 7, y + 12, 2, 4);
+      ctx.fillRect(x + 7, y + 13, 2, 4);
+    } else {
+      // LOCKED: Iron Portcullis with Red Warning Padlock
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(x + 1, y, w - 2, h);
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(x + 3, y + 3, w - 6, h - 3);
+
+      // Vertical Iron Bars
+      ctx.fillStyle = '#64748b';
+      ctx.fillRect(x + 5, y + 4, 1, h - 4);
+      ctx.fillRect(x + 8, y + 4, 1, h - 4);
+      ctx.fillRect(x + 11, y + 4, 1, h - 4);
+
+      // Glowing Red Warning Lock
+      ctx.fillStyle = '#ef4444';
+      ctx.fillRect(x + 6, y + 13, 5, 5);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(x + 8, y + 14, 1, 2);
     }
   }
 }

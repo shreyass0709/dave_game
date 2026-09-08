@@ -1,7 +1,9 @@
 /**
  * Main Game Entry Point
  * Orchestrates multi-level progression (Levels 1, 2, 3), camera tracking, HUD,
- * collectibles, scoring, particle effects, shooting mechanics, enemy AI, and Grand Victory.
+ * collectibles, scoring, particle effects, shooting mechanics, enemy AI,
+ * complete retro UI system (Main Menu, HUD, Pause, Game Over, Level Complete, Final Victory, Instructions, Settings),
+ * and dual Keyboard + Mouse navigation.
  */
 
 import { GameMap, TILE_SIZE } from './map.js';
@@ -11,11 +13,18 @@ import { InputHandler } from './input.js';
 import { Camera } from './camera.js';
 import { Enemy } from './enemy.js';
 import { EffectManager } from './effects.js';
+import { UIManager, UIButton } from './ui.js';
 
 export const GameState = {
+  MAIN_MENU: 'MAIN_MENU',
   PLAYING: 'PLAYING',
+  PAUSED: 'PAUSED',
   LEVEL_COMPLETE: 'LEVEL_COMPLETE',
-  GAME_VICTORY: 'GAME_VICTORY'
+  GAME_OVER: 'GAME_OVER',
+  FINAL_VICTORY: 'FINAL_VICTORY',
+  INSTRUCTIONS: 'INSTRUCTIONS',
+  SETTINGS: 'SETTINGS',
+  QUIT: 'QUIT'
 };
 
 export class Game {
@@ -24,7 +33,7 @@ export class Game {
       this.canvas = canvasElement || document.getElementById('gameCanvas');
       this.ctx = this.canvas ? this.canvas.getContext('2d') : null;
       if (this.ctx) this.ctx.imageSmoothingEnabled = false;
-      this.input = new InputHandler();
+      this.input = new InputHandler(this.canvas);
       this.camera = new Camera(this.canvas.width, this.canvas.height);
     } else {
       this.canvas = { width: 400, height: 240 };
@@ -34,6 +43,7 @@ export class Game {
     }
 
     this.effects = new EffectManager();
+    this.ui = new UIManager();
     this.showDebug = false;
     this.lastTime = 0;
     this.fps = 60;
@@ -45,10 +55,12 @@ export class Game {
     this.currentLevel = 1;
     this.maxLevels = 3;
     this.lives = 3;
-    this.gameState = GameState.PLAYING;
+    this.gameState = GameState.MAIN_MENU;
+    this.selectedMenuIndex = 0;
     this.messageBanner = "LEVEL 1: FIND TROPHY & GO TO EXIT!";
-    this.messageTimer = 4;
+    this.messageTimer = 0;
 
+    this.initButtons();
     this.loadLevel(1);
 
     // Start game loop in browser environment
@@ -59,11 +71,55 @@ export class Game {
   }
 
   /**
+   * Initializes all UI buttons for all interactive screens
+   */
+  initButtons() {
+    this.menuButtons = {
+      [GameState.MAIN_MENU]: [
+        new UIButton({ id: 'play', label: 'PLAY', x: 130, y: 92, width: 140, height: 20, color: '#38bdf8' }),
+        new UIButton({ id: 'instructions', label: 'INSTRUCTIONS', x: 130, y: 118, width: 140, height: 20, color: '#38bdf8' }),
+        new UIButton({ id: 'settings', label: 'SETTINGS', x: 130, y: 144, width: 140, height: 20, color: '#38bdf8' }),
+        new UIButton({ id: 'quit', label: 'QUIT', x: 130, y: 170, width: 140, height: 20, color: '#ef4444' })
+      ],
+      [GameState.PAUSED]: [
+        new UIButton({ id: 'resume', label: 'RESUME', x: 130, y: 80, width: 140, height: 20, color: '#38bdf8' }),
+        new UIButton({ id: 'restart_level', label: 'RESTART LEVEL', x: 130, y: 106, width: 140, height: 20, color: '#facc15' }),
+        new UIButton({ id: 'main_menu', label: 'MAIN MENU', x: 130, y: 132, width: 140, height: 20, color: '#ef4444' })
+      ],
+      [GameState.GAME_OVER]: [
+        new UIButton({ id: 'restart_game', label: 'RESTART', x: 130, y: 96, width: 140, height: 20, color: '#22c55e' }),
+        new UIButton({ id: 'main_menu', label: 'MAIN MENU', x: 130, y: 124, width: 140, height: 20, color: '#ef4444' })
+      ],
+      [GameState.LEVEL_COMPLETE]: [
+        new UIButton({ id: 'next_level', label: 'NEXT LEVEL', x: 130, y: 100, width: 140, height: 20, color: '#22c55e' }),
+        new UIButton({ id: 'main_menu', label: 'MAIN MENU', x: 130, y: 128, width: 140, height: 20, color: '#ef4444' })
+      ],
+      [GameState.FINAL_VICTORY]: [
+        new UIButton({ id: 'play_again', label: 'PLAY AGAIN', x: 130, y: 102, width: 140, height: 20, color: '#facc15' }),
+        new UIButton({ id: 'main_menu', label: 'MAIN MENU', x: 130, y: 130, width: 140, height: 20, color: '#ef4444' })
+      ],
+      [GameState.INSTRUCTIONS]: [
+        new UIButton({ id: 'back_main', label: 'BACK', x: 130, y: 184, width: 140, height: 20, color: '#38bdf8' })
+      ],
+      [GameState.SETTINGS]: [
+        new UIButton({ id: 'toggle_sfx', label: 'TOGGLE SOUND', x: 130, y: 102, width: 140, height: 18, color: '#a855f7' }),
+        new UIButton({ id: 'toggle_music', label: 'TOGGLE MUSIC', x: 130, y: 126, width: 140, height: 18, color: '#a855f7' }),
+        new UIButton({ id: 'toggle_crt', label: 'TOGGLE CRT', x: 130, y: 150, width: 140, height: 18, color: '#a855f7' }),
+        new UIButton({ id: 'back_main', label: 'BACK', x: 130, y: 174, width: 140, height: 18, color: '#38bdf8' })
+      ],
+      [GameState.QUIT]: [
+        new UIButton({ id: 'return_title', label: 'RETURN TO TITLE', x: 120, y: 130, width: 160, height: 22, color: '#38bdf8' })
+      ]
+    };
+  }
+
+  /**
    * Loads a specific level and resets entities cleanly
    */
   loadLevel(levelNumber) {
     this.currentLevel = levelNumber;
     this.map = new GameMap(levelNumber);
+    this.screenFadeAlpha = 1.0; // Trigger smooth fade transition
 
     if (!this.player) {
       this.player = new Player(this.map.playerSpawn.x, this.map.playerSpawn.y);
@@ -78,14 +134,16 @@ export class Game {
     this.enemies = this.map.getEnemySpawns().map(spawn => new Enemy(spawn.x, spawn.y));
     this.effects.clear();
     this.camera.snapTo(this.player, this.map.cols * TILE_SIZE);
-    this.gameState = GameState.PLAYING;
     this.messageBanner = `LEVEL ${levelNumber}: FIND TROPHY & GO TO EXIT!`;
     this.messageTimer = 3.5;
   }
 
   restartGame() {
     this.score = 0;
+    this.lives = 3;
     this.loadLevel(1);
+    this.gameState = GameState.PLAYING;
+    this.screenFadeAlpha = 1.0;
   }
 
   /**
@@ -115,35 +173,149 @@ export class Game {
   }
 
   /**
-   * Update game logic, player, projectiles, enemies, effects, physics, and level transitions
+   * Handles UI menu navigation (Keyboard & Mouse)
+   */
+  handleMenuNavigation(buttons) {
+    if (!this.input || !buttons || buttons.length === 0) return;
+
+    const isKeyUp = this.input.wasMenuUp();
+    const isKeyDown = this.input.wasMenuDown();
+    const isEnterPressed = this.input.wasMenuSelect();
+    const isMouseClick = this.input.wasMouseClicked();
+    const mousePos = this.input.getMousePos();
+
+    // 1. Keyboard Navigation
+    if (isKeyUp) {
+      this.selectedMenuIndex = (this.selectedMenuIndex - 1 + buttons.length) % buttons.length;
+    } else if (isKeyDown) {
+      this.selectedMenuIndex = (this.selectedMenuIndex + 1) % buttons.length;
+    } else if (isMouseClick && mousePos.x >= 0 && mousePos.y >= 0) {
+      // 2. Mouse Click Selection
+      for (let i = 0; i < buttons.length; i++) {
+        if (buttons[i].contains(mousePos.x, mousePos.y)) {
+          this.selectedMenuIndex = i;
+          break;
+        }
+      }
+    }
+
+    // 3. Trigger Action
+    let triggeredButton = null;
+    if (isEnterPressed) {
+      triggeredButton = buttons[this.selectedMenuIndex];
+    } else if (isMouseClick && mousePos.x >= 0 && mousePos.y >= 0) {
+      for (let i = 0; i < buttons.length; i++) {
+        if (buttons[i].contains(mousePos.x, mousePos.y)) {
+          triggeredButton = buttons[i];
+          break;
+        }
+      }
+    }
+
+    if (triggeredButton) {
+      this.executeButtonAction(triggeredButton.id);
+    }
+  }
+
+  /**
+   * Executes UI button commands
+   */
+  executeButtonAction(actionId) {
+    switch (actionId) {
+      case 'play':
+        this.restartGame();
+        this.gameState = GameState.PLAYING;
+        break;
+      case 'instructions':
+        this.gameState = GameState.INSTRUCTIONS;
+        this.selectedMenuIndex = 0;
+        break;
+      case 'settings':
+        this.gameState = GameState.SETTINGS;
+        this.selectedMenuIndex = 0;
+        break;
+      case 'quit':
+        this.gameState = GameState.QUIT;
+        this.selectedMenuIndex = 0;
+        break;
+      case 'resume':
+        this.gameState = GameState.PLAYING;
+        break;
+      case 'restart_level':
+        this.loadLevel(this.currentLevel);
+        this.gameState = GameState.PLAYING;
+        break;
+      case 'restart_game':
+      case 'play_again':
+        this.restartGame();
+        break;
+      case 'next_level':
+        if (this.currentLevel < this.maxLevels) {
+          this.loadLevel(this.currentLevel + 1);
+          this.gameState = GameState.PLAYING;
+        } else {
+          this.gameState = GameState.FINAL_VICTORY;
+          this.selectedMenuIndex = 0;
+        }
+        break;
+      case 'main_menu':
+      case 'back_main':
+      case 'return_title':
+        this.gameState = GameState.MAIN_MENU;
+        this.selectedMenuIndex = 0;
+        break;
+      case 'toggle_sfx':
+        this.ui.settings.soundFX = !this.ui.settings.soundFX;
+        break;
+      case 'toggle_music':
+        this.ui.settings.music = !this.ui.settings.music;
+        break;
+      case 'toggle_crt':
+        this.ui.settings.crtFilter = !this.ui.settings.crtFilter;
+        break;
+    }
+  }
+
+  /**
+   * Update game logic, player, projectiles, enemies, effects, physics, and state transitions
    */
   update(dt) {
+    this.ui.update(dt);
+
+    if (this.screenFadeAlpha > 0) {
+      this.screenFadeAlpha = Math.max(0, this.screenFadeAlpha - 2.5 * dt);
+    }
+
     if (this.input && this.input.wasDebugToggled()) {
       this.showDebug = !this.showDebug;
     }
 
-    // 1. Handle LEVEL_COMPLETE state (Advance to next level)
-    if (this.gameState === GameState.LEVEL_COMPLETE) {
-      if (this.input && this.input.wasRestartJustPressed()) {
-        if (this.currentLevel < this.maxLevels) {
-          this.loadLevel(this.currentLevel + 1);
-        } else {
-          this.gameState = GameState.GAME_VICTORY;
-        }
+    // 1. MAIN MENU & MODAL STATES
+    if (this.gameState !== GameState.PLAYING) {
+      const activeButtons = this.menuButtons[this.gameState] || [];
+
+      // Shortcut ESC to resume if in PAUSED state
+      if (this.gameState === GameState.PAUSED && this.input && this.input.wasPauseJustPressed()) {
+        this.gameState = GameState.PLAYING;
+        if (this.input) this.input.clearFrame();
+        return;
       }
+
+      this.handleMenuNavigation(activeButtons);
+
       if (this.input) this.input.clearFrame();
       return;
     }
 
-    // 2. Handle GAME_VICTORY state (Replay from Level 1)
-    if (this.gameState === GameState.GAME_VICTORY) {
-      if (this.input && this.input.wasRestartJustPressed()) {
-        this.restartGame();
-      }
+    // 2. PLAYING STATE: Check Pause Key (P / ESC)
+    if (this.input && this.input.wasPauseJustPressed()) {
+      this.gameState = GameState.PAUSED;
+      this.selectedMenuIndex = 0;
       if (this.input) this.input.clearFrame();
       return;
     }
 
+    // Debug death test
     if (this.input && this.input.wasDeathTestPressed()) {
       this.player.die();
     }
@@ -159,9 +331,17 @@ export class Game {
 
     // 5. Handle Player Input & Shooting
     if (this.input) {
+      const wasGroundedBefore = this.player.isGrounded;
       const newProjectile = this.player.handleInput(this.input, dt);
+
+      // Landing / Takeoff dust puff feedback
+      if (wasGroundedBefore && !this.player.isGrounded && this.player.vy < -100) {
+        this.effects.addDustPuff(this.player.x, this.player.y);
+      }
+
       if (newProjectile && this.projectiles.length < 8) {
         this.projectiles.push(newProjectile);
+        this.effects.addMuzzleFlash(this.player.x, this.player.y, this.player.facing);
       }
     }
 
@@ -170,9 +350,23 @@ export class Game {
       proj.update(this.map, dt);
     }
 
-    // 7. Update Physics & Process Collisions
+    // 7. Track previous death state for life decrement
+    const wasDeadBefore = this.player.state === PlayerState.DEAD;
+
+    // Update Physics & Process Collisions
     const events = this.physics.update(this.player, dt, this.enemies, this.projectiles);
     this.player.updateAnimation(dt);
+
+    // Detect respawn event (Transition from DEAD to IDLE)
+    if (wasDeadBefore && this.player.state === PlayerState.IDLE) {
+      this.lives--;
+      if (this.lives <= 0) {
+        this.gameState = GameState.GAME_OVER;
+        this.selectedMenuIndex = 0;
+        if (this.input) this.input.clearFrame();
+        return;
+      }
+    }
 
     // Filter out destroyed projectiles
     this.projectiles = this.projectiles.filter(p => !p.isRemoved);
@@ -185,6 +379,7 @@ export class Game {
 
         if (item.type === 'TROPHY') {
           this.showMessage("TROPHY COLLECTED! EXIT IS OPEN!", 4);
+          this.effects.addVictoryConfetti(item.x, item.y);
         }
       }
     }
@@ -194,6 +389,7 @@ export class Game {
       for (const enemy of events.stompedEnemies) {
         this.score += 200;
         this.effects.addScorePopup(enemy.x, enemy.y, 200, '#34d399');
+        this.effects.addExplosion(enemy.x, enemy.y, '#34d399');
       }
       this.showMessage("ENEMY STOMPED! +200", 2.0);
     }
@@ -201,16 +397,19 @@ export class Game {
       for (const enemy of events.shotEnemies) {
         this.score += 200;
         this.effects.addScorePopup(enemy.x, enemy.y, 200, '#38bdf8');
+        this.effects.addExplosion(enemy.x, enemy.y, '#38bdf8');
       }
       this.showMessage("ENEMY BLASTED! +200", 2.0);
     }
 
     if (events.hitEnemy) {
       this.showMessage("HIT BY ENEMY! OUCH!", 2.5);
+      this.effects.addDamageFlash('rgba(239, 68, 68, 0.4)', 0.25);
     }
 
     if (events.hitHazard) {
       this.showMessage("OUCH! WATCH OUT FOR HAZARDS!", 2.5);
+      this.effects.addDamageFlash('rgba(239, 68, 68, 0.4)', 0.25);
     }
 
     // 9. Process Level Completion Flow
@@ -219,13 +418,16 @@ export class Game {
         this.player.vx = 0;
         this.player.vy = 0;
         this.projectiles = [];
+        this.effects.addVictoryConfetti(this.player.x, this.player.y);
 
         if (this.currentLevel < this.maxLevels) {
           this.score += 500; // Level completion bonus
           this.gameState = GameState.LEVEL_COMPLETE;
+          this.selectedMenuIndex = 0;
         } else {
           this.score += 2000; // Grand campaign victory bonus
-          this.gameState = GameState.GAME_VICTORY;
+          this.gameState = GameState.FINAL_VICTORY;
+          this.selectedMenuIndex = 0;
         }
       } else {
         this.showMessage("FIND THE GOLDEN TROPHY TO OPEN EXIT!", 2.5);
@@ -250,7 +452,7 @@ export class Game {
   }
 
   /**
-   * Render all game layers: World (Camera space) and HUD (Screen space)
+   * Render all game layers: World, HUD, and UI States
    */
   render() {
     if (!this.ctx) return;
@@ -258,14 +460,37 @@ export class Game {
     const w = this.canvas.width;
     const h = this.canvas.height;
 
-    // 1. Clear Screen with dark retro backdrop
+    // 1. Clear Screen
     ctx.fillStyle = '#050508';
     ctx.fillRect(0, 0, w, h);
 
-    // 2. Render World Objects in Camera Coordinates
+    // 2. Render Main Menu if active
+    if (this.gameState === GameState.MAIN_MENU) {
+      this.ui.renderMainMenu(ctx, w, h, this.selectedMenuIndex, this.menuButtons[GameState.MAIN_MENU]);
+      this.ui.renderScreenFade(ctx, w, h, this.screenFadeAlpha);
+      return;
+    }
+
+    if (this.gameState === GameState.INSTRUCTIONS) {
+      this.ui.renderInstructions(ctx, w, h, this.selectedMenuIndex, this.menuButtons[GameState.INSTRUCTIONS]);
+      return;
+    }
+
+    if (this.gameState === GameState.SETTINGS) {
+      this.ui.renderSettings(ctx, w, h, this.selectedMenuIndex, this.menuButtons[GameState.SETTINGS]);
+      return;
+    }
+
+    if (this.gameState === GameState.QUIT) {
+      this.ui.renderQuit(ctx, w, h, this.selectedMenuIndex, this.menuButtons[GameState.QUIT]);
+      return;
+    }
+
+    // 3. Render World Objects in Camera Coordinates with Screen Shake
     ctx.save();
     const cameraOffset = this.camera.getRenderOffset();
-    ctx.translate(-cameraOffset.x, -cameraOffset.y);
+    const shakeOffset = this.effects.getShakeOffset();
+    ctx.translate(-cameraOffset.x + shakeOffset.x, -cameraOffset.y + shakeOffset.y);
 
     // Tile Map & Collectibles
     this.map.render(ctx, this.camera);
@@ -276,188 +501,77 @@ export class Game {
     // Projectiles
     for (const proj of this.projectiles) {
       proj.render(ctx);
-      if (this.showDebug) {
-        proj.renderDebug(ctx);
-      }
+      if (this.showDebug) proj.renderDebug(ctx);
     }
 
     // Enemies
     for (const enemy of this.enemies) {
       enemy.render(ctx);
-      if (this.showDebug) {
-        enemy.renderDebug(ctx);
-      }
+      if (this.showDebug) enemy.renderDebug(ctx);
     }
 
     // Player
     this.player.render(ctx);
-
-    if (this.showDebug) {
-      this.player.renderDebug(ctx);
-    }
+    if (this.showDebug) this.player.renderDebug(ctx);
 
     ctx.restore();
 
-    // 3. Render Screen-Space Retro HUD Bar
-    this.renderHUD(ctx);
+    // 4. Render Screen-Space Retro HUD Bar
+    this.ui.renderHUD(ctx, w, h, {
+      lives: this.lives,
+      score: this.score,
+      level: this.currentLevel,
+      hasTrophy: this.map.hasTrophy
+    });
 
-    // 4. Render Center Message Banner
-    if (this.gameState === GameState.PLAYING) {
+    // 5. Render Damage Flash Overlay
+    this.effects.renderScreenFlash(ctx, w, h);
+
+    // 6. Render Center Message Toast in Playing State
+    if (this.gameState === GameState.PLAYING && this.messageTimer > 0) {
       this.renderMessageBanner(ctx);
     }
 
-    // 5. Render Modals (LEVEL COMPLETE or GAME VICTORY)
-    if (this.gameState === GameState.LEVEL_COMPLETE) {
-      this.renderLevelCompleteModal(ctx);
-    } else if (this.gameState === GameState.GAME_VICTORY) {
-      this.renderVictoryModal(ctx);
+    // 7. Render Overlaid Menus
+    if (this.gameState === GameState.PAUSED) {
+      this.ui.renderPauseMenu(ctx, w, h, this.selectedMenuIndex, this.menuButtons[GameState.PAUSED]);
+    } else if (this.gameState === GameState.GAME_OVER) {
+      this.ui.renderGameOver(ctx, w, h, this.selectedMenuIndex, this.menuButtons[GameState.GAME_OVER], this.score);
+    } else if (this.gameState === GameState.LEVEL_COMPLETE) {
+      this.ui.renderLevelComplete(ctx, w, h, this.selectedMenuIndex, this.menuButtons[GameState.LEVEL_COMPLETE], {
+        currentLevel: this.currentLevel,
+        score: this.score,
+        bonus: 500
+      });
+    } else if (this.gameState === GameState.FINAL_VICTORY) {
+      this.ui.renderFinalVictory(ctx, w, h, this.selectedMenuIndex, this.menuButtons[GameState.FINAL_VICTORY], this.score);
     }
 
-    // 6. Render Debug Overlay
+    // 8. Screen Transition Fade Curtain
+    this.ui.renderScreenFade(ctx, w, h, this.screenFadeAlpha);
+
+    // 9. Render Debug Overlay
     if (this.showDebug) {
       this.renderDebug(ctx);
     }
   }
 
-  /**
-   * Retro top status banner (Score, Level, Trophy Status, Lives)
-   */
-  renderHUD(ctx) {
-    ctx.fillStyle = '#0000aa';
-    ctx.fillRect(0, 0, this.canvas.width, 16);
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '8px "Press Start 2P", monospace';
-    ctx.textBaseline = 'middle';
-
-    // SCORE
-    ctx.fillText(`SCORE:${String(this.score).padStart(5, '0')}`, 6, 8);
-
-    // LEVEL
-    ctx.fillText(`LVL:${String(this.currentLevel).padStart(2, '0')}`, 140, 8);
-
-    // TROPHY STATUS (Key item indicator)
-    if (this.map.hasTrophy) {
-      ctx.fillStyle = '#facc15';
-      ctx.fillText(`TROPHY:YES`, 220, 8);
-    } else {
-      ctx.fillStyle = '#94a3b8';
-      ctx.fillText(`TROPHY:NO`, 220, 8);
-    }
-
-    // LIVES
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(`DAVES:${this.lives}`, 330, 8);
-
-    // Bottom border line
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 15, this.canvas.width, 1);
-  }
-
-  /**
-   * Objective message banner (Dave style bottom alert bar)
-   */
   renderMessageBanner(ctx) {
-    if (this.messageTimer > 0) {
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
-      ctx.fillRect(0, this.canvas.height - 18, this.canvas.width, 18);
-
-      ctx.strokeStyle = '#38bdf8';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(0, this.canvas.height - 18, this.canvas.width, 18);
-
-      ctx.fillStyle = '#fef08a';
-      ctx.font = '7px "Press Start 2P", monospace';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(this.messageBanner, this.canvas.width / 2, this.canvas.height - 9);
-      ctx.textAlign = 'start';
-    }
-  }
-
-  /**
-   * LEVEL COMPLETE modal between levels
-   */
-  renderLevelCompleteModal(ctx) {
-    const w = this.canvas.width;
-    const h = this.canvas.height;
-
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
-    ctx.fillRect(0, 0, w, h);
-
-    const boxW = 300;
-    const boxH = 115;
-    const boxX = (w - boxW) / 2;
-    const boxY = (h - boxH) / 2;
-
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(boxX, boxY, boxW, boxH);
-
-    ctx.strokeStyle = '#22c55e';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(boxX, boxY, boxW, boxH);
-
-    ctx.fillStyle = '#4ade80';
-    ctx.font = '10px "Press Start 2P", monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText(`*** LEVEL ${this.currentLevel} COMPLETE! ***`, w / 2, boxY + 28);
-
-    ctx.fillStyle = '#facc15';
-    ctx.font = '8px "Press Start 2P", monospace';
-    ctx.fillText(`SCORE: ${this.score} (+500 BONUS)`, w / 2, boxY + 54);
-
-    ctx.fillStyle = '#e2e8f0';
-    ctx.font = '6px "Press Start 2P", monospace';
-    ctx.fillText(`PRESS [ENTER] TO ENTER LEVEL ${this.currentLevel + 1}`, w / 2, boxY + 86);
-
-    ctx.textAlign = 'start';
-  }
-
-  /**
-   * GRAND VICTORY modal after Level 3
-   */
-  renderVictoryModal(ctx) {
-    const w = this.canvas.width;
-    const h = this.canvas.height;
-
     ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
-    ctx.fillRect(0, 0, w, h);
+    ctx.fillRect(0, this.canvas.height - 18, this.canvas.width, 18);
 
-    const boxW = 320;
-    const boxH = 125;
-    const boxX = (w - boxW) / 2;
-    const boxY = (h - boxH) / 2;
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0, this.canvas.height - 18, this.canvas.width, 18);
 
-    ctx.fillStyle = '#1e1b4b'; // Deep Indigo Victory box
-    ctx.fillRect(boxX, boxY, boxW, boxH);
-
-    ctx.strokeStyle = '#fbbf24'; // Gold Border
-    ctx.lineWidth = 2;
-    ctx.strokeRect(boxX, boxY, boxW, boxH);
-
-    ctx.fillStyle = '#facc15';
-    ctx.font = '11px "Press Start 2P", monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText('*** YOU WIN! ***', w / 2, boxY + 28);
-
-    ctx.fillStyle = '#38bdf8';
+    ctx.fillStyle = '#fef08a';
     ctx.font = '7px "Press Start 2P", monospace';
-    ctx.fillText('ALL 3 LEVELS CONQUERED!', w / 2, boxY + 50);
-
-    ctx.fillStyle = '#4ade80';
-    ctx.font = '8px "Press Start 2P", monospace';
-    ctx.fillText(`FINAL SCORE: ${this.score}`, w / 2, boxY + 72);
-
-    ctx.fillStyle = '#f8fafc';
-    ctx.font = '6px "Press Start 2P", monospace';
-    ctx.fillText('PRESS [SPACE] OR [ENTER] TO REPLAY', w / 2, boxY + 98);
-
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(this.messageBanner, this.canvas.width / 2, this.canvas.height - 9);
     ctx.textAlign = 'start';
   }
 
-  /**
-   * Live diagnostics telemetry overlay
-   */
   renderDebug(ctx) {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
     ctx.fillRect(4, 20, 205, 108);

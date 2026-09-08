@@ -1,35 +1,83 @@
 /**
- * Input Manager for Keyboard Controls
- * Tracks key states, just-pressed triggers, shooting, restart, and buffers
+ * Input Manager for Keyboard Controls and Mouse Interaction
+ * Tracks gameplay keys, menu navigation, pause triggers, and canvas mouse coordinates
  */
 export class InputHandler {
-  constructor() {
+  constructor(canvasElement = null) {
     this.keys = new Set();
     this.justPressed = new Set();
+    this.mouse = { x: -1, y: -1, isDown: false, wasClicked: false };
+    this.canvas = canvasElement;
 
-    window.addEventListener('keydown', (e) => {
-      // Prevent default browser scrolling for game keys
-      if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyS', 'KeyA', 'KeyD', 'KeyK', 'KeyB', 'KeyF', 'KeyR', 'Enter'].includes(e.code)) {
-        e.preventDefault();
+    if (typeof window !== 'undefined') {
+      window.addEventListener('keydown', (e) => {
+        // Prevent default browser scrolling for game and menu keys
+        if ([
+          'Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+          'KeyW', 'KeyS', 'KeyA', 'KeyD', 'KeyK', 'KeyB', 'KeyF', 'KeyR', 'KeyP',
+          'Enter', 'Escape'
+        ].includes(e.code)) {
+          e.preventDefault();
+        }
+
+        if (!this.keys.has(e.code)) {
+          this.justPressed.add(e.code);
+        }
+        this.keys.add(e.code);
+      });
+
+      window.addEventListener('keyup', (e) => {
+        this.keys.delete(e.code);
+      });
+
+      // Mouse tracking on Canvas
+      if (this.canvas) {
+        this.attachMouseListeners(this.canvas);
       }
 
-      if (!this.keys.has(e.code)) {
-        this.justPressed.add(e.code);
-      }
-      this.keys.add(e.code);
+      // Reset input on window blur to avoid stuck keys
+      window.addEventListener('blur', () => {
+        this.keys.clear();
+        this.justPressed.clear();
+        this.mouse.isDown = false;
+        this.mouse.wasClicked = false;
+      });
+    }
+  }
+
+  attachMouseListeners(canvas) {
+    this.canvas = canvas;
+
+    const updateMousePos = (e) => {
+      const rect = this.canvas.getBoundingClientRect();
+      const scaleX = this.canvas.width / rect.width;
+      const scaleY = this.canvas.height / rect.height;
+      this.mouse.x = (e.clientX - rect.left) * scaleX;
+      this.mouse.y = (e.clientY - rect.top) * scaleY;
+    };
+
+    this.canvas.addEventListener('mousemove', (e) => {
+      updateMousePos(e);
     });
 
-    window.addEventListener('keyup', (e) => {
-      this.keys.delete(e.code);
+    this.canvas.addEventListener('mousedown', (e) => {
+      updateMousePos(e);
+      this.mouse.isDown = true;
+      this.mouse.wasClicked = true;
     });
 
-    // Reset input on window blur to avoid stuck keys
-    window.addEventListener('blur', () => {
-      this.keys.clear();
-      this.justPressed.clear();
+    this.canvas.addEventListener('mouseup', () => {
+      this.mouse.isDown = false;
+    });
+
+    this.canvas.addEventListener('mouseleave', () => {
+      this.mouse.x = -1;
+      this.mouse.y = -1;
+      this.mouse.isDown = false;
     });
   }
 
+  // Gameplay Key Queries
   isLeft() {
     return this.keys.has('KeyA') || this.keys.has('ArrowLeft');
   }
@@ -58,6 +106,27 @@ export class InputHandler {
     return this.justPressed.has('Enter') || this.justPressed.has('KeyR') || this.justPressed.has('Space');
   }
 
+  // Menu & Pause Navigation Queries
+  wasPauseJustPressed() {
+    return this.justPressed.has('KeyP') || this.justPressed.has('Escape');
+  }
+
+  wasMenuUp() {
+    return this.justPressed.has('ArrowUp') || this.justPressed.has('KeyW');
+  }
+
+  wasMenuDown() {
+    return this.justPressed.has('ArrowDown') || this.justPressed.has('KeyS');
+  }
+
+  wasMenuSelect() {
+    return this.justPressed.has('Enter') || this.justPressed.has('Space');
+  }
+
+  wasMenuBack() {
+    return this.justPressed.has('Escape') || this.justPressed.has('KeyB');
+  }
+
   wasDebugToggled() {
     return this.justPressed.has('KeyB');
   }
@@ -66,10 +135,20 @@ export class InputHandler {
     return this.justPressed.has('KeyK');
   }
 
+  getMousePos() {
+    return { x: this.mouse.x, y: this.mouse.y };
+  }
+
+  wasMouseClicked() {
+    return this.mouse.wasClicked;
+  }
+
   /**
-   * Clears single-frame trigger keys. Must be called at the end of every game frame.
+   * Clears single-frame trigger keys and clicks. Must be called at the end of every game frame.
    */
   clearFrame() {
     this.justPressed.clear();
+    this.mouse.wasClicked = false;
   }
 }
+

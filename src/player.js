@@ -228,7 +228,7 @@ export class Player {
   }
 
   /**
-   * Render Dave-inspired original retro character sprite
+   * Render Dave-inspired original retro character sprite with visual feedback
    */
   render(ctx) {
     ctx.save();
@@ -255,6 +255,17 @@ export class Player {
       ctx.translate(-centerX, -centerY);
     }
 
+    // Jump Stretch / Fall Dynamics
+    if (this.state === PlayerState.JUMPING) {
+      ctx.translate(centerX, centerY);
+      ctx.scale(0.92, 1.08); // Vertical stretch
+      ctx.translate(-centerX, -centerY);
+    } else if (this.state === PlayerState.FALLING) {
+      ctx.translate(centerX, centerY);
+      ctx.scale(1.05, 0.95); // Slight wide squash
+      ctx.translate(-centerX, -centerY);
+    }
+
     this.drawCharacterSprite(ctx, px, py);
 
     ctx.restore();
@@ -264,49 +275,76 @@ export class Player {
    * Pixel-by-pixel original retro Dave-inspired character
    */
   drawCharacterSprite(ctx, x, y) {
-    // Red Cap / Visor
-    ctx.fillStyle = '#dc2626';
+    // 1. Red Cap / Visor with Shadow Brim
+    ctx.fillStyle = '#b91c1c'; // Cap shadow
     ctx.fillRect(x + 2, y + 0, 8, 3);
+    ctx.fillStyle = '#ef4444'; // Bright Cap Crown
+    ctx.fillRect(x + 3, y + 0, 6, 2);
+    ctx.fillStyle = '#dc2626'; // Visor Brim
     ctx.fillRect(x + 5, y + 2, 6, 2);
 
-    // Face / Skin Tone
-    ctx.fillStyle = '#fed7aa';
+    // 2. Face / Skin Tone
+    ctx.fillStyle = '#fed7aa'; // Warm Peach Skin
     ctx.fillRect(x + 3, y + 3, 6, 4);
 
-    // Expressive Eye
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(x + 6, y + 4, 2, 2);
+    // 3. Expressive Eye (with periodic blink)
+    const isBlinking = Math.sin(this.animTimer * 1.5) > 0.96;
+    if (isBlinking) {
+      ctx.fillStyle = '#78350f'; // Closed eye lash
+      ctx.fillRect(x + 6, y + 4, 2, 1);
+    } else {
+      ctx.fillStyle = '#0f172a'; // Pupil
+      ctx.fillRect(x + 6, y + 4, 2, 2);
+      ctx.fillStyle = '#ffffff'; // White glint
+      ctx.fillRect(x + 7, y + 4, 1, 1);
+    }
 
-    // Blue Shirt / Torso
-    ctx.fillStyle = '#2563eb';
+    // 4. Blue Shirt / Jacket
+    ctx.fillStyle = '#1d4ed8'; // Shadow Blue
     ctx.fillRect(x + 2, y + 7, 8, 4);
+    ctx.fillStyle = '#3b82f6'; // Bright Blue jacket front
+    ctx.fillRect(x + 3, y + 7, 6, 3);
 
     // Gun / Arm Shooting Extension
     if (this.isShooting) {
-      ctx.fillStyle = '#64748b'; // Blaster metal
+      ctx.fillStyle = '#475569'; // Blaster metal
       ctx.fillRect(x + 8, y + 8, 5, 2);
-      ctx.fillStyle = '#06b6d4'; // Muzzle glow
-      ctx.fillRect(x + 12, y + 8, 2, 2);
+      ctx.fillStyle = '#06b6d4'; // Cyan Muzzle glow
+      ctx.fillRect(x + 12, y + 7, 2, 4);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(x + 13, y + 8, 1, 2);
     } else {
-      // White Shirt Collar / Accent
+      // White Shirt Collar & Brass Zipper
       ctx.fillStyle = '#f8fafc';
-      ctx.fillRect(x + 4, y + 7, 2, 2);
+      ctx.fillRect(x + 4, y + 7, 2, 1);
+      ctx.fillStyle = '#facc15';
+      ctx.fillRect(x + 4, y + 8, 1, 2);
     }
 
-    // Pants and Shoes
+    // 5. Belt with Golden Buckle
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(x + 2, y + 10, 8, 1);
+    ctx.fillStyle = '#facc15';
+    ctx.fillRect(x + 5, y + 10, 2, 1);
+
+    // 6. Navy Pants and Brown Boots
     ctx.fillStyle = '#1e3a8a';   // Navy Pants
-    const shoeColor = '#78350f'; // Brown Shoes
+    const shoeColor = '#78350f'; // Dark Brown
+    const shoeHighlight = '#b45309';
 
     if (this.state === PlayerState.JUMPING) {
-      ctx.fillRect(x + 1, y + 10, 4, 3);
-      ctx.fillRect(x + 6, y + 10, 4, 3);
+      ctx.fillRect(x + 1, y + 11, 4, 2);
+      ctx.fillRect(x + 6, y + 11, 4, 2);
 
       ctx.fillStyle = shoeColor;
       ctx.fillRect(x + 0, y + 12, 4, 2);
       ctx.fillRect(x + 7, y + 12, 4, 2);
+      ctx.fillStyle = shoeHighlight;
+      ctx.fillRect(x + 0, y + 12, 2, 1);
+      ctx.fillRect(x + 7, y + 12, 2, 1);
     } else if (this.state === PlayerState.FALLING) {
-      ctx.fillRect(x + 2, y + 11, 3, 3);
-      ctx.fillRect(x + 7, y + 11, 3, 3);
+      ctx.fillRect(x + 2, y + 11, 3, 2);
+      ctx.fillRect(x + 7, y + 11, 3, 2);
 
       ctx.fillStyle = shoeColor;
       ctx.fillRect(x + 1, y + 13, 4, 2);
@@ -319,6 +357,8 @@ export class Player {
         ctx.fillStyle = shoeColor;
         ctx.fillRect(x + 0, y + 13, 4, 2);
         ctx.fillRect(x + 7, y + 13, 4, 2);
+        ctx.fillStyle = shoeHighlight;
+        ctx.fillRect(x + 0, y + 13, 2, 1);
       } else if (this.animFrame === 2) {
         ctx.fillRect(x + 3, y + 11, 3, 2);
         ctx.fillRect(x + 6, y + 11, 3, 2);
@@ -326,6 +366,8 @@ export class Player {
         ctx.fillStyle = shoeColor;
         ctx.fillRect(x + 2, y + 13, 4, 2);
         ctx.fillRect(x + 6, y + 13, 4, 2);
+        ctx.fillStyle = shoeHighlight;
+        ctx.fillRect(x + 7, y + 13, 2, 1);
       } else {
         ctx.fillRect(x + 2, y + 11, 4, 2);
         ctx.fillRect(x + 6, y + 11, 4, 2);
@@ -356,12 +398,13 @@ export class Player {
     ctx.fillStyle = '#fef08a';
     ctx.fillRect(x + 3, y + 3, 6, 4);
 
+    // Dizzy X eyes
     ctx.fillStyle = '#b91c1c';
-    ctx.fillRect(x + 5, y + 4, 1, 1);
-    ctx.fillRect(x + 7, y + 4, 1, 1);
-    ctx.fillRect(x + 6, y + 5, 1, 1);
-    ctx.fillRect(x + 5, y + 6, 1, 1);
-    ctx.fillRect(x + 7, y + 6, 1, 1);
+    ctx.fillRect(x + 4, y + 4, 1, 1);
+    ctx.fillRect(x + 6, y + 4, 1, 1);
+    ctx.fillRect(x + 5, y + 5, 1, 1);
+    ctx.fillRect(x + 4, y + 6, 1, 1);
+    ctx.fillRect(x + 6, y + 6, 1, 1);
 
     ctx.fillStyle = '#2563eb';
     ctx.fillRect(x + 2, y + 7, 8, 4);
