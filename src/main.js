@@ -1,6 +1,7 @@
 /**
  * Main Game Entry Point
- * Orchestrates Level 1 gameplay, smooth camera tracking, HUD, collectibles, and exit events.
+ * Orchestrates Level 1 gameplay, camera tracking, HUD, collectibles, scoring,
+ * particle effects, shooting mechanics, enemy AI, combat scoring, and exit events.
  */
 
 import { GameMap, TILE_SIZE } from './map.js';
@@ -8,6 +9,8 @@ import { Player, PlayerState, Direction } from './player.js';
 import { PhysicsEngine } from './physics.js';
 import { InputHandler } from './input.js';
 import { Camera } from './camera.js';
+import { Enemy } from './enemy.js';
+import { EffectManager } from './effects.js';
 
 class Game {
   constructor() {
@@ -23,6 +26,11 @@ class Game {
     this.physics = new PhysicsEngine(this.map);
     this.input = new InputHandler();
     this.camera = new Camera(this.canvas.width, this.canvas.height);
+    this.effects = new EffectManager();
+
+    // Dynamic Entity Collections
+    this.projectiles = [];
+    this.initEnemies();
 
     this.showDebug = false;
     this.lastTime = 0;
@@ -30,7 +38,7 @@ class Game {
     this.fpsTimer = 0;
     this.frameCount = 0;
 
-    // HUD and Game State
+    // Persistent Level Scoring & Game State
     this.score = 0;
     this.level = 1;
     this.lives = 3;
@@ -41,6 +49,10 @@ class Game {
     // Start game loop
     this.loop = this.loop.bind(this);
     requestAnimationFrame(this.loop);
+  }
+
+  initEnemies() {
+    this.enemies = this.map.getEnemySpawns().map(spawn => new Enemy(spawn.x, spawn.y));
   }
 
   /**
@@ -70,7 +82,7 @@ class Game {
   }
 
   /**
-   * Update game logic, player, physics, camera, and level interactions
+   * Update game logic, player, projectiles, enemies, effects, physics, and interactions
    */
   update(dt) {
     if (this.input.wasDebugToggled()) {
@@ -81,19 +93,63 @@ class Game {
       this.player.die();
     }
 
-    // Update Player & Physics
-    this.player.handleInput(this.input, dt);
-    const events = this.physics.update(this.player, dt);
+    // 1. Update Visual Particle & Score Effects
+    this.effects.update(dt);
+
+    // 2. Update Enemies
+    for (const enemy of this.enemies) {
+      enemy.update(this.map, dt);
+    }
+    this.enemies = this.enemies.filter(e => !e.isRemoved);
+
+    // 3. Handle Player Input & Shooting
+    const newProjectile = this.player.handleInput(this.input, dt);
+    if (newProjectile && this.projectiles.length < 8) {
+      this.projectiles.push(newProjectile);
+    }
+
+    // 4. Update Projectiles
+    for (const proj of this.projectiles) {
+      proj.update(this.map, dt);
+    }
+
+    // 5. Update Physics & Process Collisions
+    const events = this.physics.update(this.player, dt, this.enemies, this.projectiles);
     this.player.updateAnimation(dt);
 
-    // Process Interaction Events
+    // Filter out destroyed/out-of-bounds projectiles
+    this.projectiles = this.projectiles.filter(p => !p.isRemoved);
+
+    // 6. Process Collectible Pickups & Trigger Visual Effects
     if (events.collectedItems && events.collectedItems.length > 0) {
       for (const item of events.collectedItems) {
         this.score += item.score;
+        this.effects.addScorePopup(item.x, item.y, item.score, item.color);
+
         if (item.type === 'TROPHY') {
           this.showMessage("TROPHY COLLECTED! GO TO EXIT!", 4);
         }
       }
+    }
+
+    // Stomp & Shooting Defeat Rewards
+    if (events.stompedEnemies && events.stompedEnemies.length > 0) {
+      for (const enemy of events.stompedEnemies) {
+        this.score += 200;
+        this.effects.addScorePopup(enemy.x, enemy.y, 200, '#34d399');
+      }
+      this.showMessage("ENEMY STOMPED! +200", 2.0);
+    }
+    if (events.shotEnemies && events.shotEnemies.length > 0) {
+      for (const enemy of events.shotEnemies) {
+        this.score += 200;
+        this.effects.addScorePopup(enemy.x, enemy.y, 200, '#38bdf8');
+      }
+      this.showMessage("ENEMY BLASTED! +200", 2.0);
+    }
+
+    if (events.hitEnemy) {
+      this.showMessage("HIT BY ENEMY! OUCH!", 2.5);
     }
 
     if (events.hitHazard) {
@@ -143,8 +199,27 @@ class Game {
     const cameraOffset = this.camera.getRenderOffset();
     ctx.translate(-cameraOffset.x, -cameraOffset.y);
 
-    // Tile Map
+    // Tile Map & Collectibles
     this.map.render(ctx, this.camera);
+
+    // Floating Score Effects & Sparkles
+    this.effects.render(ctx);
+
+    // Projectiles
+    for (const proj of this.projectiles) {
+      proj.render(ctx);
+      if (this.showDebug) {
+        proj.renderDebug(ctx);
+      }
+    }
+
+    // Enemies
+    for (const enemy of this.enemies) {
+      enemy.render(ctx);
+      if (this.showDebug) {
+        enemy.renderDebug(ctx);
+      }
+    }
 
     // Player
     this.player.render(ctx);
@@ -220,7 +295,7 @@ class Game {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(this.messageBanner, this.canvas.width / 2, this.canvas.height - 9);
-      ctx.textAlign = 'start'; // Reset
+      ctx.textAlign = 'start';
     }
   }
 
@@ -229,11 +304,11 @@ class Game {
    */
   renderDebug(ctx) {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
-    ctx.fillRect(4, 20, 190, 82);
+    ctx.fillRect(4, 20, 195, 100);
 
     ctx.strokeStyle = '#38bdf8';
     ctx.lineWidth = 1;
-    ctx.strokeRect(4, 20, 190, 82);
+    ctx.strokeRect(4, 20, 195, 100);
 
     ctx.fillStyle = '#38bdf8';
     ctx.font = '6px "Press Start 2P", monospace';
@@ -244,7 +319,8 @@ class Game {
     ctx.fillText(`FACING: ${this.player.facing === Direction.RIGHT ? 'RIGHT' : 'LEFT'}`, 8, 44);
     ctx.fillText(`POS: ${this.player.x.toFixed(0)}, ${this.player.y.toFixed(0)}  CAM: ${this.camera.x.toFixed(0)}`, 8, 54);
     ctx.fillText(`VEL: ${this.player.vx.toFixed(1)}, ${this.player.vy.toFixed(1)}`, 8, 64);
-    ctx.fillText(`TROPHY: ${this.map.hasTrophy ? 'COLLECTED' : 'NONE'} | FPS:${this.fps}`, 8, 74);
+    ctx.fillText(`FX: ${this.effects.effects.length} | SCORE: ${this.score}`, 8, 74);
+    ctx.fillText(`TROPHY: ${this.map.hasTrophy ? 'COLLECTED' : 'NONE'} | FPS:${this.fps}`, 8, 84);
   }
 }
 

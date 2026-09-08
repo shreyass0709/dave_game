@@ -1,7 +1,7 @@
 /**
  * Level & Tile Map System (Level 1 - Dave-Inspired Complete Level)
- * Includes solid platforms, hazards (fire & spikes), collectibles (gems & trophy),
- * enemy spawn locations, and the level exit portal.
+ * Features solid terrain, hazards, varied collectibles (Coins, Rubies, Sapphires, Trophy),
+ * enemy patrol stations, and the level exit portal.
  */
 
 export const TILE_SIZE = 16;
@@ -15,10 +15,12 @@ export const TILE_TYPES = {
   WOOD_PLATFORM: 3,
   HAZARD_FIRE: 4,
   HAZARD_SPIKES: 5,
-  COLLECTIBLE_GEM: 6,
-  COLLECTIBLE_TROPHY: 7,
-  EXIT_DOOR: 8,
-  ENEMY_SPAWN: 9
+  COLLECTIBLE_COIN: 6,
+  COLLECTIBLE_RUBY: 7,
+  COLLECTIBLE_SAPPHIRE: 8,
+  COLLECTIBLE_TROPHY: 9,
+  EXIT_DOOR: 10,
+  ENEMY_SPAWN: 11
 };
 
 export class GameMap {
@@ -58,39 +60,51 @@ export class GameMap {
     }
 
     // 3. SECTION 1: STARTING AREA & GENTLE HOP (Cols 1..22)
-    // Safe low intro platform
+    // Starting platforms & intro collectibles
     this.grid[11][4] = TILE_TYPES.RED_BRICK;
     this.grid[11][5] = TILE_TYPES.RED_BRICK;
     this.grid[11][6] = TILE_TYPES.RED_BRICK;
-    this.grid[10][5] = TILE_TYPES.COLLECTIBLE_GEM; // Intro gem
+    this.grid[10][4] = TILE_TYPES.COLLECTIBLE_COIN;     // +100
+    this.grid[10][5] = TILE_TYPES.COLLECTIBLE_SAPPHIRE; // +300
+    this.grid[10][6] = TILE_TYPES.COLLECTIBLE_COIN;     // +100
+
+    // Ground coins
+    this.grid[13][8] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][9] = TILE_TYPES.COLLECTIBLE_COIN;
 
     // Hop across first small fire pit (cols 13..14)
     this.grid[12][11] = TILE_TYPES.RED_BRICK;
     this.grid[12][12] = TILE_TYPES.RED_BRICK;
+    this.grid[11][11] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[11][12] = TILE_TYPES.COLLECTIBLE_COIN;
 
     this.grid[9][14] = TILE_TYPES.RED_BRICK;
     this.grid[9][15] = TILE_TYPES.RED_BRICK;
     this.grid[9][16] = TILE_TYPES.RED_BRICK;
-    this.grid[8][15] = TILE_TYPES.COLLECTIBLE_GEM;
+    this.grid[8][15] = TILE_TYPES.COLLECTIBLE_RUBY;     // +200
+    this.grid[8][16] = TILE_TYPES.COLLECTIBLE_COIN;
 
     this.grid[12][18] = TILE_TYPES.RED_BRICK;
     this.grid[12][19] = TILE_TYPES.RED_BRICK;
+    this.grid[11][18] = TILE_TYPES.COLLECTIBLE_COIN;
 
-    // Enemy Patrol Station 1
+    // Enemy Patrol Station 1 (Col 21, Row 13)
     this.grid[13][21] = TILE_TYPES.ENEMY_SPAWN;
 
     // 4. SECTION 2: MULTI-TIER PLATFORMS & SPIKE PIT (Cols 23..44)
     this.grid[12][24] = TILE_TYPES.RED_BRICK;
     this.grid[12][25] = TILE_TYPES.RED_BRICK;
+    this.grid[11][24] = TILE_TYPES.COLLECTIBLE_COIN;
 
     // Island platform directly above spike pit (spikes at 26..29)
     this.grid[9][27] = TILE_TYPES.WOOD_PLATFORM;
     this.grid[9][28] = TILE_TYPES.WOOD_PLATFORM;
-    this.grid[8][27] = TILE_TYPES.COLLECTIBLE_GEM;
-    this.grid[8][28] = TILE_TYPES.COLLECTIBLE_GEM;
+    this.grid[8][27] = TILE_TYPES.COLLECTIBLE_SAPPHIRE; // +300
+    this.grid[8][28] = TILE_TYPES.COLLECTIBLE_SAPPHIRE; // +300
 
     this.grid[11][30] = TILE_TYPES.RED_BRICK;
     this.grid[11][31] = TILE_TYPES.RED_BRICK;
+    this.grid[10][30] = TILE_TYPES.COLLECTIBLE_COIN;
 
     // Stepped wall hurdle
     this.grid[12][34] = TILE_TYPES.STEEL_BLOCK;
@@ -100,36 +114,49 @@ export class GameMap {
     this.grid[7][36] = TILE_TYPES.RED_BRICK;
     this.grid[7][37] = TILE_TYPES.RED_BRICK;
     this.grid[7][38] = TILE_TYPES.RED_BRICK;
-    this.grid[6][37] = TILE_TYPES.COLLECTIBLE_GEM; // High reward gem
+    this.grid[6][36] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[6][37] = TILE_TYPES.COLLECTIBLE_RUBY;     // +200
+    this.grid[6][38] = TILE_TYPES.COLLECTIBLE_COIN;
 
-    // Enemy Patrol Station 2
+    // Enemy Patrol Station 2 (Col 40, Row 13)
     this.grid[13][40] = TILE_TYPES.ENEMY_SPAWN;
 
     this.grid[11][42] = TILE_TYPES.RED_BRICK;
     this.grid[11][43] = TILE_TYPES.RED_BRICK;
+    this.grid[10][42] = TILE_TYPES.COLLECTIBLE_COIN;
 
     // 5. SECTION 3: THE TROPHY CHAMBER (Cols 45..58)
     this.grid[12][46] = TILE_TYPES.RED_BRICK;
     this.grid[12][47] = TILE_TYPES.RED_BRICK;
+    this.grid[11][46] = TILE_TYPES.COLLECTIBLE_COIN;
 
     // Floating platforms above lava pit (48..51)
     this.grid[9][49] = TILE_TYPES.WOOD_PLATFORM;
     this.grid[9][50] = TILE_TYPES.WOOD_PLATFORM;
-    this.grid[8][50] = TILE_TYPES.ENEMY_SPAWN; // Guarding the trophy
+    this.grid[9][51] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][49] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[8][50] = TILE_TYPES.ENEMY_SPAWN; // Platform guard
+    this.grid[8][51] = TILE_TYPES.COLLECTIBLE_RUBY;
 
     // High Trophy Pedestal
     this.grid[6][52] = TILE_TYPES.STEEL_BLOCK;
     this.grid[6][53] = TILE_TYPES.STEEL_BLOCK;
-    this.grid[5][52] = TILE_TYPES.COLLECTIBLE_TROPHY; // Golden Trophy Key Item!
+    this.grid[5][52] = TILE_TYPES.COLLECTIBLE_TROPHY; // Golden Trophy Key Item! (+1000)
 
     this.grid[9][55] = TILE_TYPES.WOOD_PLATFORM;
     this.grid[9][56] = TILE_TYPES.WOOD_PLATFORM;
-    this.grid[8][56] = TILE_TYPES.COLLECTIBLE_GEM;
+    this.grid[8][55] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[8][56] = TILE_TYPES.COLLECTIBLE_SAPPHIRE; // +300
 
     this.grid[12][58] = TILE_TYPES.RED_BRICK;
     this.grid[12][59] = TILE_TYPES.RED_BRICK;
+    this.grid[11][58] = TILE_TYPES.COLLECTIBLE_COIN;
 
     // 6. SECTION 4: THE GOAL & EXIT PORTAL (Cols 60..69)
+    this.grid[13][61] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][63] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][64] = TILE_TYPES.COLLECTIBLE_COIN;
+
     // Pillar decoration
     this.grid[11][62] = TILE_TYPES.STEEL_BLOCK;
     this.grid[12][62] = TILE_TYPES.STEEL_BLOCK;
@@ -138,6 +165,24 @@ export class GameMap {
     // The Exit Door (Row 12 & 13, Col 66)
     this.grid[12][66] = TILE_TYPES.EXIT_DOOR;
     this.grid[13][66] = TILE_TYPES.EXIT_DOOR;
+  }
+
+  /**
+   * Returns list of configured enemy spawn coordinates
+   */
+  getEnemySpawns() {
+    const spawns = [];
+    for (let r = 0; r < this.rows; r++) {
+      for (let c = 0; c < this.cols; c++) {
+        if (this.grid[r][c] === TILE_TYPES.ENEMY_SPAWN) {
+          spawns.push({
+            x: c * this.tileSize,
+            y: (r + 1) * this.tileSize - 12
+          });
+        }
+      }
+    }
+    return spawns;
   }
 
   /**
@@ -163,22 +208,31 @@ export class GameMap {
   }
 
   /**
-   * Check if tile contains a collectible item
+   * Check if tile contains a collectible item and returns metadata
    */
   getCollectible(col, row) {
     if (col < 0 || col >= this.cols || row < 0 || row >= this.rows) return null;
     const tile = this.grid[row][col];
-    if (tile === TILE_TYPES.COLLECTIBLE_GEM) {
-      return { type: 'GEM', score: 100 };
+    const worldX = col * this.tileSize;
+    const worldY = row * this.tileSize;
+
+    if (tile === TILE_TYPES.COLLECTIBLE_COIN) {
+      return { type: 'COIN', score: 100, color: '#facc15', x: worldX, y: worldY };
+    }
+    if (tile === TILE_TYPES.COLLECTIBLE_RUBY) {
+      return { type: 'RUBY', score: 200, color: '#ef4444', x: worldX, y: worldY };
+    }
+    if (tile === TILE_TYPES.COLLECTIBLE_SAPPHIRE) {
+      return { type: 'SAPPHIRE', score: 300, color: '#38bdf8', x: worldX, y: worldY };
     }
     if (tile === TILE_TYPES.COLLECTIBLE_TROPHY) {
-      return { type: 'TROPHY', score: 1000 };
+      return { type: 'TROPHY', score: 1000, color: '#fef08a', x: worldX, y: worldY };
     }
     return null;
   }
 
   /**
-   * Collects item at tile and clears tile to empty
+   * Collects item at tile and clears tile to empty (prevents duplicate collection)
    */
   collectTile(col, row) {
     if (col < 0 || col >= this.cols || row < 0 || row >= this.rows) return null;
@@ -187,7 +241,7 @@ export class GameMap {
       if (item.type === 'TROPHY') {
         this.hasTrophy = true;
       }
-      this.grid[row][col] = TILE_TYPES.EMPTY;
+      this.grid[row][col] = TILE_TYPES.EMPTY; // Clear immediately
       return item;
     }
     return null;
@@ -234,20 +288,22 @@ export class GameMap {
           case TILE_TYPES.HAZARD_SPIKES:
             this.renderHazardSpikes(ctx, x, y);
             break;
-          case TILE_TYPES.COLLECTIBLE_GEM:
-            this.renderCollectibleGem(ctx, x, y);
+          case TILE_TYPES.COLLECTIBLE_COIN:
+            this.renderCollectibleCoin(ctx, x, y);
+            break;
+          case TILE_TYPES.COLLECTIBLE_RUBY:
+            this.renderCollectibleRuby(ctx, x, y);
+            break;
+          case TILE_TYPES.COLLECTIBLE_SAPPHIRE:
+            this.renderCollectibleSapphire(ctx, x, y);
             break;
           case TILE_TYPES.COLLECTIBLE_TROPHY:
             this.renderCollectibleTrophy(ctx, x, y);
             break;
           case TILE_TYPES.EXIT_DOOR:
-            // Render door bottom and top seamlessly
             if (r === 12) {
               this.renderExitDoor(ctx, x, y);
             }
-            break;
-          case TILE_TYPES.ENEMY_SPAWN:
-            this.renderEnemySpawn(ctx, x, y);
             break;
         }
       }
@@ -304,13 +360,12 @@ export class GameMap {
     ctx.fillStyle = '#450a0a';
     ctx.fillRect(x, y + 10, s, 6);
 
-    // Fire flame layers
-    ctx.fillStyle = '#ea580c'; // Orange
+    ctx.fillStyle = '#ea580c';
     ctx.fillRect(x + 1, y + 4 + (flicker === 0 ? 1 : 0), 4, 10);
     ctx.fillRect(x + 6, y + 2 + (flicker === 1 ? 1 : 0), 4, 12);
     ctx.fillRect(x + 11, y + 5 + (flicker === 2 ? 1 : 0), 4, 9);
 
-    ctx.fillStyle = '#facc15'; // Yellow core
+    ctx.fillStyle = '#facc15';
     ctx.fillRect(x + 2, y + 7, 2, 7);
     ctx.fillRect(x + 7, y + 5, 2, 9);
     ctx.fillRect(x + 12, y + 8, 2, 6);
@@ -322,7 +377,6 @@ export class GameMap {
     ctx.fillRect(x, y + 13, s, 3);
 
     ctx.fillStyle = '#cbd5e1';
-    // 3 sharp triangular spikes
     for (let i = 0; i < 3; i++) {
       const sx = x + i * 5 + 1;
       ctx.fillRect(sx + 2, y + 3, 1, 2);
@@ -331,76 +385,114 @@ export class GameMap {
     }
   }
 
-  renderCollectibleGem(ctx, x, y) {
+  /**
+   * Animated spinning gold coin (+100)
+   */
+  renderCollectibleCoin(ctx, x, y) {
     const s = this.tileSize;
     const bob = Math.sin(this.animTimer * 4) * 1.5;
+    const cy = y + 4 + bob;
+    const spinFrame = Math.floor(this.animTimer * 8) % 4;
+
+    ctx.fillStyle = '#ca8a04'; // Dark Gold border
+
+    if (spinFrame === 0 || spinFrame === 2) {
+      // Full circle coin
+      ctx.fillRect(x + 4, cy, 8, 8);
+      ctx.fillStyle = '#facc15'; // Bright Gold
+      ctx.fillRect(x + 5, cy + 1, 6, 6);
+      ctx.fillStyle = '#fef08a'; // Specular highlight
+      ctx.fillRect(x + 6, cy + 2, 2, 2);
+    } else if (spinFrame === 1) {
+      // 3/4 turn
+      ctx.fillRect(x + 6, cy, 4, 8);
+      ctx.fillStyle = '#facc15';
+      ctx.fillRect(x + 7, cy + 1, 2, 6);
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(x + 7, cy + 2, 1, 2);
+    } else {
+      // Edge turn (thin sliver)
+      ctx.fillRect(x + 7, cy, 2, 8);
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(x + 7, cy + 2, 2, 3);
+    }
+  }
+
+  /**
+   * Sparkling Ruby Gem (+200)
+   */
+  renderCollectibleRuby(ctx, x, y) {
+    const s = this.tileSize;
+    const bob = Math.sin(this.animTimer * 4 + 1) * 1.5;
     const gy = y + 3 + bob;
 
-    // Sparkling Blue Sapphire Gem
-    ctx.fillStyle = '#38bdf8';
+    ctx.fillStyle = '#991b1b'; // Dark Red Outline
+    ctx.fillRect(x + 4, gy + 1, 8, 8);
+
+    ctx.fillStyle = '#ef4444'; // Bright Red Facet
+    ctx.fillRect(x + 5, gy + 2, 6, 6);
+
+    ctx.fillStyle = '#fca5a5'; // Pink / White Sparkle
+    ctx.fillRect(x + 5, gy + 2, 2, 2);
+  }
+
+  /**
+   * Sparkling Sapphire Gem (+300)
+   */
+  renderCollectibleSapphire(ctx, x, y) {
+    const s = this.tileSize;
+    const bob = Math.sin(this.animTimer * 4 + 2) * 1.5;
+    const gy = y + 3 + bob;
+
+    // Diamond cut sapphire
+    ctx.fillStyle = '#0369a1'; // Deep Blue
     ctx.fillRect(x + 5, gy + 1, 6, 2);
     ctx.fillRect(x + 3, gy + 3, 10, 3);
     ctx.fillRect(x + 5, gy + 6, 6, 2);
     ctx.fillRect(x + 7, gy + 8, 2, 2);
 
-    // White shine dot
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = '#38bdf8'; // Sky Blue Facet
+    ctx.fillRect(x + 5, gy + 2, 4, 4);
+
+    ctx.fillStyle = '#ffffff'; // White glint
     ctx.fillRect(x + 5, gy + 2, 2, 2);
   }
 
+  /**
+   * Golden Trophy Chalice (+1000, Key Item)
+   */
   renderCollectibleTrophy(ctx, x, y) {
     const s = this.tileSize;
     const shimmer = Math.sin(this.animTimer * 6) > 0.5;
 
-    // Golden Trophy Chalice (Dave Key Item)
-    ctx.fillStyle = shimmer ? '#fef08a' : '#eab308'; // Gold Cup
+    ctx.fillStyle = shimmer ? '#fef08a' : '#eab308';
     ctx.fillRect(x + 2, y + 1, 12, 5);
     ctx.fillRect(x + 4, y + 6, 8, 3);
     ctx.fillRect(x + 6, y + 9, 4, 3);
     ctx.fillRect(x + 3, y + 12, 10, 3);
 
-    // Cup handles
     ctx.fillRect(x + 0, y + 2, 2, 4);
     ctx.fillRect(x + 14, y + 2, 2, 4);
 
-    // Red jewel in cup center
     ctx.fillStyle = '#dc2626';
     ctx.fillRect(x + 7, y + 3, 2, 2);
   }
 
   renderExitDoor(ctx, x, y) {
-    // 2-tile tall golden arch doorway (32px high)
     const w = this.tileSize;
     const h = this.tileSize * 2;
 
-    // Outer gold frame
     ctx.fillStyle = this.hasTrophy ? '#fbbf24' : '#71717a';
     ctx.fillRect(x + 1, y, w - 2, h);
 
-    // Arched door opening
-    ctx.fillStyle = '#050508'; // Deep void
+    ctx.fillStyle = '#050508';
     ctx.fillRect(x + 3, y + 3, w - 6, h - 3);
 
-    // Doorway glow / exit star
     if (this.hasTrophy) {
       ctx.fillStyle = '#67e8f9';
       ctx.fillRect(x + 6, y + 10, 4, 8);
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(x + 7, y + 12, 2, 4);
     }
-  }
-
-  renderEnemySpawn(ctx, x, y) {
-    const s = this.tileSize;
-    // Retro danger marker / enemy location pedestal
-    ctx.fillStyle = '#475569';
-    ctx.fillRect(x + 2, y + 12, 12, 4);
-
-    // Flashing warning beacon
-    const flash = Math.sin(this.animTimer * 8) > 0;
-    ctx.fillStyle = flash ? '#ef4444' : '#7f1d1d';
-    ctx.fillRect(x + 6, y + 7, 4, 5);
-    ctx.fillStyle = '#fee2e2';
-    ctx.fillRect(x + 7, y + 8, 2, 2);
   }
 }

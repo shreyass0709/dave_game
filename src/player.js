@@ -1,8 +1,10 @@
 /**
  * Player Character Class
  * Implements states (Idle, Walking, Jumping, Falling, Dead), facing directions,
- * responsive platformer physics, and original retro pixel sprite rendering.
+ * responsive platformer physics, shooting mechanics, and original retro pixel sprite rendering.
  */
+
+import { Projectile } from './projectile.js';
 
 export const PlayerState = {
   IDLE: 'IDLE',
@@ -33,8 +35,8 @@ export class Player {
     this.vx = 0;
     this.vy = 0;
     this.speed = 115;            // Max horizontal speed (px/sec)
-    this.acceleration = 1100;    // Ground acceleration (crisp and responsive)
-    this.friction = 1300;        // Ground deceleration (snappy stopping, no ice-skating)
+    this.acceleration = 1100;    // Ground acceleration
+    this.friction = 1300;        // Ground deceleration
     this.gravity = 640;          // Downward gravitational acceleration
     this.jumpForce = -235;       // Initial jump impulse
     this.terminalVelocity = 380; // Max fall speed
@@ -50,6 +52,12 @@ export class Player {
     this.jumpBufferTimer = 0;
     this.jumpBufferMax = 0.12;   // 120ms buffer for pre-landing jump press
 
+    // Shooting Mechanics & Cooldown
+    this.shootCooldown = 0.22;   // 220ms cooldown between shots (prevents spamming)
+    this.shootCooldownTimer = 0;
+    this.isShooting = false;
+    this.shootPoseTimer = 0;
+
     // Animation & Death state
     this.animTimer = 0;
     this.animFrame = 0;          // 0 = Stand, 1 = Stride 1, 2 = Stride 2
@@ -59,15 +67,32 @@ export class Player {
   }
 
   /**
-   * Process input controls, acceleration, deceleration, and jump triggers
+   * Can the player shoot right now?
+   */
+  canShoot() {
+    return this.state !== PlayerState.DEAD && this.shootCooldownTimer <= 0;
+  }
+
+  /**
+   * Process input controls, movement, jumping, and shooting triggers
+   * @returns {Projectile | null} Newly fired projectile if shot was triggered
    */
   handleInput(input, dt) {
     if (this.state === PlayerState.DEAD) {
-      return; // No input control while in death state
+      return null;
     }
 
-    const moveLeft = input.isLeft();
-    const moveRight = input.isRight();
+    // Advance shooting cooldown
+    if (this.shootCooldownTimer > 0) {
+      this.shootCooldownTimer = Math.max(0, this.shootCooldownTimer - dt);
+    }
+    if (this.shootPoseTimer > 0) {
+      this.shootPoseTimer = Math.max(0, this.shootPoseTimer - dt);
+      if (this.shootPoseTimer <= 0) this.isShooting = false;
+    }
+
+    const moveLeft = input.isLeft ? input.isLeft() : false;
+    const moveRight = input.isRight ? input.isRight() : false;
 
     // 1. Horizontal Movement & Facing Direction
     if (moveLeft && !moveRight) {
@@ -77,7 +102,7 @@ export class Player {
       this.vx = Math.min(this.vx + this.acceleration * dt, this.speed);
       this.facing = Direction.RIGHT;
     } else {
-      // Apply snappy friction when no direction key is held
+      // Apply friction when no movement key held
       if (this.vx > 0) {
         this.vx = Math.max(0, this.vx - this.friction * dt);
       } else if (this.vx < 0) {
@@ -92,13 +117,13 @@ export class Player {
       this.coyoteTimer = Math.max(0, this.coyoteTimer - dt);
     }
 
-    if (input.wasJumpJustPressed()) {
+    if (input.wasJumpJustPressed && input.wasJumpJustPressed()) {
       this.jumpBufferTimer = this.jumpBufferMax;
     } else {
       this.jumpBufferTimer = Math.max(0, this.jumpBufferTimer - dt);
     }
 
-    // 3. Jump Execution (Trigger if buffer active and either grounded or in coyote window)
+    // 3. Jump Execution
     if (this.jumpBufferTimer > 0 && (this.isGrounded || this.coyoteTimer > 0)) {
       this.vy = this.jumpForce;
       this.isGrounded = false;
@@ -106,10 +131,26 @@ export class Player {
       this.jumpBufferTimer = 0;
     }
 
-    // 4. Variable Jump Height: Shorten jump if button is released early
-    if (!input.isJump() && this.vy < -75) {
+    // 4. Variable Jump Height
+    if (input.isJump && !input.isJump() && this.vy < -75) {
       this.vy = -75;
     }
+
+    // 5. Shooting Trigger (F key)
+    const wantsShoot = (input.wasShootJustPressed && input.wasShootJustPressed()) ||
+                       (input.isShoot && input.isShoot());
+    if (wantsShoot && this.canShoot()) {
+      this.shootCooldownTimer = this.shootCooldown;
+      this.isShooting = true;
+      this.shootPoseTimer = 0.12;
+
+      // Spawn projectile at player's gun level
+      const projX = this.facing === Direction.RIGHT ? this.x + this.width : this.x - 8;
+      const projY = this.y + 7;
+      return new Projectile(projX, projY, this.facing);
+    }
+
+    return null;
   }
 
   /**
@@ -119,14 +160,14 @@ export class Player {
     // Handle Death State Progression
     if (this.state === PlayerState.DEAD) {
       this.deathTimer += dt;
-      this.deathRotation += dt * 720; // Fast retro spin
+      this.deathRotation += dt * 720;
       if (this.deathTimer >= this.deathDuration) {
         this.respawn();
       }
       return;
     }
 
-    // Determine State (Jumping, Falling, Walking, Idle)
+    // Determine State
     if (!this.isGrounded) {
       if (this.vy < 0) {
         this.state = PlayerState.JUMPING;
@@ -162,10 +203,11 @@ export class Player {
 
     this.state = PlayerState.DEAD;
     this.vx = 0;
-    this.vy = -180; // Classic retro death hop
+    this.vy = -180;
     this.deathTimer = 0;
     this.deathRotation = 0;
     this.isGrounded = false;
+    this.isShooting = false;
   }
 
   /**
@@ -180,7 +222,9 @@ export class Player {
     this.isGrounded = false;
     this.coyoteTimer = 0;
     this.jumpBufferTimer = 0;
+    this.shootCooldownTimer = 0;
     this.deathTimer = 0;
+    this.isShooting = false;
   }
 
   /**
@@ -221,32 +265,39 @@ export class Player {
    */
   drawCharacterSprite(ctx, x, y) {
     // Red Cap / Visor
-    ctx.fillStyle = '#dc2626'; // Red Cap
+    ctx.fillStyle = '#dc2626';
     ctx.fillRect(x + 2, y + 0, 8, 3);
-    ctx.fillRect(x + 5, y + 2, 6, 2); // Cap visor
+    ctx.fillRect(x + 5, y + 2, 6, 2);
 
     // Face / Skin Tone
-    ctx.fillStyle = '#fed7aa'; // Peach Skin
+    ctx.fillStyle = '#fed7aa';
     ctx.fillRect(x + 3, y + 3, 6, 4);
 
     // Expressive Eye
-    ctx.fillStyle = '#0f172a'; // Dark eye
+    ctx.fillStyle = '#0f172a';
     ctx.fillRect(x + 6, y + 4, 2, 2);
 
     // Blue Shirt / Torso
-    ctx.fillStyle = '#2563eb'; // Royal Blue Shirt
+    ctx.fillStyle = '#2563eb';
     ctx.fillRect(x + 2, y + 7, 8, 4);
 
-    // Shirt Collar / Accent
-    ctx.fillStyle = '#f8fafc';
-    ctx.fillRect(x + 4, y + 7, 2, 2);
+    // Gun / Arm Shooting Extension
+    if (this.isShooting) {
+      ctx.fillStyle = '#64748b'; // Blaster metal
+      ctx.fillRect(x + 8, y + 8, 5, 2);
+      ctx.fillStyle = '#06b6d4'; // Muzzle glow
+      ctx.fillRect(x + 12, y + 8, 2, 2);
+    } else {
+      // White Shirt Collar / Accent
+      ctx.fillStyle = '#f8fafc';
+      ctx.fillRect(x + 4, y + 7, 2, 2);
+    }
 
     // Pants and Shoes
     ctx.fillStyle = '#1e3a8a';   // Navy Pants
     const shoeColor = '#78350f'; // Brown Shoes
 
     if (this.state === PlayerState.JUMPING) {
-      // Jump Pose: Legs tucked up, arms raised forward
       ctx.fillRect(x + 1, y + 10, 4, 3);
       ctx.fillRect(x + 6, y + 10, 4, 3);
 
@@ -254,7 +305,6 @@ export class Player {
       ctx.fillRect(x + 0, y + 12, 4, 2);
       ctx.fillRect(x + 7, y + 12, 4, 2);
     } else if (this.state === PlayerState.FALLING) {
-      // Fall Pose: Legs slightly extended downwards
       ctx.fillRect(x + 2, y + 11, 3, 3);
       ctx.fillRect(x + 7, y + 11, 3, 3);
 
@@ -263,7 +313,6 @@ export class Player {
       ctx.fillRect(x + 7, y + 13, 4, 2);
     } else if (this.state === PlayerState.WALKING) {
       if (this.animFrame === 1) {
-        // Walk Stride 1: Left leg forward, right leg back
         ctx.fillRect(x + 1, y + 11, 4, 2);
         ctx.fillRect(x + 6, y + 11, 4, 2);
 
@@ -271,7 +320,6 @@ export class Player {
         ctx.fillRect(x + 0, y + 13, 4, 2);
         ctx.fillRect(x + 7, y + 13, 4, 2);
       } else if (this.animFrame === 2) {
-        // Walk Stride 2: Legs crossing
         ctx.fillRect(x + 3, y + 11, 3, 2);
         ctx.fillRect(x + 6, y + 11, 3, 2);
 
@@ -279,7 +327,6 @@ export class Player {
         ctx.fillRect(x + 2, y + 13, 4, 2);
         ctx.fillRect(x + 6, y + 13, 4, 2);
       } else {
-        // Walk Passing frame
         ctx.fillRect(x + 2, y + 11, 4, 2);
         ctx.fillRect(x + 6, y + 11, 4, 2);
 
@@ -299,31 +346,26 @@ export class Player {
   }
 
   /**
-   * Render death sprite (shocked expression with "X" eyes and disheveled pose)
+   * Render death sprite
    */
   drawDeathSprite(ctx, x, y) {
-    // Red Cap
     ctx.fillStyle = '#dc2626';
     ctx.fillRect(x + 2, y + 0, 8, 3);
     ctx.fillRect(x + 4, y + 2, 6, 2);
 
-    // Shocked Pale Face
-    ctx.fillStyle = '#fef08a'; // Pale yellow/shock tone
+    ctx.fillStyle = '#fef08a';
     ctx.fillRect(x + 3, y + 3, 6, 4);
 
-    // "X" Eye
-    ctx.fillStyle = '#b91c1c'; // Red X
+    ctx.fillStyle = '#b91c1c';
     ctx.fillRect(x + 5, y + 4, 1, 1);
     ctx.fillRect(x + 7, y + 4, 1, 1);
     ctx.fillRect(x + 6, y + 5, 1, 1);
     ctx.fillRect(x + 5, y + 6, 1, 1);
     ctx.fillRect(x + 7, y + 6, 1, 1);
 
-    // Torso
     ctx.fillStyle = '#2563eb';
     ctx.fillRect(x + 2, y + 7, 8, 4);
 
-    // Flailing Legs & Shoes
     ctx.fillStyle = '#1e3a8a';
     ctx.fillRect(x + 0, y + 11, 4, 2);
     ctx.fillRect(x + 8, y + 11, 4, 2);

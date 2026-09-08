@@ -1,7 +1,8 @@
 /**
  * Physics & Collision Engine
  * Implements axis-separated AABB collision detection against tile maps,
- * hazard triggers, collectible pickup detection, and exit door checks.
+ * hazard triggers, collectible pickups, exit door checks,
+ * projectile-enemy impacts, and player-enemy combat.
  */
 
 import { PlayerState } from './player.js';
@@ -15,13 +16,18 @@ export class PhysicsEngine {
    * Updates player physics, applies gravity, moves player, and resolves all collisions and triggers
    * @param {Player} player 
    * @param {number} dt Delta time in seconds
-   * @returns {Object} Frame interaction events (collectedItems, hitHazard, reachedExit)
+   * @param {Array<Enemy>} enemies List of active enemy entities
+   * @param {Array<Projectile>} projectiles List of active projectiles
+   * @returns {Object} Frame interaction events (collectedItems, hitHazard, reachedExit, stompedEnemies, shotEnemies, hitEnemy)
    */
-  update(player, dt) {
+  update(player, dt, enemies = [], projectiles = []) {
     const events = {
       collectedItems: [],
       hitHazard: false,
-      reachedExit: false
+      reachedExit: false,
+      stompedEnemies: [],
+      shotEnemies: [],
+      hitEnemy: false
     };
 
     // 1. If Dead, apply free-fall gravity for death animation without tile collision
@@ -152,6 +158,40 @@ export class PhysicsEngine {
         // C. Exit Portal Check
         if (this.map.isExit(c, r)) {
           events.reachedExit = true;
+        }
+      }
+    }
+
+    // 6. Projectile-Enemy Collisions
+    if (projectiles && projectiles.length > 0 && enemies && enemies.length > 0) {
+      for (const proj of projectiles) {
+        if (proj.isRemoved) continue;
+        for (const enemy of enemies) {
+          if (enemy.isRemoved || enemy.state === 'DEAD') continue;
+          if (proj.checkEnemyCollision(enemy)) {
+            enemy.defeat();
+            events.shotEnemies.push(enemy);
+            break;
+          }
+        }
+      }
+    }
+
+    // 7. Player-Enemy Combat & Stomp Interactions
+    if (enemies && enemies.length > 0) {
+      for (const enemy of enemies) {
+        if (enemy.isRemoved) continue;
+
+        const interaction = enemy.checkPlayerCollision(player);
+        if (interaction === 'STOMP') {
+          enemy.defeat();
+          player.vy = -190;
+          player.isGrounded = false;
+          events.stompedEnemies.push(enemy);
+        } else if (interaction === 'DAMAGE') {
+          player.die();
+          events.hitEnemy = true;
+          return events;
         }
       }
     }
