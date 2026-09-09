@@ -284,16 +284,13 @@ export class UIButton {
       ctx.fillText('▶', drawX + 10 - chevronPulse, textY);
       ctx.fillText('◀', drawX + this.width - 10 + chevronPulse, textY);
 
-      // Bright white label with deep drop shadow
+      // Bright white label with drop shadow
       ctx.fillStyle = '#020617';
-      ctx.fillText(this.label, centerX + 1.5, textY + 1.5);
+      ctx.fillText(this.label, centerX + 1, textY + 1);
       ctx.fillStyle = '#ffffff';
       ctx.fillText(this.label, centerX, textY);
     } else {
-      // Non-active button: High contrast crisp text with dark shadow
-      ctx.fillStyle = '#020617';
-      ctx.fillText(this.label, centerX + 1, textY + 1);
-      ctx.fillStyle = this.disabled ? '#64748b' : '#f1f5f9';
+      ctx.fillStyle = this.disabled ? UITokens.disabled : UITokens.textMuted;
       ctx.fillText(this.label, centerX, textY);
     }
 
@@ -301,12 +298,8 @@ export class UIButton {
     if (this.badge) {
       ctx.font = `6px ${UITokens.fontFamily}`;
       ctx.textAlign = 'end';
-      const badgeX = drawX + this.width - 8;
-      // Drop shadow for badge
-      ctx.fillStyle = '#020617';
-      ctx.fillText(this.badge, badgeX + 1, textY + 1);
-      ctx.fillStyle = active ? '#ffffff' : (theme.accent || '#38bdf8');
-      ctx.fillText(this.badge, badgeX, textY);
+      ctx.fillStyle = active ? '#ffffff' : theme.accent;
+      ctx.fillText(this.badge, drawX + this.width - 8, textY);
     }
 
     ctx.restore();
@@ -503,19 +496,6 @@ export class UIManager {
         phase: i * 0.5
       });
     }
-
-    // Pre-allocated warp speed lines for cinematic level transition
-    this.warpSpeedLines = [];
-    for (let i = 0; i < 40; i++) {
-      const angle = (i / 40) * Math.PI * 2 + (i % 2 === 0 ? 0.08 : -0.08);
-      this.warpSpeedLines.push({
-        angle: angle,
-        dist: 10 + (i * 13) % 220,
-        speed: 260 + (i % 6) * 60,
-        length: 12 + (i % 5) * 14,
-        color: i % 3 === 0 ? '#facc15' : (i % 2 === 0 ? '#38bdf8' : '#ffffff')
-      });
-    }
   }
 
   resetMenuAnimation() {
@@ -600,398 +580,169 @@ export class UIManager {
       c.y += c.speed * dt;
       if (c.y > 245) c.y = -5;
     }
-
-    // Update warp speed lines
-    for (let i = 0; i < this.warpSpeedLines.length; i++) {
-      const line = this.warpSpeedLines[i];
-      line.dist += line.speed * dt;
-      if (line.dist > 280) {
-        line.dist = 6;
-      }
-    }
   }
 
   /**
-   * Screen 1: Cinematic Modern Recharged Main Menu with Level Matrix & Interactive Diorama
+   * Screen 1: Cinematic Modern Retro Main Menu with Hero Preview & Cyber Accents
    */
   renderMainMenu(ctx, width, height, selectedIndex, buttons) {
-    const isRecharged = (this.settings.themeMode !== 'CLASSIC');
-
-    // 1. Deep Space Cosmic Starfield Backdrop
+    // 1. Layered Atmospheric Background with Radial Gradient
     const bgGradient = ctx.createRadialGradient(
-      width * 0.5, height * 0.35, 10,
-      width * 0.5, height * 0.5, width * 0.8
+      width * 0.5, height * 0.4, 10,
+      width * 0.5, height * 0.5, width * 0.75
     );
-    bgGradient.addColorStop(0, isRecharged ? '#120508' : '#0f172a');
-    bgGradient.addColorStop(0.5, isRecharged ? '#080306' : '#080d1a');
-    bgGradient.addColorStop(1, '#020306');
+    bgGradient.addColorStop(0, '#0f172a');
+    bgGradient.addColorStop(0.5, '#080d1a');
+    bgGradient.addColorStop(1, '#03050a');
 
     ctx.fillStyle = bgGradient;
     ctx.fillRect(0, 0, width, height);
 
-    // 2. Cosmic Star Dust Particles
+    // 2. Subtle Isometric Perspective Cyber Floor Grid
+    ctx.save();
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.06)';
+    ctx.lineWidth = 1;
+
+    const horizonY = 135;
+    const vpX = 200;
+    for (let angle = -1.2; angle <= 1.2; angle += 0.3) {
+      ctx.beginPath();
+      ctx.moveTo(vpX, horizonY);
+      ctx.lineTo(vpX + Math.tan(angle) * (height - horizonY) * 2.2, height);
+      ctx.stroke();
+    }
+
+    const hGridLines = [150, 168, 188, 210, 234];
+    for (let y of hGridLines) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(width, y);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // 3. Floating Atmospheric Energy Motes / Star Particles
     ctx.save();
     for (let i = 0; i < this.bgParticles.length; i++) {
       const p = this.bgParticles[i];
-      const starAlpha = 0.35 + 0.55 * (Math.sin(this.animTimer * 3 + p.phase) * 0.5 + 0.5);
-      ctx.globalAlpha = starAlpha;
-      ctx.fillStyle = isRecharged ? ((i % 4 === 0) ? '#f43f5e' : ((i % 3 === 0) ? '#facc15' : '#ffffff')) : p.color;
+      const pulseAlpha = 0.25 + 0.6 * (Math.sin(this.animTimer * 3 + p.phase) * 0.5 + 0.5);
+      ctx.globalAlpha = pulseAlpha;
+      ctx.fillStyle = p.color;
       ctx.fillRect(Math.round(p.x), Math.round(p.y), p.size, p.size);
     }
     ctx.restore();
 
-    // 3. Futuristic Corner Tech Brackets around Top Viewport
-    ctx.strokeStyle = isRecharged ? 'rgba(244, 63, 94, 0.45)' : 'rgba(56, 189, 248, 0.4)';
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(16, 10, 8, 8);
-    ctx.strokeRect(width - 24, 10, 8, 8);
+    // 4. Outer Cyber Frame & Corner L-Brackets
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.22)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(8, 8, width - 16, height - 16);
 
-    // 4. Hero Title: Stacked Crimson "DANGEROUS DAVE" + "RECHARGED"
-    const titleEnter = Math.min(1, this.menuTimer / 0.45);
-    const titleEase = UIAnimation.easeOutBack(titleEnter, 1.1);
-    const titleY = UIAnimation.lerp(10, 16, titleEase);
+    ctx.fillStyle = UITokens.primary;
+    // Top-Left
+    ctx.fillRect(8, 8, 6, 2);
+    ctx.fillRect(8, 8, 2, 6);
+    // Top-Right
+    ctx.fillRect(width - 14, 8, 6, 2);
+    ctx.fillRect(width - 10, 8, 2, 6);
+    // Bottom-Left
+    ctx.fillRect(8, height - 10, 6, 2);
+    ctx.fillRect(8, height - 14, 2, 6);
+    // Bottom-Right
+    ctx.fillRect(width - 14, height - 10, 6, 2);
+    ctx.fillRect(width - 10, height - 14, 2, 6);
+
+    // 5. Minimal Cyber-HUD Header Status Badges
+    UITypography.drawText(ctx, '● SYSTEM: READY', 18, 16, {
+      size: '6px',
+      color: UITokens.success,
+      align: 'left',
+      shadow: false
+    });
+
+    UITypography.drawText(ctx, 'DAVE-ENGINE v2.4 PRO', width - 18, 16, {
+      size: '6px',
+      color: UITokens.textMuted,
+      align: 'right',
+      shadow: false
+    });
+
+    // 6. Animated Title Entrance & Settle
+    const titleEnter = Math.min(1, this.menuTimer / 0.55);
+    const titleEase = UIAnimation.easeOutBack(titleEnter, 1.15);
+    const titleScale = UIAnimation.lerp(0.85, 1.0, titleEase);
+    const titleY = UIAnimation.lerp(20, 36, titleEase);
     const titleAlpha = UIAnimation.easeOutQuad(titleEnter);
 
     ctx.save();
     ctx.globalAlpha = titleAlpha;
     ctx.translate(width / 2, titleY);
+    ctx.scale(titleScale, titleScale);
 
-    const glowPulse = UIAnimation.getPulse(this.animTimer, 2.5, 0.4, 0.9);
-    ctx.shadowColor = isRecharged ? `rgba(239, 68, 68, ${glowPulse})` : `rgba(250, 204, 21, ${glowPulse})`;
-    ctx.shadowBlur = 14;
+    // Ambient gold glow behind title
+    const glowPulse = UIAnimation.getPulse(this.animTimer, 2.5, 0.4, 0.85);
+    ctx.shadowColor = `rgba(250, 204, 21, ${glowPulse})`;
+    ctx.shadowBlur = 12;
 
-    ctx.font = '11px "Press Start 2P", monospace';
+    // Dual-layer crisp title typography
+    ctx.font = '13px "Press Start 2P", monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // "DANGEROUS" Line
+    // Drop shadow
     ctx.fillStyle = '#020617';
-    ctx.fillText('DANGEROUS', 1.5, 1.5);
-    ctx.fillStyle = isRecharged ? '#ef4444' : '#facc15';
-    ctx.fillText('DANGEROUS', 0, 0);
+    ctx.fillText('DANGEROUS ADVENTURE', 1.5, 1.5);
 
-    // "DAVE" Line
-    ctx.fillStyle = '#020617';
-    ctx.fillText('DAVE', 1.5, 12.5);
-    ctx.fillStyle = isRecharged ? '#ef4444' : '#facc15';
-    ctx.fillText('DAVE', 0, 11);
+    // Radiant Gold Fill
+    ctx.fillStyle = UITokens.gold;
+    ctx.fillText('DANGEROUS ADVENTURE', 0, 0);
 
     ctx.shadowBlur = 0;
 
-    // "RECHARGED" Spaced Subtitle
-    ctx.font = '5px "Press Start 2P", monospace';
-    ctx.fillStyle = isRecharged ? '#94a3b8' : '#38bdf8';
-    ctx.fillText(isRecharged ? 'R E C H A R G E D' : '~ RETRO PLATFORMER ~', 0, 22);
+    // Subtitle
+    ctx.font = '7px "Press Start 2P", monospace';
+    ctx.fillStyle = UITokens.primary;
+    ctx.fillText('~ A RETRO PLATFORMER ~', 0, 16);
 
-    ctx.restore();
-
-    // 5. Zone 2: Top Action Buttons Row (PLAY, ROSTER, SETTINGS)
-    const topActionData = [
-      { id: 'play', btnIndex: 0, label: 'PLAY', icon: '▶', x: 22, y: 44, w: 110, h: 32, theme: '#ef4444', glow: 'rgba(239, 68, 68, 0.5)' },
-      { id: 'instructions', btnIndex: 2, label: 'ROSTER', icon: '👥', x: 145, y: 44, w: 110, h: 32, theme: '#38bdf8', glow: 'rgba(56, 189, 248, 0.5)' },
-      { id: 'settings', btnIndex: 3, label: 'SETTINGS', icon: '⚙', x: 268, y: 44, w: 110, h: 32, theme: '#facc15', glow: 'rgba(250, 204, 21, 0.5)' }
-    ];
-
-    for (let i = 0; i < topActionData.length; i++) {
-      const tab = topActionData[i];
-      const isBtnSelected = (selectedIndex === tab.btnIndex);
-      const btnObj = buttons ? buttons[tab.btnIndex] : null;
-      if (btnObj) btnObj.update(0.016, isBtnSelected);
-
-      const btnScale = isBtnSelected ? 1.02 : 1.0;
-      const bCenterX = tab.x + tab.w / 2;
-      const bCenterY = tab.y + tab.h / 2;
-
-      ctx.save();
-      ctx.translate(bCenterX, bCenterY);
-      ctx.scale(btnScale, btnScale);
-      ctx.translate(-bCenterX, -bCenterY);
-
-      // Card Body
-      ctx.fillStyle = isBtnSelected ? 'rgba(30, 41, 59, 0.95)' : 'rgba(15, 23, 42, 0.75)';
-      ctx.fillRect(tab.x, tab.y, tab.w, tab.h);
-
-      // Card Border & Glow
-      ctx.strokeStyle = isBtnSelected ? tab.theme : (isRecharged ? 'rgba(244, 63, 94, 0.25)' : 'rgba(56, 189, 248, 0.2)');
-      ctx.lineWidth = isBtnSelected ? 2 : 1;
-      if (isBtnSelected) {
-        ctx.shadowColor = tab.glow;
-        ctx.shadowBlur = 10;
-      }
-      ctx.strokeRect(tab.x, tab.y, tab.w, tab.h);
-      ctx.shadowBlur = 0;
-
-      // Icon & Label
-      ctx.font = '7.5px "Press Start 2P", monospace';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-
-      ctx.fillStyle = isBtnSelected ? tab.theme : '#94a3b8';
-      ctx.fillText(tab.icon, bCenterX, tab.y + 11);
-
-      ctx.font = '6.5px "Press Start 2P", monospace';
-      ctx.fillStyle = isBtnSelected ? '#ffffff' : '#e2e8f0';
-      ctx.fillText(tab.label, bCenterX, tab.y + 22);
-
-      // Active Corner Accents
-      if (isBtnSelected) {
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(tab.x, tab.y, 2, 2);
-        ctx.fillRect(tab.x + tab.w - 2, tab.y, 2, 2);
-        ctx.fillRect(tab.x, tab.y + tab.h - 2, 2, 2);
-        ctx.fillRect(tab.x + tab.w - 2, tab.y + tab.h - 2, 2, 2);
-      }
-
-      ctx.restore();
-    }
-
-    // 6. Zone 3: Level Select Header & 2x3 Matrix Grid
-    ctx.save();
-    UITypography.drawText(ctx, 'LEVEL SELECT', 22, 88, {
-      size: '5.5px',
-      color: isRecharged ? '#ef4444' : '#38bdf8',
-      align: 'left',
-      shadow: true
-    });
-
-    const levelGrid = [
-      { num: '1', name: 'TRAINING GROUNDS', score: '★ 140', unlocked: true, levelNum: 1 },
-      { num: '2', name: 'INDUSTRIAL RUINS', score: '★ 250', unlocked: true, levelNum: 2 },
-      { num: '3', name: 'DARK CAVERNS', score: '★ ---', unlocked: true, levelNum: 3 },
-      { num: '4', name: 'SKY FORTRESS', score: 'LOCKED', unlocked: false, levelNum: 4 },
-      { num: '5', name: 'THE GAUNTLET', score: 'LOCKED', unlocked: false, levelNum: 5 },
-      { num: '6', name: 'COLLAPSING FOUNDRY', score: 'LOCKED', unlocked: false, levelNum: 6 }
-    ];
-
-    const cardW = 110;
-    const cardH = 34;
-    const colX = [22, 145, 268];
-    const rowY = [94, 132];
-
-    for (let i = 0; i < levelGrid.length; i++) {
-      const card = levelGrid[i];
-      const col = i % 3;
-      const row = Math.floor(i / 3);
-      const cx = colX[col];
-      const cy = rowY[row];
-
-      const isCardSelected = (selectedIndex === 1 && i === 0);
-
-      // Card Background
-      ctx.fillStyle = card.unlocked ? (isCardSelected ? 'rgba(30, 41, 59, 0.95)' : 'rgba(15, 23, 42, 0.85)') : 'rgba(8, 12, 22, 0.55)';
-      ctx.fillRect(cx, cy, cardW, cardH);
-
-      // Card Border
-      ctx.strokeStyle = card.unlocked ? (isCardSelected ? '#ef4444' : (isRecharged ? 'rgba(239, 68, 68, 0.4)' : 'rgba(56, 189, 248, 0.35)')) : '#1e293b';
-      ctx.lineWidth = isCardSelected ? 2 : 1;
-      if (isCardSelected) {
-        ctx.shadowColor = 'rgba(239, 68, 68, 0.6)';
-        ctx.shadowBlur = 8;
-      }
-      ctx.strokeRect(cx, cy, cardW, cardH);
-      ctx.shadowBlur = 0;
-
-      // Card Number / Lock Icon
-      ctx.font = '7px "Press Start 2P", monospace';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = card.unlocked ? (isRecharged ? '#ef4444' : '#38bdf8') : '#475569';
-      ctx.fillText(card.unlocked ? card.num : '🔒', cx + cardW / 2, cy + 9);
-
-      // Level Name
-      ctx.font = '4.5px "Press Start 2P", monospace';
-      ctx.fillStyle = card.unlocked ? '#e2e8f0' : '#475569';
-      ctx.fillText(card.name, cx + cardW / 2, cy + 19);
-
-      // Score / Lock Label
-      ctx.font = '5px "Press Start 2P", monospace';
-      ctx.fillStyle = card.unlocked ? '#facc15' : '#334155';
-      ctx.fillText(card.unlocked ? card.score : 'LOCKED', cx + cardW / 2, cy + 27);
-    }
-    ctx.restore();
-
-    // 7. Zone 4: Navigation Legend Bar
-    UITypography.drawText(ctx, '[ARROWS] SELECT   [ENTER] LAUNCH   MOUSE CLICK', width / 2, 173, {
-      size: '5px',
-      color: '#94a3b8',
-      align: 'center',
-      shadow: true,
-      shadowColor: '#020617'
-    });
-
-    // 8. Zone 5: Interactive Animated Diorama at the Bottom
-    this.renderBottomDiorama(ctx, width, height, this.animTimer);
-
-    // 9. Zone 5b: Mode Switcher Button (Bottom Right)
-    const modeLabel = isRecharged ? '⇅ CLASSIC DAVE' : '⚡ RECHARGED';
-    const modeBtnW = 106;
-    const modeBtnH = 22;
-    const modeBtnX = 275;
-    const modeBtnY = 208;
-    const isModeSelected = (selectedIndex === 4);
-
-    ctx.save();
-    ctx.fillStyle = isModeSelected ? 'rgba(30, 41, 59, 0.98)' : 'rgba(15, 23, 42, 0.9)';
-    ctx.fillRect(modeBtnX, modeBtnY, modeBtnW, modeBtnH);
-
-    ctx.strokeStyle = isModeSelected ? '#ffffff' : (isRecharged ? '#f43f5e' : '#38bdf8');
-    ctx.lineWidth = isModeSelected ? 2 : 1;
-    ctx.shadowColor = isRecharged ? 'rgba(244, 63, 94, 0.6)' : UITokens.primaryGlow;
-    ctx.shadowBlur = isModeSelected ? 10 : 6;
-    ctx.strokeRect(modeBtnX, modeBtnY, modeBtnW, modeBtnH);
-    ctx.shadowBlur = 0;
-
-    UITypography.drawText(ctx, modeLabel, modeBtnX + modeBtnW / 2, modeBtnY + modeBtnH / 2, {
-      size: '5.5px',
-      color: isRecharged ? '#fca5a5' : '#7dd3fc',
-      align: 'center',
-      shadow: true
-    });
-    ctx.restore();
-  }
-
-  /**
-   * Renders the interactive animated diorama at the bottom of the main menu
-   */
-  renderBottomDiorama(ctx, width, height, animTimer) {
-    ctx.save();
-    const groundY = height - 32;
-
-    // 1. Red Brick Ledges (Left and Right)
-    // Left Brick Platform
-    const brickW = 110;
-    ctx.fillStyle = '#991b1b';
-    ctx.fillRect(0, groundY, brickW, 32);
-    ctx.fillStyle = '#dc2626';
-    ctx.fillRect(0, groundY, brickW, 2);
-
-    // Brick Pattern Lines
-    ctx.strokeStyle = '#450a0a';
+    // Glowing divider line with diamond pip
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
     ctx.lineWidth = 1;
-    for (let r = 0; r < 3; r++) {
-      const by = groundY + r * 10;
-      ctx.beginPath();
-      ctx.moveTo(0, by);
-      ctx.lineTo(brickW, by);
-      ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-110, 24);
+    ctx.lineTo(-12, 24);
+    ctx.moveTo(12, 24);
+    ctx.lineTo(110, 24);
+    ctx.stroke();
 
-      const offset = (r % 2 === 0) ? 0 : 12;
-      for (let bx = offset; bx < brickW; bx += 24) {
-        ctx.beginPath();
-        ctx.moveTo(bx, by);
-        ctx.lineTo(bx, by + 10);
-        ctx.stroke();
-      }
-    }
-
-    // Right Brick Platform
-    const rightStartX = width - 130;
-    ctx.fillStyle = '#991b1b';
-    ctx.fillRect(rightStartX, groundY, 130, 32);
-    ctx.fillStyle = '#dc2626';
-    ctx.fillRect(rightStartX, groundY, 130, 2);
-
-    for (let r = 0; r < 3; r++) {
-      const by = groundY + r * 10;
-      ctx.beginPath();
-      ctx.moveTo(rightStartX, by);
-      ctx.lineTo(width, by);
-      ctx.stroke();
-
-      const offset = (r % 2 === 0) ? 0 : 12;
-      for (let bx = rightStartX + offset; bx < width; bx += 24) {
-        ctx.beginPath();
-        ctx.moveTo(bx, by);
-        ctx.lineTo(bx, by + 10);
-        ctx.stroke();
-      }
-    }
-
-    // 2. Animated Dave Character on Left Platform
-    const daveX = 18;
-    const daveBob = Math.sin(animTimer * 3.5) * 1.5;
-    const daveY = groundY - 15 + daveBob;
-
-    ctx.save();
-    ctx.translate(daveX, daveY);
-
-    // Cap
-    ctx.fillStyle = '#ef4444';
-    ctx.fillRect(2, 0, 8, 3);
-    ctx.fillRect(0, 2, 12, 2);
-    // Face
-    ctx.fillStyle = '#fed7aa';
-    ctx.fillRect(2, 4, 8, 4);
-    // Eye
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(7, 4, 1, 2);
-    // Shirt & Overalls
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(2, 7, 8, 3);
-    ctx.fillStyle = '#2563eb';
-    ctx.fillRect(1, 8, 10, 5);
-    // Legs
-    ctx.fillStyle = '#1e40af';
-    ctx.fillRect(2, 13, 3, 2);
-    ctx.fillRect(7, 13, 3, 2);
-    ctx.restore();
-
-    // 3. Golden Trophy on Left Platform
-    const trophyX = 65;
-    const trophyY = groundY - 14;
-    // Ambient gold glow
-    const tGlow = Math.sin(animTimer * 4) * 0.3 + 0.7;
-    ctx.shadowColor = `rgba(250, 204, 21, ${tGlow})`;
-    ctx.shadowBlur = 10;
-    ctx.fillStyle = '#facc15';
-    // Trophy cup & handles
-    ctx.fillRect(trophyX + 2, trophyY, 6, 5);
-    ctx.fillRect(trophyX, trophyY + 1, 2, 3);
-    ctx.fillRect(trophyX + 8, trophyY + 1, 2, 3);
-    ctx.fillRect(trophyX + 4, trophyY + 5, 2, 3);
-    ctx.fillRect(trophyX + 2, trophyY + 8, 6, 2);
-    ctx.shadowBlur = 0;
-
-    // 4. Plasma Gun Pickup on Left
-    const gunX = 84;
-    const gunBob = Math.sin(animTimer * 4 + 1) * 2;
-    const gunY = groundY - 12 + gunBob;
-    ctx.fillStyle = '#94a3b8';
-    ctx.fillRect(gunX, gunY, 8, 3);
-    ctx.fillStyle = '#475569';
-    ctx.fillRect(gunX + 2, gunY + 3, 3, 2);
-    ctx.fillStyle = '#38bdf8';
-    ctx.fillRect(gunX + 8, gunY + 1, 2, 1);
-
-    // 5. Golden Trophy & Fire Torches on Right Platform
-    const rTrophyX = rightStartX + 20;
-    const rTrophyY = groundY - 14;
-    ctx.shadowColor = `rgba(250, 204, 21, ${tGlow})`;
-    ctx.shadowBlur = 10;
-    ctx.fillStyle = '#facc15';
-    ctx.fillRect(rTrophyX + 2, rTrophyY, 6, 5);
-    ctx.fillRect(rTrophyX, rTrophyY + 1, 2, 3);
-    ctx.fillRect(rTrophyX + 8, rTrophyY + 1, 2, 3);
-    ctx.fillRect(rTrophyX + 4, rTrophyY + 5, 2, 3);
-    ctx.fillRect(rTrophyX + 2, rTrophyY + 8, 6, 2);
-    ctx.shadowBlur = 0;
-
-    // Twin Fire Torches
-    for (let t = 0; t < 2; t++) {
-      const tx = rightStartX + 42 + t * 8;
-      const ty = groundY - 8;
-      // Torch base
-      ctx.fillStyle = '#78350f';
-      ctx.fillRect(tx + 1, ty + 2, 3, 6);
-      // Flame particles
-      const flameH = 4 + Math.floor(Math.random() * 3);
-      ctx.fillStyle = '#f97316';
-      ctx.fillRect(tx, ty - flameH + 2, 5, flameH);
-      ctx.fillStyle = '#facc15';
-      ctx.fillRect(tx + 1, ty - flameH + 3, 3, flameH - 1);
-    }
+    ctx.fillStyle = UITokens.gold;
+    ctx.font = '6px "Press Start 2P", monospace';
+    ctx.fillText('✦', 0, 24);
 
     ctx.restore();
+
+    // 7. Hero Preview Character on Floating Hologram Pedestal (Left Side)
+    this.renderHeroPreview(ctx, 82, 134, this.animTimer);
+
+    // 8. Staggered Animated Menu Buttons (Right Side)
+    for (let i = 0; i < buttons.length; i++) {
+      const btn = buttons[i];
+      btn.update(0.016, i === selectedIndex);
+
+      const btnEnterDelay = 0.12 + i * 0.07;
+      const btnProgress = Math.min(1, Math.max(0, (this.menuTimer - btnEnterDelay) / 0.3));
+      const btnEase = UIAnimation.easeOutQuad(btnProgress);
+      const slideOffsetX = (1 - btnEase) * 35;
+      const btnAlpha = btnEase;
+
+      btn.render(ctx, i === selectedIndex, false, slideOffsetX, btnAlpha);
+    }
+
+    // 9. Footer Navigation Legend
+    UITypography.drawText(ctx, '[▲/▼] NAVIGATE   [ENTER/SPACE] SELECT   MOUSE CLICK', width / 2, height - 16, {
+      size: '6px',
+      color: UITokens.textMuted,
+      align: 'center',
+      shadow: true
+    });
   }
 
   /**
@@ -1006,8 +757,8 @@ export class UIManager {
 
     // Upward soft blue light beam
     const beamGrad = ctx.createLinearGradient(x, baseY, x, y - 10);
-    beamGrad.addColorStop(0, 'rgba(56, 189, 248, 0.28)');
-    beamGrad.addColorStop(0.6, 'rgba(56, 189, 248, 0.09)');
+    beamGrad.addColorStop(0, 'rgba(56, 189, 248, 0.22)');
+    beamGrad.addColorStop(0.6, 'rgba(56, 189, 248, 0.07)');
     beamGrad.addColorStop(1, 'rgba(56, 189, 248, 0.0)');
     ctx.fillStyle = beamGrad;
     ctx.beginPath();
@@ -1024,27 +775,16 @@ export class UIManager {
     ctx.ellipse(x, baseY, 28, 8, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.strokeStyle = '#38bdf8';
+    ctx.strokeStyle = UITokens.primary;
     ctx.lineWidth = 1.5;
-    ctx.shadowColor = UITokens.primaryGlow;
-    ctx.shadowBlur = 8;
     ctx.stroke();
-    ctx.shadowBlur = 0;
 
     // Inner specular ring
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.ellipse(x, baseY, 22, 5, 0, 0, Math.PI * 2);
     ctx.stroke();
-
-    // Hologram upward particle motes
-    for (let i = 0; i < 4; i++) {
-      const moteX = x + Math.sin(animTimer * 2.5 + i * 1.5) * 16;
-      const moteY = baseY - ((animTimer * 20 + i * 12) % 36);
-      ctx.fillStyle = '#67e8f9';
-      ctx.fillRect(Math.round(moteX), Math.round(moteY), 1.5, 1.5);
-    }
 
     // 2. Decorative Hero Sprite (Scaled Pixel Character with Idle Bobbing)
     const charBobY = Math.sin(animTimer * 3.2) * 2;
@@ -1112,23 +852,19 @@ export class UIManager {
 
     ctx.restore();
 
-    // 3. Hero Label & Subtitle (Crisp high-contrast typography)
+    // 3. Hero Label & Subtitle
     UITypography.drawText(ctx, 'AGENT DAVE', x, baseY + 14, {
       size: '7px',
       color: UITokens.gold,
       align: 'center',
-      shadow: true,
-      shadowColor: '#020617',
-      glow: true,
-      glowColor: UITokens.goldGlow
+      shadow: true
     });
 
     UITypography.drawText(ctx, 'COMBAT READY', x, baseY + 23, {
       size: '6px',
-      color: '#38bdf8',
+      color: UITokens.textSecondary,
       align: 'center',
-      shadow: true,
-      shadowColor: '#020617'
+      shadow: false
     });
 
     ctx.restore();
@@ -3127,99 +2863,16 @@ export class UIManager {
   }
 
   /**
-   * Screen Transition Curtain Fade & Cinematic Hyper-Warp Jump Animation
+   * Screen Transition Curtain Fade
    */
-  renderScreenFade(ctx, width, height, alpha, levelNumber = 1) {
-    if (alpha <= 0.01) return;
-
-    ctx.save();
-    ctx.globalAlpha = Math.min(1, alpha);
-
-    // Deep space backdrop
-    ctx.fillStyle = '#03050a';
-    ctx.fillRect(0, 0, width, height);
-
-    const cx = width / 2;
-    const cy = height / 2;
-
-    // 1. Hyper-warp speed star streaks radiating from vortex center
-    if (this.warpSpeedLines && this.warpSpeedLines.length > 0) {
-      ctx.lineWidth = 1.5;
-      for (let i = 0; i < this.warpSpeedLines.length; i++) {
-        const line = this.warpSpeedLines[i];
-        const startDist = line.dist * (1.0 - alpha * 0.4);
-        const endDist = startDist + line.length * (alpha * 1.8 + 0.5);
-
-        const x1 = cx + Math.cos(line.angle) * startDist;
-        const y1 = cy + Math.sin(line.angle) * startDist;
-        const x2 = cx + Math.cos(line.angle) * endDist;
-        const y2 = cy + Math.sin(line.angle) * endDist;
-
-        if (ctx.beginPath && ctx.moveTo && ctx.lineTo && ctx.stroke) {
-          ctx.strokeStyle = line.color;
-          ctx.beginPath();
-          ctx.moveTo(x1, y1);
-          ctx.lineTo(x2, y2);
-          ctx.stroke();
-        }
-      }
+  renderScreenFade(ctx, width, height, alpha) {
+    if (alpha > 0.01) {
+      ctx.save();
+      ctx.fillStyle = '#000000';
+      ctx.globalAlpha = Math.min(1, alpha);
+      ctx.fillRect(0, 0, width, height);
+      ctx.restore();
     }
-
-    // 2. Expanding central warp shockwave ring
-    const ringRadius = (1.0 - alpha) * 160 + 15;
-    ctx.strokeStyle = `rgba(56, 189, 248, ${alpha * 0.8})`;
-    ctx.lineWidth = 2;
-    ctx.shadowColor = UITokens.primaryGlow;
-    ctx.shadowBlur = 14;
-    if (ctx.beginPath && ctx.arc && ctx.stroke) {
-      ctx.beginPath();
-      ctx.arc(cx, cy, ringRadius, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-    ctx.shadowBlur = 0;
-
-    // 3. Cinematic Sector Telemetry Briefing (Centered Cyber Card)
-    const levelNames = {
-      1: 'THE LOST VAULT',
-      2: 'CYBER FACTORY',
-      3: 'DAVE FORTRESS'
-    };
-    const sectorName = levelNames[levelNumber] || `SECTOR 0${levelNumber}`;
-
-    UITypography.drawText(ctx, '>> HYPER-WARP ENGAGED <<', cx, cy - 28, {
-      size: '8px',
-      color: UITokens.gold,
-      align: 'center',
-      shadow: true,
-      shadowColor: '#020617',
-      glow: true,
-      glowColor: UITokens.goldGlow
-    });
-
-    UITypography.drawText(ctx, `ENTERING SECTOR 0${levelNumber}: ${sectorName}`, cx, cy - 10, {
-      size: '7.5px',
-      color: '#ffffff',
-      align: 'center',
-      shadow: true,
-      shadowColor: '#020617'
-    });
-
-    UITypography.drawText(ctx, '● ATMOSPHERE: HAZARDOUS   ● RADAR: ONLINE', cx, cy + 8, {
-      size: '5.5px',
-      color: '#38bdf8',
-      align: 'center',
-      shadow: false
-    });
-
-    UITypography.drawText(ctx, 'GET READY...', cx, cy + 26, {
-      size: '6px',
-      color: '#4ade80',
-      align: 'center',
-      shadow: true,
-      shadowColor: '#020617'
-    });
-
-    ctx.restore();
   }
 }
 
