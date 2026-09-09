@@ -490,7 +490,7 @@ export class Game {
     this.ui.update(dt);
 
     if (this.screenFadeAlpha > 0) {
-      this.screenFadeAlpha = Math.max(0, this.screenFadeAlpha - 2.5 * dt);
+      this.screenFadeAlpha = Math.max(0, this.screenFadeAlpha - 1.4 * dt);
     }
 
     if (this.input && this.input.wasDebugToggled && this.input.wasDebugToggled()) {
@@ -840,7 +840,7 @@ export class Game {
     }
 
     // 8. Screen Transition Fade Curtain
-    this.ui.renderScreenFade(ctx, w, h, this.screenFadeAlpha);
+    this.ui.renderScreenFade(ctx, w, h, this.screenFadeAlpha, this.currentLevel);
 
     // 9. Render Debug Overlay
     if (this.showDebug) {
@@ -901,5 +901,79 @@ export class Game {
 if (typeof window !== 'undefined') {
   window.addEventListener('DOMContentLoaded', () => {
     new Game();
+
+    // DOM Controls Modal & Fullscreen Bindings
+    const controlsModal = document.getElementById('controlsModal');
+    const btnHelp = document.getElementById('btnHelp');
+    const btnCloseModal = document.getElementById('btnCloseModal');
+    const btnDismiss = document.getElementById('btnDismiss');
+    const btnFullscreen = document.getElementById('btnFullscreen');
+
+    const toggleControlsModal = (show) => {
+      if (!controlsModal) return;
+      if (show) {
+        controlsModal.classList.remove('hidden');
+      } else {
+        controlsModal.classList.add('hidden');
+      }
+    };
+
+    if (btnHelp) {
+      btnHelp.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleControlsModal(true);
+      });
+    }
+
+    if (btnCloseModal) {
+      btnCloseModal.addEventListener('click', () => toggleControlsModal(false));
+    }
+
+    if (btnDismiss) {
+      btnDismiss.addEventListener('click', () => toggleControlsModal(false));
+    }
+
+    if (controlsModal) {
+      controlsModal.addEventListener('click', (e) => {
+        if (e.target === controlsModal) {
+          toggleControlsModal(false);
+        }
+      });
+    }
+
+    // Fullscreen Toggle
+    const toggleFullscreen = () => {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        if (document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else if (document.documentElement.webkitRequestFullscreen) {
+          document.documentElement.webkitRequestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+      }
+    };
+
+    if (btnFullscreen) {
+      btnFullscreen.addEventListener('click', toggleFullscreen);
+    }
+
+    const canvas = document.getElementById('gameCanvas');
+    if (canvas) {
+      canvas.addEventListener('dblclick', toggleFullscreen);
+    }
+
+    // Dismiss modal on ESC or Enter if active
+    window.addEventListener('keydown', (e) => {
+      if (controlsModal && !controlsModal.classList.contains('hidden')) {
+        if (e.code === 'Escape' || e.code === 'Enter' || e.code === 'Space') {
+          toggleControlsModal(false);
+        }
+      }
+    });
   });
 }

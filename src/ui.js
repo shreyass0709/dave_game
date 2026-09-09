@@ -284,13 +284,16 @@ export class UIButton {
       ctx.fillText('▶', drawX + 10 - chevronPulse, textY);
       ctx.fillText('◀', drawX + this.width - 10 + chevronPulse, textY);
 
-      // Bright white label with drop shadow
+      // Bright white label with deep drop shadow
       ctx.fillStyle = '#020617';
-      ctx.fillText(this.label, centerX + 1, textY + 1);
+      ctx.fillText(this.label, centerX + 1.5, textY + 1.5);
       ctx.fillStyle = '#ffffff';
       ctx.fillText(this.label, centerX, textY);
     } else {
-      ctx.fillStyle = this.disabled ? UITokens.disabled : UITokens.textMuted;
+      // Non-active button: High contrast crisp text with dark shadow
+      ctx.fillStyle = '#020617';
+      ctx.fillText(this.label, centerX + 1, textY + 1);
+      ctx.fillStyle = this.disabled ? '#64748b' : '#f1f5f9';
       ctx.fillText(this.label, centerX, textY);
     }
 
@@ -298,8 +301,12 @@ export class UIButton {
     if (this.badge) {
       ctx.font = `6px ${UITokens.fontFamily}`;
       ctx.textAlign = 'end';
-      ctx.fillStyle = active ? '#ffffff' : theme.accent;
-      ctx.fillText(this.badge, drawX + this.width - 8, textY);
+      const badgeX = drawX + this.width - 8;
+      // Drop shadow for badge
+      ctx.fillStyle = '#020617';
+      ctx.fillText(this.badge, badgeX + 1, textY + 1);
+      ctx.fillStyle = active ? '#ffffff' : (theme.accent || '#38bdf8');
+      ctx.fillText(this.badge, badgeX, textY);
     }
 
     ctx.restore();
@@ -496,6 +503,19 @@ export class UIManager {
         phase: i * 0.5
       });
     }
+
+    // Pre-allocated warp speed lines for cinematic level transition
+    this.warpSpeedLines = [];
+    for (let i = 0; i < 40; i++) {
+      const angle = (i / 40) * Math.PI * 2 + (i % 2 === 0 ? 0.08 : -0.08);
+      this.warpSpeedLines.push({
+        angle: angle,
+        dist: 10 + (i * 13) % 220,
+        speed: 260 + (i % 6) * 60,
+        length: 12 + (i % 5) * 14,
+        color: i % 3 === 0 ? '#facc15' : (i % 2 === 0 ? '#38bdf8' : '#ffffff')
+      });
+    }
   }
 
   resetMenuAnimation() {
@@ -580,6 +600,15 @@ export class UIManager {
       c.y += c.speed * dt;
       if (c.y > 245) c.y = -5;
     }
+
+    // Update warp speed lines
+    for (let i = 0; i < this.warpSpeedLines.length; i++) {
+      const line = this.warpSpeedLines[i];
+      line.dist += line.speed * dt;
+      if (line.dist > 280) {
+        line.dist = 6;
+      }
+    }
   }
 
   /**
@@ -598,9 +627,9 @@ export class UIManager {
     ctx.fillStyle = bgGradient;
     ctx.fillRect(0, 0, width, height);
 
-    // 2. Subtle Isometric Perspective Cyber Floor Grid
+    // 2. Dynamic Scrolling Isometric Cyber Floor Grid
     ctx.save();
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.06)';
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.09)';
     ctx.lineWidth = 1;
 
     const horizonY = 135;
@@ -612,12 +641,15 @@ export class UIManager {
       ctx.stroke();
     }
 
-    const hGridLines = [150, 168, 188, 210, 234];
-    for (let y of hGridLines) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(width, y);
-      ctx.stroke();
+    const gridScroll = (this.animTimer * 28) % 20;
+    for (let base = 145; base <= 245; base += 18) {
+      const y = base + gridScroll;
+      if (y >= 140 && y <= height) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+      }
     }
     ctx.restore();
 
@@ -625,7 +657,7 @@ export class UIManager {
     ctx.save();
     for (let i = 0; i < this.bgParticles.length; i++) {
       const p = this.bgParticles[i];
-      const pulseAlpha = 0.25 + 0.6 * (Math.sin(this.animTimer * 3 + p.phase) * 0.5 + 0.5);
+      const pulseAlpha = 0.35 + 0.55 * (Math.sin(this.animTimer * 3.5 + p.phase) * 0.5 + 0.5);
       ctx.globalAlpha = pulseAlpha;
       ctx.fillStyle = p.color;
       ctx.fillRect(Math.round(p.x), Math.round(p.y), p.size, p.size);
@@ -633,7 +665,7 @@ export class UIManager {
     ctx.restore();
 
     // 4. Outer Cyber Frame & Corner L-Brackets
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.22)';
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.28)';
     ctx.lineWidth = 1;
     ctx.strokeRect(8, 8, width - 16, height - 16);
 
@@ -652,16 +684,16 @@ export class UIManager {
     ctx.fillRect(width - 10, height - 14, 2, 6);
 
     // 5. Minimal Cyber-HUD Header Status Badges
-    UITypography.drawText(ctx, '● SYSTEM: READY', 18, 16, {
-      size: '6px',
-      color: UITokens.success,
-      align: 'left',
-      shadow: false
-    });
+    const readyPulse = Math.sin(this.animTimer * 5) * 0.3 + 0.7;
+    ctx.fillStyle = `rgba(74, 222, 128, ${readyPulse})`;
+    ctx.font = '6px "Press Start 2P", monospace';
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left';
+    ctx.fillText('● SYSTEM: READY', 18, 16);
 
     UITypography.drawText(ctx, 'DAVE-ENGINE v2.4 PRO', width - 18, 16, {
       size: '6px',
-      color: UITokens.textMuted,
+      color: '#93c5fd',
       align: 'right',
       shadow: false
     });
@@ -681,7 +713,7 @@ export class UIManager {
     // Ambient gold glow behind title
     const glowPulse = UIAnimation.getPulse(this.animTimer, 2.5, 0.4, 0.85);
     ctx.shadowColor = `rgba(250, 204, 21, ${glowPulse})`;
-    ctx.shadowBlur = 12;
+    ctx.shadowBlur = 14;
 
     // Dual-layer crisp title typography
     ctx.font = '13px "Press Start 2P", monospace';
@@ -700,11 +732,11 @@ export class UIManager {
 
     // Subtitle
     ctx.font = '7px "Press Start 2P", monospace';
-    ctx.fillStyle = UITokens.primary;
+    ctx.fillStyle = '#38bdf8';
     ctx.fillText('~ A RETRO PLATFORMER ~', 0, 16);
 
     // Glowing divider line with diamond pip
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(-110, 24);
@@ -736,12 +768,13 @@ export class UIManager {
       btn.render(ctx, i === selectedIndex, false, slideOffsetX, btnAlpha);
     }
 
-    // 9. Footer Navigation Legend
-    UITypography.drawText(ctx, '[▲/▼] NAVIGATE   [ENTER/SPACE] SELECT   MOUSE CLICK', width / 2, height - 16, {
+    // 9. Footer Navigation Legend (Crisp readable text)
+    UITypography.drawText(ctx, '[W/S / ARROWS] NAVIGATE   [ENTER/SPACE] SELECT   MOUSE CLICK', width / 2, height - 16, {
       size: '6px',
-      color: UITokens.textMuted,
+      color: '#cbd5e1',
       align: 'center',
-      shadow: true
+      shadow: true,
+      shadowColor: '#020617'
     });
   }
 
@@ -757,8 +790,8 @@ export class UIManager {
 
     // Upward soft blue light beam
     const beamGrad = ctx.createLinearGradient(x, baseY, x, y - 10);
-    beamGrad.addColorStop(0, 'rgba(56, 189, 248, 0.22)');
-    beamGrad.addColorStop(0.6, 'rgba(56, 189, 248, 0.07)');
+    beamGrad.addColorStop(0, 'rgba(56, 189, 248, 0.28)');
+    beamGrad.addColorStop(0.6, 'rgba(56, 189, 248, 0.09)');
     beamGrad.addColorStop(1, 'rgba(56, 189, 248, 0.0)');
     ctx.fillStyle = beamGrad;
     ctx.beginPath();
@@ -775,16 +808,27 @@ export class UIManager {
     ctx.ellipse(x, baseY, 28, 8, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.strokeStyle = UITokens.primary;
+    ctx.strokeStyle = '#38bdf8';
     ctx.lineWidth = 1.5;
+    ctx.shadowColor = UITokens.primaryGlow;
+    ctx.shadowBlur = 8;
     ctx.stroke();
+    ctx.shadowBlur = 0;
 
     // Inner specular ring
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.ellipse(x, baseY, 22, 5, 0, 0, Math.PI * 2);
     ctx.stroke();
+
+    // Hologram upward particle motes
+    for (let i = 0; i < 4; i++) {
+      const moteX = x + Math.sin(animTimer * 2.5 + i * 1.5) * 16;
+      const moteY = baseY - ((animTimer * 20 + i * 12) % 36);
+      ctx.fillStyle = '#67e8f9';
+      ctx.fillRect(Math.round(moteX), Math.round(moteY), 1.5, 1.5);
+    }
 
     // 2. Decorative Hero Sprite (Scaled Pixel Character with Idle Bobbing)
     const charBobY = Math.sin(animTimer * 3.2) * 2;
@@ -852,19 +896,23 @@ export class UIManager {
 
     ctx.restore();
 
-    // 3. Hero Label & Subtitle
+    // 3. Hero Label & Subtitle (Crisp high-contrast typography)
     UITypography.drawText(ctx, 'AGENT DAVE', x, baseY + 14, {
       size: '7px',
       color: UITokens.gold,
       align: 'center',
-      shadow: true
+      shadow: true,
+      shadowColor: '#020617',
+      glow: true,
+      glowColor: UITokens.goldGlow
     });
 
     UITypography.drawText(ctx, 'COMBAT READY', x, baseY + 23, {
       size: '6px',
-      color: UITokens.textSecondary,
+      color: '#38bdf8',
       align: 'center',
-      shadow: false
+      shadow: true,
+      shadowColor: '#020617'
     });
 
     ctx.restore();
@@ -2863,16 +2911,99 @@ export class UIManager {
   }
 
   /**
-   * Screen Transition Curtain Fade
+   * Screen Transition Curtain Fade & Cinematic Hyper-Warp Jump Animation
    */
-  renderScreenFade(ctx, width, height, alpha) {
-    if (alpha > 0.01) {
-      ctx.save();
-      ctx.fillStyle = '#000000';
-      ctx.globalAlpha = Math.min(1, alpha);
-      ctx.fillRect(0, 0, width, height);
-      ctx.restore();
+  renderScreenFade(ctx, width, height, alpha, levelNumber = 1) {
+    if (alpha <= 0.01) return;
+
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, alpha);
+
+    // Deep space backdrop
+    ctx.fillStyle = '#03050a';
+    ctx.fillRect(0, 0, width, height);
+
+    const cx = width / 2;
+    const cy = height / 2;
+
+    // 1. Hyper-warp speed star streaks radiating from vortex center
+    if (this.warpSpeedLines && this.warpSpeedLines.length > 0) {
+      ctx.lineWidth = 1.5;
+      for (let i = 0; i < this.warpSpeedLines.length; i++) {
+        const line = this.warpSpeedLines[i];
+        const startDist = line.dist * (1.0 - alpha * 0.4);
+        const endDist = startDist + line.length * (alpha * 1.8 + 0.5);
+
+        const x1 = cx + Math.cos(line.angle) * startDist;
+        const y1 = cy + Math.sin(line.angle) * startDist;
+        const x2 = cx + Math.cos(line.angle) * endDist;
+        const y2 = cy + Math.sin(line.angle) * endDist;
+
+        if (ctx.beginPath && ctx.moveTo && ctx.lineTo && ctx.stroke) {
+          ctx.strokeStyle = line.color;
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+        }
+      }
     }
+
+    // 2. Expanding central warp shockwave ring
+    const ringRadius = (1.0 - alpha) * 160 + 15;
+    ctx.strokeStyle = `rgba(56, 189, 248, ${alpha * 0.8})`;
+    ctx.lineWidth = 2;
+    ctx.shadowColor = UITokens.primaryGlow;
+    ctx.shadowBlur = 14;
+    if (ctx.beginPath && ctx.arc && ctx.stroke) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, ringRadius, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.shadowBlur = 0;
+
+    // 3. Cinematic Sector Telemetry Briefing (Centered Cyber Card)
+    const levelNames = {
+      1: 'THE LOST VAULT',
+      2: 'CYBER FACTORY',
+      3: 'DAVE FORTRESS'
+    };
+    const sectorName = levelNames[levelNumber] || `SECTOR 0${levelNumber}`;
+
+    UITypography.drawText(ctx, '>> HYPER-WARP ENGAGED <<', cx, cy - 28, {
+      size: '8px',
+      color: UITokens.gold,
+      align: 'center',
+      shadow: true,
+      shadowColor: '#020617',
+      glow: true,
+      glowColor: UITokens.goldGlow
+    });
+
+    UITypography.drawText(ctx, `ENTERING SECTOR 0${levelNumber}: ${sectorName}`, cx, cy - 10, {
+      size: '7.5px',
+      color: '#ffffff',
+      align: 'center',
+      shadow: true,
+      shadowColor: '#020617'
+    });
+
+    UITypography.drawText(ctx, '● ATMOSPHERE: HAZARDOUS   ● RADAR: ONLINE', cx, cy + 8, {
+      size: '5.5px',
+      color: '#38bdf8',
+      align: 'center',
+      shadow: false
+    });
+
+    UITypography.drawText(ctx, 'GET READY...', cx, cy + 26, {
+      size: '6px',
+      color: '#4ade80',
+      align: 'center',
+      shadow: true,
+      shadowColor: '#020617'
+    });
+
+    ctx.restore();
   }
 }
 

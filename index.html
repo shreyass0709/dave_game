@@ -10,41 +10,108 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="arcade-cabinet">
-    <header class="game-header">
-      <div class="game-title">DANGEROUS ADVENTURE</div>
-      <div class="game-subtitle">A Retro Platformer | College Mini-Project</div>
+  <div class="app-layout">
+    <!-- Top Action Toolbar -->
+    <header class="game-toolbar">
+      <div class="toolbar-brand">
+        <span class="brand-title">DANGEROUS ADVENTURE</span>
+        <span class="brand-badge">ARCADE EDITION</span>
+      </div>
+      <div class="toolbar-actions">
+        <button id="btnHelp" class="action-pill-btn" title="View Game Controls & Tips">
+          <span class="btn-icon">⌨</span> CONTROLS
+        </button>
+        <button id="btnFullscreen" class="action-pill-btn" title="Toggle Fullscreen Mode">
+          <span class="btn-icon">⛶</span> FULLSCREEN
+        </button>
+      </div>
     </header>
 
-    <div class="screen-frame">
-      <canvas id="gameCanvas" width="400" height="240"></canvas>
-    </div>
+    <!-- Fullscreen Game Canvas Frame -->
+    <main class="viewport-wrapper">
+      <div class="screen-frame crt-active">
+        <canvas id="gameCanvas" width="400" height="240"></canvas>
+      </div>
+    </main>
 
-    <footer class="controls-panel">
-      <div class="controls-guide">
-        <div class="control-item">
-          <span class="key-badge">A</span> / <span class="key-badge">◀</span> : Move Left
+    <!-- Controls & Help Modal Overlay -->
+    <div id="controlsModal" class="modal-backdrop hidden">
+      <div class="modal-container">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <h2 class="modal-title">TACTICAL CONTROLS</h2>
+            <p class="modal-subtitle">MASTER THE DAVE PROTOCOL</p>
+          </div>
+          <button id="btnCloseModal" class="modal-close" aria-label="Close Controls Guide">&times;</button>
         </div>
-        <div class="control-item">
-          <span class="key-badge">D</span> / <span class="key-badge">▶</span> : Move Right
+
+        <div class="modal-body">
+          <div class="controls-grid">
+            <div class="control-card">
+              <div class="control-keys">
+                <span class="key-cap">A</span>
+                <span class="key-sep">/</span>
+                <span class="key-cap">◀</span>
+              </div>
+              <span class="control-label">Move Left</span>
+            </div>
+
+            <div class="control-card">
+              <div class="control-keys">
+                <span class="key-cap">D</span>
+                <span class="key-sep">/</span>
+                <span class="key-cap">▶</span>
+              </div>
+              <span class="control-label">Move Right</span>
+            </div>
+
+            <div class="control-card full-span">
+              <div class="control-keys">
+                <span class="key-cap">Space</span>
+                <span class="key-sep">/</span>
+                <span class="key-cap">W</span>
+                <span class="key-sep">/</span>
+                <span class="key-cap">▲</span>
+              </div>
+              <span class="control-label">Jump (Hold for Maximum Height)</span>
+            </div>
+
+            <div class="control-card">
+              <div class="control-keys">
+                <span class="key-cap">F</span>
+              </div>
+              <span class="control-label">Shoot Plasma Blaster</span>
+            </div>
+
+            <div class="control-card">
+              <div class="control-keys">
+                <span class="key-cap">P</span>
+                <span class="key-sep">/</span>
+                <span class="key-cap">ESC</span>
+              </div>
+              <span class="control-label">Pause / Menu / Back</span>
+            </div>
+
+            <div class="control-card full-span">
+              <div class="control-keys">
+                <span class="key-cap">Enter</span>
+                <span class="key-sep">/</span>
+                <span class="key-cap">Mouse Click</span>
+              </div>
+              <span class="control-label">Select / Confirm Action</span>
+            </div>
+          </div>
         </div>
-        <div class="control-item">
-          <span class="key-badge">W</span> / <span class="key-badge">▲</span> / <span class="key-badge">Space</span> : Jump
-        </div>
-        <div class="control-item">
-          <span class="key-badge">F</span> : Shoot Blaster
-        </div>
-        <div class="control-item">
-          <span class="key-badge">P</span> / <span class="key-badge">ESC</span> : Pause Game
-        </div>
-        <div class="control-item">
-          <span class="key-badge">Enter</span> / <span class="key-badge">Mouse</span> : Select
+
+        <div class="modal-footer">
+          <div class="engine-status">
+            <span class="live-dot"></span>
+            <span>60 FPS Active | Dual Keyboard & Mouse</span>
+          </div>
+          <button id="btnDismiss" class="modal-confirm-btn">DISMISS [ ENTER ]</button>
         </div>
       </div>
-      <div class="status-indicator">
-        <span class="status-dot"></span> Game State Engine: Active (60 FPS) | Dual Input: Keyboard & Mouse
-      </div>
-    </footer>
+    </div>
   </div>
 
   <script type="module" src="src/main.js"></script>
