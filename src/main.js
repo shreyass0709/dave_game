@@ -860,22 +860,36 @@ export class Game {
     if (this.messageTimer <= 0) return;
     const alpha = Math.min(1, Math.max(0, this.messageTimer < 0.4 ? this.messageTimer / 0.4 : 1.0));
 
-    const bw = Math.min(330, this.canvas.width - 32);
+    const bw = Math.min(320, this.canvas.width - 40);
     const bh = 18;
     const bx = (this.canvas.width - bw) / 2;
-    const by = this.canvas.height - 22;
+    const by = 24; // Positioned in upper sky/ceiling zone right below HUD bar (never obscures the gameplay path)
 
     ctx.save();
     ctx.globalAlpha = alpha;
-    ctx.fillStyle = 'rgba(8, 13, 26, 0.92)';
+    ctx.fillStyle = 'rgba(8, 13, 26, 0.94)';
     ctx.fillRect(bx, by, bw, bh);
 
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.6)';
     ctx.lineWidth = 1;
+    ctx.shadowColor = 'rgba(56, 189, 248, 0.4)';
+    ctx.shadowBlur = 6;
     ctx.strokeRect(bx, by, bw, bh);
+    ctx.shadowBlur = 0;
+
+    // Corner tech brackets
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillRect(bx, by, 3, 1.5);
+    ctx.fillRect(bx, by, 1.5, 3);
+    ctx.fillRect(bx + bw - 3, by, 3, 1.5);
+    ctx.fillRect(bx + bw - 1.5, by, 1.5, 3);
+    ctx.fillRect(bx, by + bh - 1.5, 3, 1.5);
+    ctx.fillRect(bx, by + bh - 3, 1.5, 3);
+    ctx.fillRect(bx + bw - 3, by + bh - 1.5, 3, 1.5);
+    ctx.fillRect(bx + bw - 1.5, by + bh - 3, 1.5, 3);
 
     ctx.fillStyle = '#fef08a';
-    ctx.font = '6px "Press Start 2P", monospace';
+    ctx.font = '700 8px "Outfit", "Segoe UI", "Press Start 2P", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(this.messageBanner, this.canvas.width / 2, by + bh / 2);
