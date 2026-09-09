@@ -42,7 +42,7 @@ export class Player {
     this.groundFriction = 1300;        // Ground deceleration
     this.airFriction = 400;            // Gentle air drag
     this.gravity = 640;                // Downward gravitational acceleration
-    this.jumpForce = -235;             // Initial jump impulse
+    this.jumpForce = -265;             // Initial jump impulse (clears 3-tile / 48px platforms)
     this.terminalVelocity = 380;       // Max fall speed
 
     // State Management & Combat
