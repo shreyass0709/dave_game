@@ -108,6 +108,7 @@ export class UITypography {
    */
   static drawText(ctx, text, x, y, {
     size = '8px',
+    font = null,
     color = UITokens.textPrimary,
     align = 'center',
     baseline = 'middle',
@@ -118,7 +119,7 @@ export class UITypography {
     glowColor = UITokens.primaryGlow
   } = {}) {
     ctx.save();
-    ctx.font = `${size} ${UITokens.fontFamily}`;
+    ctx.font = font || `${size} ${UITokens.fontFamily}`;
     ctx.textAlign = align;
     ctx.textBaseline = baseline;
 
@@ -2427,80 +2428,105 @@ export class UIManager {
 
     ctx.save();
     ctx.globalAlpha = leftAlpha;
-    ctx.fillStyle = 'rgba(11, 17, 32, 0.94)';
+    ctx.fillStyle = 'rgba(11, 17, 32, 0.95)';
     ctx.fillRect(leftCardX, leftCardY, leftCardW, leftCardH);
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
     ctx.lineWidth = 1;
     ctx.strokeRect(leftCardX, leftCardY, leftCardW, leftCardH);
 
+    // Corner accents
+    ctx.fillStyle = UITokens.primary;
+    ctx.fillRect(leftCardX, leftCardY, 4, 1.5);
+    ctx.fillRect(leftCardX, leftCardY, 1.5, 4);
+    ctx.fillRect(leftCardX + leftCardW - 4, leftCardY, 4, 1.5);
+    ctx.fillRect(leftCardX + leftCardW - 1.5, leftCardY, 1.5, 4);
+    ctx.fillRect(leftCardX, leftCardY + leftCardH - 1.5, 4, 1.5);
+    ctx.fillRect(leftCardX, leftCardY + leftCardH - 4, 1.5, 4);
+    ctx.fillRect(leftCardX + leftCardW - 4, leftCardY + leftCardH - 1.5, 4, 1.5);
+    ctx.fillRect(leftCardX + leftCardW - 1.5, leftCardY + leftCardH - 4, 1.5, 4);
+
     // Header tag
     UITypography.drawText(ctx, '🎮 TACTICAL CONTROLS', leftCardX + leftCardW / 2, leftCardY + 11, {
-      size: '6.5px',
+      font: '700 7.5px "Press Start 2P", monospace',
       color: UITokens.primary,
       align: 'center',
       shadow: true
     });
+
+    // Divider line under header
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
+    ctx.beginPath();
+    ctx.moveTo(leftCardX + 8, leftCardY + 20);
+    ctx.lineTo(leftCardX + leftCardW - 8, leftCardY + 20);
+    ctx.stroke();
 
     // Control rows with 3D Keycaps
     const controls = [
       {
         keys: [{ text: 'A', w: 14 }, { text: 'D', w: 14 }],
         label: 'MOVE LEFT / RIGHT',
-        sub: 'or ARROW KEYS',
+        sub: 'or Arrow Keys',
         textX: 42
       },
       {
-        keys: [{ text: 'W', w: 14 }, { text: 'SPACE', w: 32 }],
+        keys: [{ text: 'W', w: 14 }, { text: 'SPACE', w: 34 }],
         label: 'JUMP / HIGH JUMP',
-        sub: 'or UP ARROW',
-        textX: 58
+        sub: 'Hold for height',
+        textX: 60
       },
       {
-        keys: [{ text: 'F', w: 14 }],
+        keys: [{ text: 'F', w: 15 }],
         label: 'PLASMA BLASTER',
-        sub: 'SHOOT ENEMIES',
-        textX: 26
+        sub: 'Shoot enemies',
+        textX: 25
       },
       {
         keys: [{ text: 'P', w: 14 }, { text: 'ESC', w: 22 }],
         label: 'PAUSE / RESUME',
-        sub: 'QUICK TOGGLE',
+        sub: 'Quick menu toggle',
         textX: 48
       }
     ];
 
-    let rowY = leftCardY + 22;
+    let rowY = leftCardY + 24;
     for (let i = 0; i < controls.length; i++) {
       const c = controls[i];
       const keyEnter = Math.min(1, Math.max(0, (this.instructionsTimer - 0.15 - i * 0.05) / 0.25));
       const keyScale = keyEnter > 0 ? UIAnimation.easeOutBack(keyEnter, 1.15) : 0;
 
-      let kx = leftCardX + 6;
+      let kx = leftCardX + 8;
       for (let k = 0; k < c.keys.length; k++) {
         const keyObj = c.keys[k];
         if (keyScale > 0) {
-          this.drawKeycap(ctx, keyObj.text, kx, rowY, keyObj.w, 12, keyScale);
+          this.drawKeycap(ctx, keyObj.text, kx, rowY, keyObj.w, 13, keyScale);
         }
         kx += keyObj.w + 3;
       }
 
-      ctx.font = '5.5px "Press Start 2P", monospace';
+      ctx.font = '700 8.5px "Outfit", "Segoe UI", sans-serif';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'top';
-      ctx.fillStyle = UITokens.textPrimary;
-      ctx.fillText(c.label, leftCardX + c.textX + 16, rowY + 1);
+      ctx.fillStyle = (i === 2) ? UITokens.primary : UITokens.textPrimary;
+      ctx.fillText(c.label, leftCardX + c.textX + 14, rowY);
 
       ctx.fillStyle = UITokens.textMuted;
-      ctx.font = '4.5px "Press Start 2P", monospace';
-      ctx.fillText(c.sub, leftCardX + c.textX + 16, rowY + 8);
+      ctx.font = '600 7px "Outfit", "Segoe UI", sans-serif';
+      ctx.fillText(c.sub, leftCardX + c.textX + 14, rowY + 9);
 
       rowY += 23;
     }
 
+    // Divider before checkpoint note
+    ctx.strokeStyle = 'rgba(34, 197, 94, 0.25)';
+    ctx.beginPath();
+    ctx.moveTo(leftCardX + 8, leftCardY + leftCardH - 18);
+    ctx.lineTo(leftCardX + leftCardW - 8, leftCardY + leftCardH - 18);
+    ctx.stroke();
+
     ctx.fillStyle = UITokens.success;
-    ctx.font = '5px "Press Start 2P", monospace';
+    ctx.font = '700 7.5px "Outfit", "Segoe UI", sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('⚡ BEACONS AUTO-SAVE MIDWAY', leftCardX + leftCardW / 2, leftCardY + leftCardH - 9);
+    ctx.fillText('⚡ BEACONS AUTO-SAVE MIDWAY', leftCardX + leftCardW / 2, leftCardY + leftCardH - 12);
     ctx.restore();
 
     // 7. Right Card: Objectives & Tactical Tips with Stagger Entry
@@ -2516,70 +2542,77 @@ export class UIManager {
 
     ctx.save();
     ctx.globalAlpha = rightAlpha;
-    ctx.fillStyle = 'rgba(11, 17, 32, 0.94)';
+    ctx.fillStyle = 'rgba(11, 17, 32, 0.95)';
     ctx.fillRect(rightCardX, rightCardY, rightCardW, rightCardH);
-    ctx.strokeStyle = 'rgba(168, 85, 247, 0.35)';
+    ctx.strokeStyle = 'rgba(168, 85, 247, 0.4)';
     ctx.lineWidth = 1;
     ctx.strokeRect(rightCardX, rightCardY, rightCardW, rightCardH);
 
+    // Corner accents
+    ctx.fillStyle = UITokens.secondary;
+    ctx.fillRect(rightCardX, rightCardY, 4, 1.5);
+    ctx.fillRect(rightCardX, rightCardY, 1.5, 4);
+    ctx.fillRect(rightCardX + rightCardW - 4, rightCardY, 4, 1.5);
+    ctx.fillRect(rightCardX + rightCardW - 1.5, rightCardY, 1.5, 4);
+    ctx.fillRect(rightCardX, rightCardY + rightCardH - 1.5, 4, 1.5);
+    ctx.fillRect(rightCardX, rightCardY + rightCardH - 4, 1.5, 4);
+    ctx.fillRect(rightCardX + rightCardW - 4, rightCardY + rightCardH - 1.5, 4, 1.5);
+    ctx.fillRect(rightCardX + rightCardW - 1.5, rightCardY + rightCardH - 4, 1.5, 4);
+
     UITypography.drawText(ctx, '🎯 MISSION DIRECTIVES', rightCardX + rightCardW / 2, rightCardY + 11, {
-      size: '6.5px',
+      font: '700 7.5px "Press Start 2P", monospace',
       color: UITokens.secondary,
       align: 'center',
       shadow: true
     });
 
+    // Divider line under header
+    ctx.strokeStyle = 'rgba(168, 85, 247, 0.25)';
+    ctx.beginPath();
+    ctx.moveTo(rightCardX + 8, rightCardY + 20);
+    ctx.lineTo(rightCardX + rightCardW - 8, rightCardY + 20);
+    ctx.stroke();
+
     const objectives = [
-      { tag: '1. EXPLORE', desc: 'Dodge spikes & hazards', col: UITokens.primary },
-      { tag: '2. COLLECT', desc: 'Coins & gems (+250/+500)', col: UITokens.gold },
-      { tag: '3. SURVIVE', desc: 'Blaster or stomp (+200)', col: UITokens.danger },
+      { tag: '1. EXPLORE', desc: 'Dodge spikes & hazardous traps', col: UITokens.primary },
+      { tag: '2. COLLECT', desc: 'Coins & gems (+250 / +500)', col: UITokens.gold },
+      { tag: '3. SURVIVE', desc: 'Blaster or stomp guards (+200)', col: UITokens.danger },
       { tag: '4. ESCAPE', desc: 'Get Golden Trophy to exit', col: UITokens.success }
     ];
 
-    let objY = rightCardY + 20;
+    let objY = rightCardY + 24;
     for (let item of objectives) {
-      ctx.font = '5.5px "Press Start 2P", monospace';
+      ctx.font = '700 8.5px "Outfit", "Segoe UI", sans-serif';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'top';
       ctx.fillStyle = item.col;
-      ctx.fillText(item.tag, rightCardX + 6, objY);
+      ctx.fillText(item.tag, rightCardX + 8, objY);
 
-      ctx.fillStyle = UITokens.textSecondary;
-      ctx.font = '4.5px "Press Start 2P", monospace';
-      ctx.fillText(item.desc, rightCardX + 6, objY + 7);
-      objY += 15;
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = '600 7.5px "Outfit", "Segoe UI", sans-serif';
+      ctx.fillText(item.desc, rightCardX + 8, objY + 9);
+      objY += 21;
     }
 
-    ctx.strokeStyle = 'rgba(168, 85, 247, 0.3)';
+    ctx.strokeStyle = 'rgba(168, 85, 247, 0.25)';
     ctx.beginPath();
     ctx.moveTo(rightCardX + 8, objY + 1);
     ctx.lineTo(rightCardX + rightCardW - 8, objY + 1);
     ctx.stroke();
 
     UITypography.drawText(ctx, '💡 TACTICAL TIPS', rightCardX + rightCardW / 2, objY + 8, {
-      size: '6px',
+      font: '700 6.5px "Press Start 2P", monospace',
       color: UITokens.gold,
       align: 'center',
       shadow: false
     });
 
-    const tips = [
-      '• Stomp enemies from above (+200).',
-      '• Jump near ledge edges for boost.',
-      '• Golden Trophy unlocks the exit door.',
-      '• Beacons save midway spawn points.'
-    ];
-
-    let tipY = objY + 16;
-    for (let t = 0; t < tips.length; t++) {
-      const tipEnter = Math.min(1, Math.max(0, (this.instructionsTimer - 0.3 - t * 0.05) / 0.25));
-      ctx.globalAlpha = rightAlpha * UIAnimation.easeOutQuad(tipEnter);
-      ctx.fillStyle = UITokens.textMuted;
-      ctx.font = '4.5px "Press Start 2P", monospace';
-      ctx.textAlign = 'left';
-      ctx.fillText(tips[t], rightCardX + 6, tipY);
-      tipY += 7.5;
-    }
+    const tipEnter = Math.min(1, Math.max(0, (this.instructionsTimer - 0.35) / 0.25));
+    ctx.globalAlpha = rightAlpha * UIAnimation.easeOutQuad(tipEnter);
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = '700 8px "Outfit", "Segoe UI", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('• Golden Trophy unlocks the exit door.', rightCardX + rightCardW / 2, objY + 17);
     ctx.restore();
 
     // 8. Back Button & Footer Legend
@@ -2613,18 +2646,18 @@ export class UIManager {
     ctx.fillStyle = '#1e293b';
     ctx.fillRect(x, y, w, h);
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
     ctx.fillRect(x + 1, y + 1, w - 2, 1);
 
     ctx.strokeStyle = '#475569';
     ctx.lineWidth = 1;
     ctx.strokeRect(x, y, w, h);
 
-    ctx.font = '5px "Press Start 2P", monospace';
+    ctx.font = '700 7.5px "Outfit", "Segoe UI", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#f8fafc';
-    ctx.fillText(text, x + w / 2, y + h / 2);
+    ctx.fillText(text, x + w / 2, y + h / 2 + 0.5);
     ctx.restore();
   }
 
@@ -2782,15 +2815,15 @@ export class UIManager {
       ctx.strokeRect(rowX, ry, rowW, rowH);
       ctx.shadowBlur = 0;
 
-      ctx.font = '7px "Press Start 2P", monospace';
+      ctx.font = '700 8.5px "Outfit", "Segoe UI", sans-serif';
       ctx.textBaseline = 'top';
       ctx.textAlign = 'left';
       ctx.fillStyle = isFocused ? '#ffffff' : UITokens.textPrimary;
-      ctx.fillText(`${row.icon} ${row.title}`, rowX + 10, ry + 7);
+      ctx.fillText(`${row.icon} ${row.title}`, rowX + 10, ry + 6);
 
-      ctx.font = '5px "Press Start 2P", monospace';
+      ctx.font = '600 7.5px "Outfit", "Segoe UI", sans-serif';
       ctx.fillStyle = UITokens.textMuted;
-      ctx.fillText(row.desc, rowX + 10, ry + 20);
+      ctx.fillText(row.desc, rowX + 10, ry + 19);
 
       if (isFocused) {
         ctx.fillStyle = '#ffffff';
@@ -2811,14 +2844,14 @@ export class UIManager {
     ctx.lineWidth = 1;
     ctx.strokeRect(rowX, statusY, rowW, 26);
 
-    UITypography.drawText(ctx, '⚡ HARDWARE SYNTH: WEB AUDIO API READY', rowX + rowW / 2, statusY + 8, {
-      size: '6px',
+    UITypography.drawText(ctx, '⚡ HARDWARE SYNTH: WEB AUDIO API READY', rowX + rowW / 2, statusY + 7, {
+      font: '700 7.5px "Outfit", "Segoe UI", sans-serif',
       color: UITokens.primary,
       align: 'center',
       shadow: false
     });
-    UITypography.drawText(ctx, 'Real-time procedural 8-bit chiptune synthesis • Zero lag', rowX + rowW / 2, statusY + 18, {
-      size: '5px',
+    UITypography.drawText(ctx, 'Real-time procedural 8-bit chiptune synthesis • Zero lag', rowX + rowW / 2, statusY + 17, {
+      font: '600 7px "Outfit", "Segoe UI", sans-serif',
       color: UITokens.textMuted,
       align: 'center',
       shadow: false
