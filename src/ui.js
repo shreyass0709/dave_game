@@ -2420,10 +2420,10 @@ export class UIManager {
     const leftOffsetY = UIAnimation.lerp(12, 0, leftEase);
     const leftAlpha = UIAnimation.easeOutQuad(leftEnter);
 
-    const leftCardX = 18;
-    const leftCardY = 48 + leftOffsetY;
-    const leftCardW = 176;
-    const leftCardH = 144;
+    const leftCardX = 14;
+    const leftCardY = 46 + leftOffsetY;
+    const leftCardW = 180;
+    const leftCardH = 146;
 
     ctx.save();
     ctx.globalAlpha = leftAlpha;
@@ -2434,7 +2434,7 @@ export class UIManager {
     ctx.strokeRect(leftCardX, leftCardY, leftCardW, leftCardH);
 
     // Header tag
-    UITypography.drawText(ctx, '🎮 TACTICAL CONTROLS', leftCardX + leftCardW / 2, leftCardY + 12, {
+    UITypography.drawText(ctx, '🎮 TACTICAL CONTROLS', leftCardX + leftCardW / 2, leftCardY + 11, {
       size: '6.5px',
       color: UITokens.primary,
       align: 'center',
@@ -2443,45 +2443,64 @@ export class UIManager {
 
     // Control rows with 3D Keycaps
     const controls = [
-      { keys: ['A', 'D'], label: 'MOVE LEFT / RIGHT', sub: 'or [◄] [►] ARROWS' },
-      { keys: ['SPACE', 'W'], label: 'JUMP / HIGH JUMP', sub: 'or [▲] UP ARROW' },
-      { keys: ['F'], label: 'PLASMA BLASTER', sub: 'SHOOT ENEMIES' },
-      { keys: ['P', 'ESC'], label: 'PAUSE / RESUME', sub: 'QUICK TOGGLE' }
+      {
+        keys: [{ text: 'A', w: 14 }, { text: 'D', w: 14 }],
+        label: 'MOVE LEFT / RIGHT',
+        sub: 'or ARROW KEYS',
+        textX: 42
+      },
+      {
+        keys: [{ text: 'W', w: 14 }, { text: 'SPACE', w: 32 }],
+        label: 'JUMP / HIGH JUMP',
+        sub: 'or UP ARROW',
+        textX: 58
+      },
+      {
+        keys: [{ text: 'F', w: 14 }],
+        label: 'PLASMA BLASTER',
+        sub: 'SHOOT ENEMIES',
+        textX: 26
+      },
+      {
+        keys: [{ text: 'P', w: 14 }, { text: 'ESC', w: 22 }],
+        label: 'PAUSE / RESUME',
+        sub: 'QUICK TOGGLE',
+        textX: 48
+      }
     ];
 
-    let rowY = leftCardY + 24;
+    let rowY = leftCardY + 22;
     for (let i = 0; i < controls.length; i++) {
       const c = controls[i];
       const keyEnter = Math.min(1, Math.max(0, (this.instructionsTimer - 0.15 - i * 0.05) / 0.25));
       const keyScale = keyEnter > 0 ? UIAnimation.easeOutBack(keyEnter, 1.15) : 0;
 
-      let kx = leftCardX + 8;
+      let kx = leftCardX + 6;
       for (let k = 0; k < c.keys.length; k++) {
-        const keyText = c.keys[k];
-        const kw = keyText.length > 2 ? 38 : 16;
+        const keyObj = c.keys[k];
         if (keyScale > 0) {
-          this.drawKeycap(ctx, keyText, kx, rowY, kw, 13, keyScale);
+          this.drawKeycap(ctx, keyObj.text, kx, rowY, keyObj.w, 12, keyScale);
         }
-        kx += kw + 4;
+        kx += keyObj.w + 3;
       }
 
-      ctx.font = '6px "Press Start 2P", monospace';
+      ctx.font = '5.5px "Press Start 2P", monospace';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'top';
       ctx.fillStyle = UITokens.textPrimary;
-      ctx.fillText(c.label, leftCardX + 78, rowY + 1);
+      ctx.fillText(c.label, leftCardX + c.textX + 16, rowY + 1);
 
       ctx.fillStyle = UITokens.textMuted;
-      ctx.font = '5px "Press Start 2P", monospace';
-      ctx.fillText(c.sub, leftCardX + 78, rowY + 9);
+      ctx.font = '4.5px "Press Start 2P", monospace';
+      ctx.fillText(c.sub, leftCardX + c.textX + 16, rowY + 8);
 
-      rowY += 24;
+      rowY += 23;
     }
 
     ctx.fillStyle = UITokens.success;
-    ctx.font = '5.5px "Press Start 2P", monospace';
+    ctx.font = '5px "Press Start 2P", monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('⚡ BEACONS AUTO-SAVE MIDWAY', leftCardX + leftCardW / 2, leftCardY + leftCardH - 10);
+    ctx.fillText('⚡ BEACONS AUTO-SAVE MIDWAY', leftCardX + leftCardW / 2, leftCardY + leftCardH - 9);
     ctx.restore();
 
     // 7. Right Card: Objectives & Tactical Tips with Stagger Entry
@@ -2491,9 +2510,9 @@ export class UIManager {
     const rightAlpha = UIAnimation.easeOutQuad(rightEnter);
 
     const rightCardX = 202;
-    const rightCardY = 48 + rightOffsetY;
-    const rightCardW = 180;
-    const rightCardH = 144;
+    const rightCardY = 46 + rightOffsetY;
+    const rightCardW = 184;
+    const rightCardH = 146;
 
     ctx.save();
     ctx.globalAlpha = rightAlpha;
@@ -2511,33 +2530,33 @@ export class UIManager {
     });
 
     const objectives = [
-      { tag: '1. EXPLORE', desc: 'Navigate platforms, hazards & spike pits.', col: UITokens.primary },
-      { tag: '2. COLLECT', desc: 'Coins (+100), Gems (+250/+500 pts).', col: UITokens.gold },
-      { tag: '3. SURVIVE', desc: 'Stomp guards (+200) or fire blaster (+200).', col: UITokens.danger },
-      { tag: '4. ESCAPE', desc: 'Collect Golden Trophy (+1000) to open Exit!', col: UITokens.success }
+      { tag: '1. EXPLORE', desc: 'Dodge spikes & hazards', col: UITokens.primary },
+      { tag: '2. COLLECT', desc: 'Coins & gems (+250/+500)', col: UITokens.gold },
+      { tag: '3. SURVIVE', desc: 'Blaster or stomp (+200)', col: UITokens.danger },
+      { tag: '4. ESCAPE', desc: 'Get Golden Trophy to exit', col: UITokens.success }
     ];
 
-    let objY = rightCardY + 21;
+    let objY = rightCardY + 20;
     for (let item of objectives) {
-      ctx.font = '6px "Press Start 2P", monospace';
+      ctx.font = '5.5px "Press Start 2P", monospace';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'top';
       ctx.fillStyle = item.col;
-      ctx.fillText(item.tag, rightCardX + 8, objY);
+      ctx.fillText(item.tag, rightCardX + 6, objY);
 
       ctx.fillStyle = UITokens.textSecondary;
-      ctx.font = '5px "Press Start 2P", monospace';
-      ctx.fillText(item.desc, rightCardX + 8, objY + 7);
-      objY += 16;
+      ctx.font = '4.5px "Press Start 2P", monospace';
+      ctx.fillText(item.desc, rightCardX + 6, objY + 7);
+      objY += 15;
     }
 
     ctx.strokeStyle = 'rgba(168, 85, 247, 0.3)';
     ctx.beginPath();
-    ctx.moveTo(rightCardX + 10, objY + 2);
-    ctx.lineTo(rightCardX + rightCardW - 10, objY + 2);
+    ctx.moveTo(rightCardX + 8, objY + 1);
+    ctx.lineTo(rightCardX + rightCardW - 8, objY + 1);
     ctx.stroke();
 
-    UITypography.drawText(ctx, '💡 TACTICAL TIPS', rightCardX + rightCardW / 2, objY + 10, {
+    UITypography.drawText(ctx, '💡 TACTICAL TIPS', rightCardX + rightCardW / 2, objY + 8, {
       size: '6px',
       color: UITokens.gold,
       align: 'center',
@@ -2545,21 +2564,21 @@ export class UIManager {
     });
 
     const tips = [
-      '• Stomp enemies from above (+200 pts).',
-      '• Jump near ledge edges for max clearance.',
+      '• Stomp enemies from above (+200).',
+      '• Jump near ledge edges for boost.',
       '• Golden Trophy unlocks the exit door.',
-      '• Checkpoints auto-save mid-level progress.'
+      '• Beacons save midway spawn points.'
     ];
 
-    let tipY = objY + 19;
+    let tipY = objY + 16;
     for (let t = 0; t < tips.length; t++) {
       const tipEnter = Math.min(1, Math.max(0, (this.instructionsTimer - 0.3 - t * 0.05) / 0.25));
       ctx.globalAlpha = rightAlpha * UIAnimation.easeOutQuad(tipEnter);
       ctx.fillStyle = UITokens.textMuted;
-      ctx.font = '5px "Press Start 2P", monospace';
+      ctx.font = '4.5px "Press Start 2P", monospace';
       ctx.textAlign = 'left';
-      ctx.fillText(tips[t], rightCardX + 8, tipY);
-      tipY += 8.5;
+      ctx.fillText(tips[t], rightCardX + 6, tipY);
+      tipY += 7.5;
     }
     ctx.restore();
 
@@ -2601,7 +2620,7 @@ export class UIManager {
     ctx.lineWidth = 1;
     ctx.strokeRect(x, y, w, h);
 
-    ctx.font = '6px "Press Start 2P", monospace';
+    ctx.font = '5px "Press Start 2P", monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#f8fafc';
@@ -2713,7 +2732,7 @@ export class UIManager {
         id: 'toggle_sfx',
         icon: '🔊',
         title: 'SOUND EFFECTS',
-        desc: 'Blaster plasma, stomp impacts, gem pickups & jump audio',
+        desc: 'Blaster, stomp, pickups & jump audio',
         state: this.settings.soundFX,
         btnIndex: 0
       },
@@ -2721,7 +2740,7 @@ export class UIManager {
         id: 'toggle_music',
         icon: '🎵',
         title: 'BGM CHIPTUNE',
-        desc: 'Atmospheric retro arcade background soundtrack',
+        desc: 'Atmospheric retro arcade soundtrack',
         state: this.settings.music,
         btnIndex: 1
       },
@@ -2729,7 +2748,7 @@ export class UIManager {
         id: 'toggle_crt',
         icon: '📺',
         title: 'CRT SCANLINES',
-        desc: 'Authentic retro arcade cabinet scanlines & curvature',
+        desc: 'Authentic retro arcade scanlines',
         state: this.settings.crtFilter,
         btnIndex: 2
       }
@@ -2769,7 +2788,7 @@ export class UIManager {
       ctx.fillStyle = isFocused ? '#ffffff' : UITokens.textPrimary;
       ctx.fillText(`${row.icon} ${row.title}`, rowX + 10, ry + 7);
 
-      ctx.font = '5.5px "Press Start 2P", monospace';
+      ctx.font = '5px "Press Start 2P", monospace';
       ctx.fillStyle = UITokens.textMuted;
       ctx.fillText(row.desc, rowX + 10, ry + 20);
 
