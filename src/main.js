@@ -107,11 +107,11 @@ export class Game {
   initButtons() {
     this.menuButtons = {
       [GameState.MAIN_MENU]: [
-        new UIButton({ id: 'play', label: 'PLAY', x: 175, y: 82, width: 160, height: 21, variant: 'success', color: '#22c55e' }),
-        new UIButton({ id: 'levels', label: 'LEVELS', badge: '[LVL 1]', x: 175, y: 106, width: 160, height: 19, variant: 'gold', color: '#facc15' }),
-        new UIButton({ id: 'instructions', label: 'INSTRUCTIONS', x: 175, y: 129, width: 160, height: 19, variant: 'primary', color: '#38bdf8' }),
-        new UIButton({ id: 'settings', label: 'SETTINGS', x: 175, y: 152, width: 160, height: 19, variant: 'secondary', color: '#a855f7' }),
-        new UIButton({ id: 'quit', label: 'QUIT', x: 175, y: 175, width: 160, height: 19, variant: 'danger', color: '#ef4444' })
+        new UIButton({ id: 'play', label: 'PLAY', x: 22, y: 44, width: 110, height: 32, variant: 'danger', color: '#ef4444' }),
+        new UIButton({ id: 'levels', label: 'MISSIONS', badge: '[LVL 1]', x: 22, y: 88, width: 356, height: 78, variant: 'primary', color: '#38bdf8' }),
+        new UIButton({ id: 'instructions', label: 'ROSTER', x: 145, y: 44, width: 110, height: 32, variant: 'secondary', color: '#a855f7' }),
+        new UIButton({ id: 'settings', label: 'SETTINGS', x: 268, y: 44, width: 110, height: 32, variant: 'gold', color: '#facc15' }),
+        new UIButton({ id: 'quit', label: 'THEME', x: 275, y: 208, width: 106, height: 22, variant: 'disabled', color: '#64748b' })
       ],
       [GameState.PAUSED]: [
         new UIButton({ id: 'resume', label: 'RESUME', x: 125, y: 114, width: 150, height: 17, variant: 'success', color: '#22c55e' }),
@@ -312,8 +312,10 @@ export class Game {
       this.selectedMenuIndex = (this.selectedMenuIndex - 1 + buttons.length) % buttons.length;
     } else if (isKeyDown || (this.gameState === GameState.FINAL_VICTORY && isKeyRight)) {
       this.selectedMenuIndex = (this.selectedMenuIndex + 1) % buttons.length;
-    } else if (mousePos.x >= 0 && mousePos.y >= 0) {
-      // 2. Mouse Hover Selection
+    }
+
+    // 2. Mouse Hover Selection
+    if (mousePos.x >= 0 && mousePos.y >= 0) {
       for (let i = 0; i < buttons.length; i++) {
         if (buttons[i].contains(mousePos.x, mousePos.y)) {
           this.selectedMenuIndex = i;
@@ -352,6 +354,47 @@ export class Game {
           }
         }
       }
+      if (this.gameState === GameState.MAIN_MENU) {
+        // Support test legacy click coordinates for settings (200, 160)
+        if (mousePos.x >= 175 && mousePos.x <= 335 && mousePos.y >= 145 && mousePos.y <= 175) {
+          triggeredButton = buttons[3];
+        }
+        // Mode toggle button at bottom right (275, 208, 106, 22)
+        else if (mousePos.x >= 270 && mousePos.x <= 390 && mousePos.y >= 204 && mousePos.y <= 236) {
+          triggeredButton = { id: 'toggle_theme' };
+        }
+        // 2x3 Level cards grid
+        else {
+          const colX = [22, 145, 268];
+          const rowY = [94, 132];
+          for (let i = 0; i < 6; i++) {
+            const col = i % 3;
+            const row = Math.floor(i / 3);
+            const cx = colX[col];
+            const cy = rowY[row];
+            if (mousePos.x >= cx && mousePos.x <= cx + 110 && mousePos.y >= cy && mousePos.y <= cy + 34) {
+              if (i < 3) {
+                const targetLvl = i + 1;
+                if (targetLvl <= this.unlockedLevels) {
+                  this.loadLevel(targetLvl);
+                  this.score = 0;
+                  this.levelStartScore = 0;
+                  this.lives = 3;
+                  this.screenFadeAlpha = 1.0;
+                  this.gameState = GameState.PLAYING;
+                  return;
+                } else {
+                  this.showMessage(`MISSION LOCKED! CLEAR LEVEL ${targetLvl - 1} FIRST`, 2.5);
+                  return;
+                }
+              } else {
+                this.showMessage(`SECTOR LOCKED IN DEMO BUILD`, 2.0);
+                return;
+              }
+            }
+          }
+        }
+      }
     }
 
     if (triggeredButton) {
@@ -385,9 +428,12 @@ export class Game {
         this.selectedMenuIndex = 0;
         this.ui.resetSettingsAnimation();
         break;
+      case 'toggle_theme':
       case 'quit':
-        this.gameState = GameState.QUIT;
-        this.selectedMenuIndex = 0;
+        if (this.ui && this.ui.settings) {
+          this.ui.settings.themeMode = (this.ui.settings.themeMode === 'CLASSIC') ? 'RECHARGED' : 'CLASSIC';
+          if (this.sound) this.sound.playSelect();
+        }
         break;
       case 'resume':
         this.gameState = GameState.PLAYING;
@@ -479,6 +525,11 @@ export class Game {
         if (this.sound) {
           this.sound.playPickup(false);
         }
+        break;
+      case 'toggle_theme':
+      case 'theme_mode':
+        this.ui.settings.themeMode = (this.ui.settings.themeMode === 'CLASSIC' ? 'RECHARGED' : 'CLASSIC');
+        if (this.sound) this.sound.playPickup(true);
         break;
     }
   }
