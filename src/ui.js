@@ -2203,16 +2203,22 @@ export class UIManager {
       glowColor: UITokens.goldGlow
     });
 
-    UITypography.drawText(ctx, 'DAVE HAS ESCAPED', width / 2, boxY + 27, {
+    UITypography.drawText(ctx, 'ALL MISSIONS COMPLETE', width / 2, boxY + 27, {
       size: '6.5px',
       color: UITokens.primary,
       align: 'center',
       shadow: false
     });
 
-    UITypography.drawText(ctx, '★ ALL MISSIONS COMPLETE ★', width / 2, boxY + 38, {
+    const dotPulse = Math.sin(this.animTimer * 6) * 0.4 + 0.6;
+    ctx.fillStyle = `rgba(74, 222, 128, ${dotPulse})`;
+    ctx.beginPath();
+    ctx.arc(width / 2 - 58, boxY + 38, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    UITypography.drawText(ctx, 'CAMPAIGN COMPLETE', width / 2 + 4, boxY + 38, {
       size: '5.5px',
-      color: '#fde047',
+      color: '#86efac',
       align: 'center',
       shadow: false
     });
@@ -2243,12 +2249,12 @@ export class UIManager {
     ctx.textAlign = 'left';
 
     ctx.fillStyle = '#86efac';
-    ctx.fillText('SECTOR 01: THE LOST VAULT   ✓', cardX + 6, cardY + 6);
-    ctx.fillText('SECTOR 02: CYBER FACTORY    ✓', cardX + 6, cardY + 16);
-    ctx.fillText('SECTOR 03: DAVE FORTRESS    ✓', cardX + 6, cardY + 26);
+    ctx.fillText('MISSION 01: THE LOST VAULT  ✓', cardX + 6, cardY + 6);
+    ctx.fillText('MISSION 02: CYBER FACTORY   ✓', cardX + 6, cardY + 16);
+    ctx.fillText('MISSION 03: DAVE FORTRESS   ✓', cardX + 6, cardY + 26);
 
     ctx.fillStyle = UITokens.textMuted;
-    ctx.fillText('MISSION STATUS:', cardX + 6, cardY + 36);
+    ctx.fillText('CAMPAIGN STATUS:', cardX + 6, cardY + 36);
     ctx.fillStyle = '#facc15';
     ctx.fillText('100% COMPLETE', cardX + 106, cardY + 36);
 
@@ -2268,7 +2274,7 @@ export class UIManager {
     ctx.strokeStyle = 'rgba(250, 204, 21, 0.45)';
     ctx.strokeRect(boxX + 12, scoreCardY, boxW - 24, 18);
 
-    UITypography.drawText(ctx, `FINAL CAMPAIGN SCORE: ${String(displayFinalScore).padStart(6, '0')}`, width / 2, scoreCardY + 9, {
+    UITypography.drawText(ctx, `FINAL SCORE: ${String(displayFinalScore).padStart(6, '0')}`, width / 2, scoreCardY + 9, {
       size: '7px',
       color: UITokens.gold,
       align: 'center',
@@ -2285,8 +2291,8 @@ export class UIManager {
     ctx.stroke();
 
     // Memorable Tagline
-    UITypography.drawText(ctx, 'MISSION ACCOMPLISHED • DAVE PROTOCOL COMPLETE', width / 2, boxY + 138, {
-      size: '5px',
+    UITypography.drawText(ctx, 'MISSION ACCOMPLISHED', width / 2, boxY + 138, {
+      size: '6px',
       color: '#93c5fd',
       align: 'center',
       shadow: false
