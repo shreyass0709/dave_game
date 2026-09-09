@@ -120,16 +120,18 @@ export class Game {
         new UIButton({ id: 'main_menu', label: 'MAIN MENU', x: 125, y: 174, width: 150, height: 17, variant: 'danger', color: '#ef4444' })
       ],
       [GameState.GAME_OVER]: [
-        new UIButton({ id: 'restart_game', label: 'RETRY LEVEL', x: 125, y: 126, width: 150, height: 19, variant: 'success', color: '#22c55e' }),
-        new UIButton({ id: 'main_menu', label: 'MAIN MENU', x: 125, y: 150, width: 150, height: 19, variant: 'danger', color: '#ef4444' })
+        new UIButton({ id: 'restart_game', label: 'RETRY LEVEL', x: 125, y: 132, width: 150, height: 19, variant: 'success', color: '#22c55e' }),
+        new UIButton({ id: 'main_menu', label: 'MAIN MENU', x: 125, y: 156, width: 150, height: 19, variant: 'danger', color: '#ef4444' })
       ],
       [GameState.LEVEL_COMPLETE]: [
-        new UIButton({ id: 'next_level', label: 'NEXT LEVEL', x: 130, y: 100, width: 140, height: 20, color: '#22c55e' }),
-        new UIButton({ id: 'main_menu', label: 'MAIN MENU', x: 130, y: 128, width: 140, height: 20, color: '#ef4444' })
+        new UIButton({ id: 'next_level', label: 'NEXT LEVEL', x: 125, y: 112, width: 150, height: 18, variant: 'success', color: '#22c55e' }),
+        new UIButton({ id: 'replay_level', label: 'REPLAY LEVEL', x: 125, y: 134, width: 150, height: 18, variant: 'gold', color: '#facc15' }),
+        new UIButton({ id: 'main_menu', label: 'MAIN MENU', x: 125, y: 156, width: 150, height: 18, variant: 'danger', color: '#ef4444' })
       ],
       [GameState.FINAL_VICTORY]: [
-        new UIButton({ id: 'play_again', label: 'PLAY AGAIN', x: 130, y: 102, width: 140, height: 20, color: '#facc15' }),
-        new UIButton({ id: 'main_menu', label: 'MAIN MENU', x: 130, y: 130, width: 140, height: 20, color: '#ef4444' })
+        new UIButton({ id: 'play_again', label: 'PLAY AGAIN', x: 50, y: 148, width: 94, height: 22, variant: 'gold', color: '#facc15' }),
+        new UIButton({ id: 'level_select', label: 'LEVEL SELECT', x: 153, y: 148, width: 94, height: 22, variant: 'primary', color: '#38bdf8' }),
+        new UIButton({ id: 'main_menu', label: 'MAIN MENU', x: 256, y: 148, width: 94, height: 22, variant: 'danger', color: '#ef4444' })
       ],
       [GameState.INSTRUCTIONS]: [
         new UIButton({ id: 'back_main', label: '◄ BACK', x: 18, y: 198, width: 80, height: 20, variant: 'primary', color: '#38bdf8' })
@@ -258,6 +260,7 @@ export class Game {
 
   restartGame() {
     this.score = 0;
+    this.levelStartScore = 0;
     this.lives = 3;
     this.loadLevel(1);
     this.gameState = GameState.PLAYING;
@@ -298,14 +301,16 @@ export class Game {
 
     const isKeyUp = this.input.wasMenuUp ? this.input.wasMenuUp() : false;
     const isKeyDown = this.input.wasMenuDown ? this.input.wasMenuDown() : false;
+    const isKeyLeft = this.input.wasMenuLeft ? this.input.wasMenuLeft() : false;
+    const isKeyRight = this.input.wasMenuRight ? this.input.wasMenuRight() : false;
     const isEnterPressed = this.input.wasMenuSelect ? this.input.wasMenuSelect() : false;
     const isMouseClick = this.input.wasMouseClicked ? this.input.wasMouseClicked() : false;
     const mousePos = this.input.getMousePos ? this.input.getMousePos() : { x: -1, y: -1 };
 
     // 1. Keyboard Navigation
-    if (isKeyUp) {
+    if (isKeyUp || (this.gameState === GameState.FINAL_VICTORY && isKeyLeft)) {
       this.selectedMenuIndex = (this.selectedMenuIndex - 1 + buttons.length) % buttons.length;
-    } else if (isKeyDown) {
+    } else if (isKeyDown || (this.gameState === GameState.FINAL_VICTORY && isKeyRight)) {
       this.selectedMenuIndex = (this.selectedMenuIndex + 1) % buttons.length;
     } else if (mousePos.x >= 0 && mousePos.y >= 0) {
       // 2. Mouse Hover Selection
@@ -375,6 +380,7 @@ export class Game {
         this.ui.resetInstructionsAnimation();
         break;
       case 'settings':
+        this.previousState = this.gameState === GameState.PAUSED ? GameState.PAUSED : GameState.MAIN_MENU;
         this.gameState = GameState.SETTINGS;
         this.selectedMenuIndex = 0;
         this.ui.resetSettingsAnimation();
@@ -385,28 +391,66 @@ export class Game {
         break;
       case 'resume':
         this.gameState = GameState.PLAYING;
+        if (this.sound) this.sound.playResume();
         break;
       case 'restart_level':
         this.score = this.levelStartScore;
         this.loadLevel(this.currentLevel);
         this.gameState = GameState.PLAYING;
+        if (this.sound) this.sound.playResume();
         break;
       case 'restart_game':
+        this.score = this.levelStartScore;
+        this.lives = 3;
+        this.loadLevel(this.currentLevel);
+        this.gameState = GameState.PLAYING;
+        if (this.sound) this.sound.playResume();
+        break;
+      case 'replay_level':
+        this.score = this.levelStartScore;
+        this.loadLevel(this.currentLevel);
+        this.gameState = GameState.PLAYING;
+        if (this.sound) this.sound.playResume();
+        break;
       case 'play_again':
         this.restartGame();
+        if (this.sound) this.sound.playResume();
+        break;
+      case 'level_select':
+        this.gameState = GameState.LEVEL_SELECT;
+        this.selectedLevelIndex = this.currentLevel - 1;
+        this.selectedMenuIndex = 0;
+        this.ui.resetLevelSelectAnimation();
         break;
       case 'next_level':
         if (this.currentLevel < this.maxLevels) {
           this.loadLevel(this.currentLevel + 1);
           this.levelStartScore = this.score;
           this.gameState = GameState.PLAYING;
+          if (this.sound) this.sound.playResume();
         } else {
           this.gameState = GameState.FINAL_VICTORY;
           this.selectedMenuIndex = 0;
+          this.ui.resetVictoryAnimation();
+          if (this.sound) this.sound.playVictory();
+        }
+        break;
+      case 'back_main':
+        if (this.previousState === GameState.PAUSED) {
+          this.gameState = GameState.PAUSED;
+          this.selectedMenuIndex = 2; // Focus Settings in Pause Menu
+          this.ui.resetPauseAnimation();
+        } else {
+          this.gameState = GameState.MAIN_MENU;
+          this.selectedMenuIndex = 0;
+          this.ui.resetMenuAnimation();
+          if (this.menuButtons && this.menuButtons[GameState.MAIN_MENU]) {
+            const mainLvlBtn = this.menuButtons[GameState.MAIN_MENU].find(b => b.id === 'levels');
+            if (mainLvlBtn) mainLvlBtn.badge = `[LVL ${this.currentLevel}]`;
+          }
         }
         break;
       case 'main_menu':
-      case 'back_main':
       case 'return_title':
         this.gameState = GameState.MAIN_MENU;
         this.selectedMenuIndex = 0;
@@ -471,9 +515,9 @@ export class Game {
 
       const activeButtons = this.menuButtons[this.gameState] || [];
 
-      // Shortcut ESC to resume if in PAUSED state
-      if (this.gameState === GameState.PAUSED && this.input && (this.input.wasPauseJustPressed ? this.input.wasPauseJustPressed() : false)) {
-        this.gameState = GameState.PLAYING;
+      // Shortcut ESC or P to resume if in PAUSED state
+      if (this.gameState === GameState.PAUSED && this.input && (this.input.wasPauseJustPressed ? this.input.wasPauseJustPressed() : (this.input.wasMenuBack ? this.input.wasMenuBack() : false))) {
+        this.executeButtonAction('resume');
         if (this.input) this.input.clearFrame();
         return;
       }
@@ -488,6 +532,8 @@ export class Game {
     if (this.input && this.input.wasPauseJustPressed && this.input.wasPauseJustPressed()) {
       this.gameState = GameState.PAUSED;
       this.selectedMenuIndex = 0;
+      this.ui.resetPauseAnimation();
+      if (this.sound) this.sound.playPause();
       if (this.input) this.input.clearFrame();
       return;
     }
@@ -545,6 +591,8 @@ export class Game {
       if (this.lives <= 0) {
         this.gameState = GameState.GAME_OVER;
         this.selectedMenuIndex = 0;
+        this.ui.resetGameOverAnimation();
+        if (this.sound) this.sound.playGameOver();
         if (this.input) this.input.clearFrame();
         return;
       } else {
@@ -636,10 +684,14 @@ export class Game {
           this.score += 500; // Level completion bonus
           this.gameState = GameState.LEVEL_COMPLETE;
           this.selectedMenuIndex = 0;
+          this.ui.resetLevelCompleteAnimation();
+          if (this.sound) this.sound.playLevelComplete();
         } else {
           this.score += 2000; // Grand campaign victory bonus
           this.gameState = GameState.FINAL_VICTORY;
           this.selectedMenuIndex = 0;
+          this.ui.resetVictoryAnimation();
+          if (this.sound) this.sound.playVictory();
         }
       } else {
         if (this.messageBanner !== "FIND THE GOLDEN TROPHY TO OPEN EXIT!" || this.messageTimer <= 0.5) {
@@ -759,17 +811,32 @@ export class Game {
 
     // 7. Render Overlaid Menus
     if (this.gameState === GameState.PAUSED) {
-      this.ui.renderPauseMenu(ctx, w, h, this.selectedMenuIndex, this.menuButtons[GameState.PAUSED]);
+      this.ui.renderPauseMenu(ctx, w, h, this.selectedMenuIndex, this.menuButtons[GameState.PAUSED], {
+        currentLevel: this.currentLevel,
+        score: this.score,
+        hasTrophy: this.map.hasTrophy,
+        hasCheckpoint: this.activeCheckpoint !== null
+      });
     } else if (this.gameState === GameState.GAME_OVER) {
-      this.ui.renderGameOver(ctx, w, h, this.selectedMenuIndex, this.menuButtons[GameState.GAME_OVER], this.score);
+      this.ui.renderGameOver(ctx, w, h, this.selectedMenuIndex, this.menuButtons[GameState.GAME_OVER], {
+        currentLevel: this.currentLevel,
+        finalScore: this.score,
+        hasTrophy: this.map.hasTrophy,
+        hasCheckpoint: this.activeCheckpoint !== null
+      });
     } else if (this.gameState === GameState.LEVEL_COMPLETE) {
       this.ui.renderLevelComplete(ctx, w, h, this.selectedMenuIndex, this.menuButtons[GameState.LEVEL_COMPLETE], {
         currentLevel: this.currentLevel,
         score: this.score,
+        baseScore: this.levelStartScore,
         bonus: 500
       });
     } else if (this.gameState === GameState.FINAL_VICTORY) {
-      this.ui.renderFinalVictory(ctx, w, h, this.selectedMenuIndex, this.menuButtons[GameState.FINAL_VICTORY], this.score);
+      this.ui.renderFinalVictory(ctx, w, h, this.selectedMenuIndex, this.menuButtons[GameState.FINAL_VICTORY], {
+        finalScore: this.score,
+        completedLevels: this.completedLevels,
+        unlockedLevels: this.unlockedLevels
+      });
     }
 
     // 8. Screen Transition Fade Curtain

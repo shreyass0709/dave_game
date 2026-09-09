@@ -440,6 +440,8 @@ export class UIManager {
     this.settingsTimer = 0;
     this.pauseTimer = 0;
     this.gameOverTimer = 0;
+    this.levelCompleteTimer = 0;
+    this.victoryTimer = 0;
     this.settings = {
       soundFX: true,
       music: true,
@@ -469,6 +471,31 @@ export class UIManager {
         phase: i * 0.4
       });
     }
+
+    // Pre-allocated cosmic stars for Grand Victory celebration
+    this.victoryStars = [];
+    for (let i = 0; i < 40; i++) {
+      this.victoryStars.push({
+        x: (i * 23.7 + 17) % 400,
+        y: (i * 19.3 + 11) % 240,
+        size: (i % 3 === 0) ? 2 : 1,
+        phase: i * 0.35,
+        speed: 1.5 + (i % 4) * 0.8
+      });
+    }
+
+    // Pre-allocated celebration confetti for Grand Victory
+    this.victoryConfetti = [];
+    for (let i = 0; i < 30; i++) {
+      this.victoryConfetti.push({
+        x: (i * 27.3 + 30) % 360 + 20,
+        y: (i * 13.5 + 40) % 200 + 20,
+        color: ['#facc15', '#38bdf8', '#34d399', '#f43f5e', '#a855f7'][i % 5],
+        speed: 18 + (i % 4) * 12,
+        rotSpeed: 2.0 + (i % 4) * 1.5,
+        phase: i * 0.5
+      });
+    }
   }
 
   resetMenuAnimation() {
@@ -493,6 +520,14 @@ export class UIManager {
 
   resetGameOverAnimation() {
     this.gameOverTimer = 0;
+  }
+
+  resetLevelCompleteAnimation() {
+    this.levelCompleteTimer = 0;
+  }
+
+  resetVictoryAnimation() {
+    this.victoryTimer = 0;
   }
 
   triggerScorePulse() {
@@ -521,6 +556,8 @@ export class UIManager {
     this.settingsTimer += dt;
     this.pauseTimer += dt;
     this.gameOverTimer += dt;
+    this.levelCompleteTimer += dt;
+    this.victoryTimer += dt;
 
     if (this.scorePulseTimer > 0) this.scorePulseTimer = Math.max(0, this.scorePulseTimer - dt);
     if (this.trophyAcquiredTimer > 0) this.trophyAcquiredTimer = Math.max(0, this.trophyAcquiredTimer - dt);
@@ -535,6 +572,13 @@ export class UIManager {
 
       if (p.x > 405) p.x = -5;
       if (p.y < -5) p.y = 245;
+    }
+
+    // Update victory confetti
+    for (let i = 0; i < this.victoryConfetti.length; i++) {
+      const c = this.victoryConfetti[i];
+      c.y += c.speed * dt;
+      if (c.y > 245) c.y = -5;
     }
   }
 
@@ -1848,74 +1892,422 @@ export class UIManager {
   }
 
   /**
-   * Screen 5: Level Complete
+   * Screen 5: Modern Cinematic Mission Complete Screen
    */
-  renderLevelComplete(ctx, width, height, selectedIndex, buttons, { currentLevel = 1, score = 0, bonus = 500 }) {
+  renderLevelComplete(ctx, width, height, selectedIndex, buttons, meta = {}) {
+    let currentLevel = 1;
+    let score = 0;
+    let baseScore = 0;
+    let bonus = 500;
+
+    if (typeof meta === 'number') {
+      score = meta;
+    } else if (typeof meta === 'object' && meta !== null) {
+      currentLevel = meta.currentLevel || 1;
+      score = meta.score || 0;
+      baseScore = meta.baseScore !== undefined ? meta.baseScore : (score - bonus);
+      bonus = meta.bonus !== undefined ? meta.bonus : 500;
+    }
+
+    const levelNames = {
+      1: 'THE LOST VAULT',
+      2: 'CYBER FACTORY',
+      3: 'DAVE FORTRESS'
+    };
+    const levelTitle = levelNames[currentLevel] || `SECTOR 0${currentLevel}`;
+
+    // 1. Dark Translucent Backdrop with Vignette & Gold Energy
+    ctx.save();
+    ctx.fillStyle = 'rgba(3, 7, 18, 0.82)';
+    ctx.fillRect(0, 0, width, height);
+
+    // Subtle Radial Gold Glow in Center
+    const centerGlow = ctx.createRadialGradient(width / 2, height / 2, 10, width / 2, height / 2, 180);
+    centerGlow.addColorStop(0, 'rgba(250, 204, 21, 0.12)');
+    centerGlow.addColorStop(0.6, 'rgba(56, 189, 248, 0.04)');
+    centerGlow.addColorStop(1, 'rgba(3, 7, 18, 0)');
+    ctx.fillStyle = centerGlow;
+    ctx.fillRect(0, 0, width, height);
+
+    // 2. Entrance Animation
+    const lcEnter = Math.min(1, this.levelCompleteTimer / 0.4);
+    const lcEase = UIAnimation.easeOutBack(lcEnter, 1.08);
+    const lcScale = UIAnimation.lerp(0.92, 1.0, lcEase);
+    const lcAlpha = UIAnimation.easeOutQuad(lcEnter);
+
     const boxW = 280;
-    const boxH = 150;
+    const boxH = 194;
     const boxX = (width - boxW) / 2;
     const boxY = (height - boxH) / 2;
 
-    UIPanel.render(ctx, {
-      x: boxX,
-      y: boxY,
-      width: boxW,
-      height: boxH,
-      title: `*** LEVEL ${currentLevel} COMPLETE! ***`,
-      variant: 'success',
-      screenWidth: width,
-      screenHeight: height
-    });
+    ctx.globalAlpha = lcAlpha;
+    ctx.translate(width / 2, height / 2);
+    ctx.scale(lcScale, lcScale);
+    ctx.translate(-width / 2, -height / 2);
 
-    UITypography.drawText(ctx, `CURRENT SCORE: ${score}`, width / 2, boxY + 46, {
-      size: '8px',
+    // 3. Glassmorphic Modal Panel
+    ctx.fillStyle = 'rgba(11, 18, 36, 0.95)';
+    ctx.fillRect(boxX, boxY, boxW, boxH);
+    ctx.strokeStyle = 'rgba(250, 204, 21, 0.55)';
+    ctx.lineWidth = 1;
+    ctx.shadowColor = UITokens.goldGlow;
+    ctx.shadowBlur = 14;
+    ctx.strokeRect(boxX, boxY, boxW, boxH);
+    ctx.shadowBlur = 0;
+
+    // Specular top highlight
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+    ctx.fillRect(boxX + 1, boxY + 1, boxW - 2, 1);
+
+    // Corner Gold Cyber-Accents
+    ctx.fillStyle = UITokens.gold;
+    ctx.fillRect(boxX, boxY, 5, 2); ctx.fillRect(boxX, boxY, 2, 5);
+    ctx.fillRect(boxX + boxW - 5, boxY, 5, 2); ctx.fillRect(boxX + boxW - 2, boxY, 2, 5);
+    ctx.fillRect(boxX, boxY + boxH - 2, 5, 2); ctx.fillRect(boxX, boxY + boxH - 5, 2, 5);
+    ctx.fillRect(boxX + boxW - 5, boxY + boxH - 2, 5, 2); ctx.fillRect(boxX + boxW - 2, boxY + boxH - 5, 2, 5);
+
+    // 4. Header Section
+    UITypography.drawText(ctx, 'MISSION COMPLETE', width / 2, boxY + 16, {
+      size: '10px',
       color: UITokens.gold,
-      align: 'center'
+      align: 'center',
+      shadow: true,
+      glow: true,
+      glowColor: UITokens.goldGlow
     });
 
-    UITypography.drawText(ctx, `LEVEL BONUS: +${bonus} PTS`, width / 2, boxY + 62, {
-      size: '7px',
+    UITypography.drawText(ctx, 'EXTRACTION SUCCESSFUL', width / 2, boxY + 28, {
+      size: '6px',
+      color: UITokens.primary,
+      align: 'center',
+      shadow: false
+    });
+
+    // Pulsing LED dot for objective complete
+    const dotPulse = Math.sin(this.animTimer * 6) * 0.4 + 0.6;
+    ctx.fillStyle = `rgba(74, 222, 128, ${dotPulse})`;
+    ctx.beginPath();
+    ctx.arc(width / 2 - 58, boxY + 39, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    UITypography.drawText(ctx, 'OBJECTIVE COMPLETE', width / 2 + 4, boxY + 39, {
+      size: '5px',
       color: '#86efac',
-      align: 'center'
+      align: 'center',
+      shadow: false
     });
 
-    for (let i = 0; i < buttons.length; i++) {
-      buttons[i].update(0.016, i === selectedIndex);
-      buttons[i].render(ctx, i === selectedIndex, false);
+    // Divider Line
+    ctx.strokeStyle = 'rgba(250, 204, 21, 0.35)';
+    ctx.beginPath();
+    ctx.moveTo(boxX + 12, boxY + 46);
+    ctx.lineTo(boxX + boxW - 12, boxY + 46);
+    ctx.stroke();
+
+    // 5. Stylized Golden Trophy Centerpiece (Left side)
+    const trophyProgress = Math.min(1, Math.max(0, (this.levelCompleteTimer - 0.15) / 0.35));
+    const trophyEase = UIAnimation.easeOutBack(trophyProgress, 1.25);
+    const trophyCenterY = UIAnimation.lerp(boxY + 84, boxY + 74, trophyEase);
+    const trophyCenterX = boxX + 40;
+
+    // Glowing trophy halo
+    const haloGlow = UIAnimation.getPulse(this.animTimer, 3, 0.4, 0.9);
+    ctx.save();
+    ctx.shadowColor = `rgba(250, 204, 21, ${haloGlow})`;
+    ctx.shadowBlur = 12;
+
+    // Draw stylized Golden Trophy
+    ctx.fillStyle = '#facc15';
+    // Cup body
+    ctx.fillRect(trophyCenterX - 9, trophyCenterY - 10, 18, 11);
+    ctx.fillStyle = '#eab308';
+    ctx.fillRect(trophyCenterX - 7, trophyCenterY + 1, 14, 4);
+    // Stem
+    ctx.fillStyle = '#ca8a04';
+    ctx.fillRect(trophyCenterX - 2, trophyCenterY + 5, 4, 6);
+    // Base
+    ctx.fillStyle = '#facc15';
+    ctx.fillRect(trophyCenterX - 8, trophyCenterY + 11, 16, 4);
+    // Handles
+    ctx.strokeStyle = '#facc15';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(trophyCenterX - 13, trophyCenterY - 9, 4, 7);
+    ctx.strokeRect(trophyCenterX + 9, trophyCenterY - 9, 4, 7);
+    // Cup specular shine
+    ctx.fillStyle = '#fef08a';
+    ctx.fillRect(trophyCenterX - 6, trophyCenterY - 8, 3, 7);
+    ctx.fillRect(trophyCenterX - 7, trophyCenterY + 12, 14, 1);
+    ctx.restore();
+
+    // Orbiting sparkles around trophy
+    for (let i = 0; i < 4; i++) {
+      const angle = this.animTimer * 2.5 + i * (Math.PI / 2);
+      const sx = trophyCenterX + Math.cos(angle) * 16;
+      const sy = trophyCenterY + Math.sin(angle) * 10;
+      ctx.fillStyle = (i % 2 === 0) ? '#fde047' : '#38bdf8';
+      ctx.fillRect(sx - 1, sy - 1, 2, 2);
     }
+
+    // 6. Results & Score Count-up Card (Right side)
+    const cardX = boxX + 76;
+    const cardY = boxY + 50;
+    const cardW = boxW - 88;
+    const cardH = 48;
+
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.7)';
+    ctx.fillRect(cardX, cardY, cardW, cardH);
+    ctx.strokeStyle = '#334155';
+    ctx.strokeRect(cardX, cardY, cardW, cardH);
+
+    ctx.font = '5.5px "Press Start 2P", monospace';
+    ctx.textBaseline = 'top';
+    ctx.textAlign = 'left';
+
+    ctx.fillStyle = UITokens.textMuted;
+    ctx.fillText('MISSION:', cardX + 6, cardY + 6);
+    ctx.fillStyle = UITokens.textPrimary;
+    ctx.fillText(`0${currentLevel} ${levelTitle}`, cardX + 58, cardY + 6);
+
+    ctx.fillStyle = UITokens.textMuted;
+    ctx.fillText('TROPHY:', cardX + 6, cardY + 17);
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText('ACQUIRED', cardX + 58, cardY + 17);
+
+    ctx.fillStyle = UITokens.textMuted;
+    ctx.fillText('BONUS:', cardX + 6, cardY + 28);
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillText(`+${bonus} PTS`, cardX + 58, cardY + 28);
+
+    // Score animated rolling count-up
+    const countProgress = Math.min(1, Math.max(0, (this.levelCompleteTimer - 0.25) / 0.5));
+    const countEase = UIAnimation.easeOutQuad(countProgress);
+    const currentDisplayScore = Math.floor(UIAnimation.lerp(baseScore, score, countEase));
+
+    ctx.fillStyle = UITokens.textMuted;
+    ctx.fillText('SCORE:', cardX + 6, cardY + 39);
+    ctx.fillStyle = UITokens.gold;
+    ctx.fillText(`${String(currentDisplayScore).padStart(5, '0')}`, cardX + 58, cardY + 39);
+
+    // Divider Line
+    ctx.strokeStyle = 'rgba(250, 204, 21, 0.35)';
+    ctx.beginPath();
+    ctx.moveTo(boxX + 12, boxY + 104);
+    ctx.lineTo(boxX + boxW - 12, boxY + 104);
+    ctx.stroke();
+
+    // 7. Action Buttons (NEXT LEVEL, REPLAY LEVEL, MAIN MENU)
+    for (let i = 0; i < buttons.length; i++) {
+      const btn = buttons[i];
+      btn.update(0.016, i === selectedIndex);
+      btn.render(ctx, i === selectedIndex, false);
+    }
+
+    // 8. Footer Hint
+    UITypography.drawText(ctx, '[▲/▼] NAVIGATE   [ENTER / SPACE] SELECT', width / 2, boxY + boxH - 8, {
+      size: '5px',
+      color: UITokens.textMuted,
+      align: 'center',
+      shadow: false
+    });
+
+    ctx.restore();
   }
 
   /**
-   * Screen 6: Final Victory
+   * Screen 6: Modern Cinematic Grand Victory Screen
    */
-  renderFinalVictory(ctx, width, height, selectedIndex, buttons, finalScore = 0) {
-    const boxW = 300;
-    const boxH = 155;
+  renderFinalVictory(ctx, width, height, selectedIndex, buttons, metaOrScore = {}) {
+    let finalScore = 0;
+    if (typeof metaOrScore === 'number') {
+      finalScore = metaOrScore;
+    } else if (typeof metaOrScore === 'object' && metaOrScore !== null) {
+      finalScore = metaOrScore.finalScore || metaOrScore.score || 0;
+    }
+
+    // 1. Deep Space Atmospheric Cosmic Background
+    ctx.save();
+    const bgGradient = ctx.createRadialGradient(
+      width * 0.5, height * 0.45, 15,
+      width * 0.5, height * 0.5, width * 0.75
+    );
+    bgGradient.addColorStop(0, '#0f1026');
+    bgGradient.addColorStop(0.5, '#080816');
+    bgGradient.addColorStop(1, '#020308');
+
+    ctx.fillStyle = bgGradient;
+    ctx.fillRect(0, 0, width, height);
+
+    // Twinkling cosmic stars
+    for (let i = 0; i < this.victoryStars.length; i++) {
+      const s = this.victoryStars[i];
+      const starAlpha = Math.sin(this.animTimer * s.speed + s.phase) * 0.4 + 0.6;
+      ctx.fillStyle = `rgba(254, 240, 138, ${starAlpha})`;
+      ctx.fillRect(s.x, s.y, s.size, s.size);
+    }
+
+    // Celebratory falling confetti
+    for (let i = 0; i < this.victoryConfetti.length; i++) {
+      const c = this.victoryConfetti[i];
+      ctx.save();
+      ctx.translate(c.x, c.y);
+      ctx.rotate(this.animTimer * c.rotSpeed + c.phase);
+      ctx.fillStyle = c.color;
+      ctx.fillRect(-2, -1.5, 4, 3);
+      ctx.restore();
+    }
+
+    // 2. Entrance Animation
+    const vicEnter = Math.min(1, this.victoryTimer / 0.45);
+    const vicEase = UIAnimation.easeOutBack(vicEnter, 1.1);
+    const vicScale = UIAnimation.lerp(0.9, 1.0, vicEase);
+    const vicAlpha = UIAnimation.easeOutQuad(vicEnter);
+
+    const boxW = 320;
+    const boxH = 208;
     const boxX = (width - boxW) / 2;
     const boxY = (height - boxH) / 2;
 
-    UIPanel.render(ctx, {
-      x: boxX,
-      y: boxY,
-      width: boxW,
-      height: boxH,
-      title: '*** YOU WIN! ***',
-      subtitle: 'ALL 3 LEVELS CONQUERED!',
-      variant: 'gold',
-      screenWidth: width,
-      screenHeight: height
+    ctx.globalAlpha = vicAlpha;
+    ctx.translate(width / 2, height / 2);
+    ctx.scale(vicScale, vicScale);
+    ctx.translate(-width / 2, -height / 2);
+
+    // 3. Glassmorphic Modal Panel
+    ctx.fillStyle = 'rgba(13, 11, 28, 0.96)';
+    ctx.fillRect(boxX, boxY, boxW, boxH);
+    ctx.strokeStyle = 'rgba(250, 204, 21, 0.7)';
+    ctx.lineWidth = 1.5;
+    ctx.shadowColor = UITokens.goldGlow;
+    ctx.shadowBlur = 18;
+    ctx.strokeRect(boxX, boxY, boxW, boxH);
+    ctx.shadowBlur = 0;
+
+    // Specular top highlight
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.16)';
+    ctx.fillRect(boxX + 1, boxY + 1, boxW - 2, 1);
+
+    // Corner Gold Cyber-Accents
+    ctx.fillStyle = UITokens.gold;
+    ctx.fillRect(boxX, boxY, 7, 2); ctx.fillRect(boxX, boxY, 2, 7);
+    ctx.fillRect(boxX + boxW - 7, boxY, 7, 2); ctx.fillRect(boxX + boxW - 2, boxY, 2, 7);
+    ctx.fillRect(boxX, boxY + boxH - 2, 7, 2); ctx.fillRect(boxX, boxY + boxH - 7, 2, 7);
+    ctx.fillRect(boxX + boxW - 7, boxY + boxH - 2, 7, 2); ctx.fillRect(boxX + boxW - 2, boxY + boxH - 7, 2, 7);
+
+    // 4. Header Section
+    UITypography.drawText(ctx, 'GRAND VICTORY', width / 2, boxY + 15, {
+      size: '11px',
+      color: UITokens.gold,
+      align: 'center',
+      shadow: true,
+      glow: true,
+      glowColor: UITokens.goldGlow
     });
 
-    UITypography.drawText(ctx, `FINAL SCORE: ${finalScore}`, width / 2, boxY + 63, {
-      size: '8px',
-      color: '#4ade80',
-      align: 'center'
+    UITypography.drawText(ctx, 'DAVE HAS ESCAPED', width / 2, boxY + 27, {
+      size: '6.5px',
+      color: UITokens.primary,
+      align: 'center',
+      shadow: false
     });
 
+    UITypography.drawText(ctx, '★ ALL MISSIONS COMPLETE ★', width / 2, boxY + 38, {
+      size: '5.5px',
+      color: '#fde047',
+      align: 'center',
+      shadow: false
+    });
+
+    // Divider Line
+    ctx.strokeStyle = 'rgba(250, 204, 21, 0.4)';
+    ctx.beginPath();
+    ctx.moveTo(boxX + 12, boxY + 45);
+    ctx.lineTo(boxX + boxW - 12, boxY + 45);
+    ctx.stroke();
+
+    // 5. Hero Preview (Agent Dave on Hologram Pedestal, Left Side)
+    this.renderHeroPreview(ctx, boxX + 44, boxY + 54, this.animTimer);
+
+    // 6. Campaign Summary Card (Right Side)
+    const cardX = boxX + 88;
+    const cardY = boxY + 49;
+    const cardW = boxW - 100;
+    const cardH = 55;
+
+    ctx.fillStyle = 'rgba(20, 15, 38, 0.75)';
+    ctx.fillRect(cardX, cardY, cardW, cardH);
+    ctx.strokeStyle = '#3b2d54';
+    ctx.strokeRect(cardX, cardY, cardW, cardH);
+
+    ctx.font = '5px "Press Start 2P", monospace';
+    ctx.textBaseline = 'top';
+    ctx.textAlign = 'left';
+
+    ctx.fillStyle = '#86efac';
+    ctx.fillText('SECTOR 01: THE LOST VAULT   ✓', cardX + 6, cardY + 6);
+    ctx.fillText('SECTOR 02: CYBER FACTORY    ✓', cardX + 6, cardY + 16);
+    ctx.fillText('SECTOR 03: DAVE FORTRESS    ✓', cardX + 6, cardY + 26);
+
+    ctx.fillStyle = UITokens.textMuted;
+    ctx.fillText('MISSION STATUS:', cardX + 6, cardY + 36);
+    ctx.fillStyle = '#facc15';
+    ctx.fillText('100% COMPLETE', cardX + 106, cardY + 36);
+
+    ctx.fillStyle = UITokens.textMuted;
+    ctx.fillText('GOLDEN TROPHY:', cardX + 6, cardY + 45);
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText('ACQUIRED 🏆', cardX + 106, cardY + 45);
+
+    // 7. Large Animated Final Score Banner
+    const scoreProgress = Math.min(1, Math.max(0, (this.victoryTimer - 0.2) / 0.6));
+    const scoreEase = UIAnimation.easeOutQuad(scoreProgress);
+    const displayFinalScore = Math.floor(UIAnimation.lerp(0, finalScore, scoreEase));
+
+    const scoreCardY = boxY + 108;
+    ctx.fillStyle = 'rgba(30, 20, 50, 0.65)';
+    ctx.fillRect(boxX + 12, scoreCardY, boxW - 24, 18);
+    ctx.strokeStyle = 'rgba(250, 204, 21, 0.45)';
+    ctx.strokeRect(boxX + 12, scoreCardY, boxW - 24, 18);
+
+    UITypography.drawText(ctx, `FINAL CAMPAIGN SCORE: ${String(displayFinalScore).padStart(6, '0')}`, width / 2, scoreCardY + 9, {
+      size: '7px',
+      color: UITokens.gold,
+      align: 'center',
+      shadow: true,
+      glow: true,
+      glowColor: UITokens.goldGlow
+    });
+
+    // Divider Line
+    ctx.strokeStyle = 'rgba(250, 204, 21, 0.4)';
+    ctx.beginPath();
+    ctx.moveTo(boxX + 12, boxY + 130);
+    ctx.lineTo(boxX + boxW - 12, boxY + 130);
+    ctx.stroke();
+
+    // Memorable Tagline
+    UITypography.drawText(ctx, 'MISSION ACCOMPLISHED • DAVE PROTOCOL COMPLETE', width / 2, boxY + 138, {
+      size: '5px',
+      color: '#93c5fd',
+      align: 'center',
+      shadow: false
+    });
+
+    // 8. Action Buttons (PLAY AGAIN, LEVEL SELECT, MAIN MENU)
     for (let i = 0; i < buttons.length; i++) {
-      buttons[i].update(0.016, i === selectedIndex);
-      buttons[i].render(ctx, i === selectedIndex, false);
+      const btn = buttons[i];
+      btn.update(0.016, i === selectedIndex);
+      btn.render(ctx, i === selectedIndex, false);
     }
+
+    // 9. Footer Hint
+    UITypography.drawText(ctx, '[◄/►] NAVIGATE   [ENTER / SPACE] SELECT', width / 2, boxY + boxH - 8, {
+      size: '5px',
+      color: UITokens.textMuted,
+      align: 'center',
+      shadow: false
+    });
+
+    ctx.restore();
   }
 
   /**

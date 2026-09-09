@@ -320,6 +320,100 @@ export class SoundSystem {
     } catch (e) {}
   }
 
+  /**
+   * Level Complete celebratory fanfare
+   */
+  playLevelComplete() {
+    if (!this.soundFXEnabled) return;
+    if (!this.initContext() || !this.ctx) return;
+    try {
+      const arpeggio = [523.25, 659.25, 783.99, 1046.50]; // C5 -> E5 -> G5 -> C6
+      arpeggio.forEach((freq, idx) => {
+        const now = this.ctx.currentTime + idx * 0.09;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(freq, now);
+
+        gain.gain.setValueAtTime(0.22, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.22);
+
+        osc.connect(gain);
+        gain.connect(this.sfxGain);
+
+        osc.start(now);
+        osc.stop(now + 0.24);
+      });
+
+      // Final celebratory chord
+      const chordTime = this.ctx.currentTime + 0.42;
+      [659.25, 783.99, 1046.50, 1318.51].forEach((freq) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, chordTime);
+
+        gain.gain.setValueAtTime(0.20, chordTime);
+        gain.gain.linearRampToValueAtTime(0.01, chordTime + 0.45);
+
+        osc.connect(gain);
+        gain.connect(this.sfxGain);
+
+        osc.start(chordTime);
+        osc.stop(chordTime + 0.48);
+      });
+    } catch (e) {}
+  }
+
+  /**
+   * Grand Victory supreme triumph fanfare
+   */
+  playVictory() {
+    if (!this.soundFXEnabled) return;
+    if (!this.initContext() || !this.ctx) return;
+    try {
+      const melody = [392.00, 523.25, 659.25, 783.99, 1046.50, 1318.51];
+      melody.forEach((freq, idx) => {
+        const now = this.ctx.currentTime + idx * 0.08;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(freq, now);
+
+        gain.gain.setValueAtTime(0.22, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.22);
+
+        osc.connect(gain);
+        gain.connect(this.sfxGain);
+
+        osc.start(now);
+        osc.stop(now + 0.24);
+      });
+
+      // Grand sustained harmonic triumph chord
+      const grandChordTime = this.ctx.currentTime + 0.52;
+      [523.25, 659.25, 783.99, 1046.50, 1567.98].forEach((freq) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, grandChordTime);
+
+        gain.gain.setValueAtTime(0.25, grandChordTime);
+        gain.gain.linearRampToValueAtTime(0.01, grandChordTime + 0.85);
+
+        osc.connect(gain);
+        gain.connect(this.sfxGain);
+
+        osc.start(grandChordTime);
+        osc.stop(grandChordTime + 0.9);
+      });
+    } catch (e) {}
+  }
+
   // =========================================================================
   // BACKGROUND CHIPTUNE MUSIC
   // =========================================================================
