@@ -69,7 +69,7 @@ export class Game {
     this.completedLevels = new Set();
     this.highScores = { 1: 0, 2: 0, 3: 0 };
     this.previousState = GameState.MAIN_MENU;
-    this.messageBanner = "LEVEL 1: FIND TROPHY & GO TO EXIT!";
+    this.messageBanner = "";
     this.messageTimer = 0;
 
     this.initButtons();
@@ -260,7 +260,7 @@ export class Game {
     this.enemies = this.map.getEnemySpawns().map(spawn => new Enemy(spawn.x, spawn.y));
     this.effects.clear();
     this.camera.snapTo(this.player, this.map.cols * TILE_SIZE);
-    this.messageBanner = `LEVEL ${levelNumber}: FIND TROPHY & GO TO EXIT!`;
+    this.messageBanner = '';
     this.messageTimer = 0; // Handled by cinematic levelIntroTimer
   }
 
@@ -857,7 +857,7 @@ export class Game {
   }
 
   renderMessageBanner(ctx) {
-    if (this.messageTimer <= 0 || (this.ui && this.ui.levelIntroTimer > 0)) return;
+    if (this.messageTimer <= 0 || !this.messageBanner || (this.ui && this.ui.levelIntroTimer > 0)) return;
     const alpha = Math.min(1, Math.max(0, this.messageTimer < 0.4 ? this.messageTimer / 0.4 : 1.0));
 
     const bw = Math.min(320, this.canvas.width - 40);
