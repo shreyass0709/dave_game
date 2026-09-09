@@ -278,29 +278,59 @@ export class UIButton {
 
     const textY = this.y + this.height / 2 + 1;
 
-    if (active && !this.disabled) {
-      // Animated Chevrons pulsing horizontally
-      const chevronPulse = Math.sin(this.animTimer * 8) * 1.5;
-      ctx.fillStyle = theme.accent;
-      ctx.fillText('▶', drawX + 10 - chevronPulse, textY);
-      ctx.fillText('◀', drawX + this.width - 10 + chevronPulse, textY);
-
-      // Bright white label with drop shadow
-      ctx.fillStyle = '#020617';
-      ctx.fillText(this.label, centerX + 1, textY + 1);
-      ctx.fillStyle = '#ffffff';
-      ctx.fillText(this.label, centerX, textY);
-    } else {
-      ctx.fillStyle = this.disabled ? UITokens.disabled : UITokens.textMuted;
-      ctx.fillText(this.label, centerX, textY);
-    }
-
-    // 7. Optional Badge (e.g. [ON] / [OFF] / [LVL 1])
+    // 6. Handle Badge-enabled Buttons (e.g. Toggle Switches [ ON ] / [ OFF ]) vs Standard Buttons
     if (this.badge) {
-      ctx.font = `6px ${UITokens.fontFamily}`;
-      ctx.textAlign = 'end';
-      ctx.fillStyle = active ? '#ffffff' : theme.accent;
-      ctx.fillText(this.badge, drawX + this.width - 8, textY);
+      const isBadgeOn = this.badge.includes('ON');
+      const badgeColor = active ? '#ffffff' : (isBadgeOn ? UITokens.success : UITokens.disabled);
+
+      if (active && !this.disabled) {
+        const chevronPulse = Math.sin(this.animTimer * 8) * 1.5;
+        ctx.fillStyle = theme.accent;
+        ctx.font = '700 8px "Press Start 2P", monospace';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('▶', drawX + 5 - chevronPulse, textY);
+        ctx.textAlign = 'right';
+        ctx.fillText('◀', drawX + this.width - 5 + chevronPulse, textY);
+      }
+
+      if (this.label && this.label !== this.badge) {
+        ctx.font = '700 8px "Outfit", "Segoe UI", sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = active ? '#ffffff' : UITokens.textSecondary;
+        ctx.fillText(this.label, drawX + (active ? 15 : 10), textY);
+
+        ctx.font = '700 8.5px "Outfit", "Segoe UI", "Press Start 2P", sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillStyle = badgeColor;
+        ctx.fillText(this.badge, drawX + this.width - (active ? 15 : 10), textY);
+      } else {
+        ctx.font = '700 8.5px "Outfit", "Segoe UI", "Press Start 2P", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = badgeColor;
+        ctx.fillText(this.badge, centerX, textY);
+      }
+    } else {
+      ctx.font = `8px ${UITokens.fontFamily}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      if (active && !this.disabled) {
+        const chevronPulse = Math.sin(this.animTimer * 8) * 1.5;
+        ctx.fillStyle = theme.accent;
+        ctx.fillText('▶', drawX + 10 - chevronPulse, textY);
+        ctx.fillText('◀', drawX + this.width - 10 + chevronPulse, textY);
+
+        ctx.fillStyle = '#020617';
+        ctx.fillText(this.label, centerX + 1, textY + 1);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(this.label, centerX, textY);
+      } else {
+        ctx.fillStyle = this.disabled ? UITokens.disabled : UITokens.textMuted;
+        ctx.fillText(this.label, centerX, textY);
+      }
     }
 
     ctx.restore();
@@ -2622,7 +2652,7 @@ export class UIManager {
     }
 
     UITypography.drawText(ctx, '[ENTER / SPACE / ESC] RETURN TO MAIN MENU', width / 2 + 40, height - 16, {
-      size: '6px',
+      font: '700 7.5px "Outfit", "Segoe UI", sans-serif',
       color: UITokens.textMuted,
       align: 'center',
       shadow: true
@@ -2864,15 +2894,15 @@ export class UIManager {
       btn.update(0.016, i === selectedIndex);
 
       if (btn.id === 'toggle_sfx') {
-        btn.label = this.settings.soundFX ? 'SOUND FX' : 'SOUND FX';
+        btn.label = '';
         btn.badge = this.settings.soundFX ? '[ ON ]' : '[ OFF ]';
         btn.customColor = this.settings.soundFX ? UITokens.success : UITokens.disabled;
       } else if (btn.id === 'toggle_music') {
-        btn.label = this.settings.music ? 'MUSIC' : 'MUSIC';
+        btn.label = '';
         btn.badge = this.settings.music ? '[ ON ]' : '[ OFF ]';
         btn.customColor = this.settings.music ? UITokens.success : UITokens.disabled;
       } else if (btn.id === 'toggle_crt') {
-        btn.label = this.settings.crtFilter ? 'CRT FILTER' : 'CRT FILTER';
+        btn.label = '';
         btn.badge = this.settings.crtFilter ? '[ ON ]' : '[ OFF ]';
         btn.customColor = this.settings.crtFilter ? UITokens.success : UITokens.disabled;
       }
@@ -2882,7 +2912,7 @@ export class UIManager {
 
     // 8. Footer Legend
     UITypography.drawText(ctx, '[▲/▼] NAVIGATE ROWS   [ENTER/SPACE] TOGGLE   [ESC] BACK', width / 2 + 40, height - 16, {
-      size: '6px',
+      font: '700 7.5px "Outfit", "Segoe UI", sans-serif',
       color: UITokens.textMuted,
       align: 'center',
       shadow: true

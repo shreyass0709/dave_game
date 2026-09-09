@@ -137,9 +137,9 @@ export class Game {
         new UIButton({ id: 'back_main', label: '◄ BACK', x: 18, y: 198, width: 80, height: 20, variant: 'primary', color: '#38bdf8' })
       ],
       [GameState.SETTINGS]: [
-        new UIButton({ id: 'toggle_sfx', label: 'SOUND FX', badge: '[ ON ]', x: 275, y: 54, width: 98, height: 22, variant: 'primary', color: '#a855f7' }),
-        new UIButton({ id: 'toggle_music', label: 'MUSIC', badge: '[ ON ]', x: 275, y: 92, width: 98, height: 22, variant: 'primary', color: '#a855f7' }),
-        new UIButton({ id: 'toggle_crt', label: 'CRT FILTER', badge: '[ ON ]', x: 275, y: 130, width: 98, height: 22, variant: 'primary', color: '#a855f7' }),
+        new UIButton({ id: 'toggle_sfx', label: '', badge: '[ ON ]', x: 275, y: 54, width: 95, height: 22, variant: 'primary', color: '#22c55e' }),
+        new UIButton({ id: 'toggle_music', label: '', badge: '[ ON ]', x: 275, y: 92, width: 95, height: 22, variant: 'primary', color: '#22c55e' }),
+        new UIButton({ id: 'toggle_crt', label: '', badge: '[ ON ]', x: 275, y: 130, width: 95, height: 22, variant: 'primary', color: '#22c55e' }),
         new UIButton({ id: 'back_main', label: '◄ BACK', x: 18, y: 198, width: 80, height: 20, variant: 'primary', color: '#38bdf8' })
       ],
       [GameState.QUIT]: [
