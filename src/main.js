@@ -107,11 +107,11 @@ export class Game {
   initButtons() {
     this.menuButtons = {
       [GameState.MAIN_MENU]: [
-        new UIButton({ id: 'play', label: 'PLAY', x: 22, y: 44, width: 110, height: 32, variant: 'danger', color: '#ef4444' }),
-        new UIButton({ id: 'levels', label: 'MISSIONS', badge: '[LVL 1]', x: 22, y: 88, width: 356, height: 78, variant: 'primary', color: '#38bdf8' }),
-        new UIButton({ id: 'instructions', label: 'ROSTER', x: 145, y: 44, width: 110, height: 32, variant: 'secondary', color: '#a855f7' }),
-        new UIButton({ id: 'settings', label: 'SETTINGS', x: 268, y: 44, width: 110, height: 32, variant: 'gold', color: '#facc15' }),
-        new UIButton({ id: 'quit', label: 'THEME', x: 275, y: 208, width: 106, height: 22, variant: 'disabled', color: '#64748b' })
+        new UIButton({ id: 'play', label: 'PLAY', x: 175, y: 82, width: 160, height: 21, variant: 'success', color: '#22c55e' }),
+        new UIButton({ id: 'levels', label: 'LEVELS', badge: '[LVL 1]', x: 175, y: 106, width: 160, height: 19, variant: 'gold', color: '#facc15' }),
+        new UIButton({ id: 'instructions', label: 'INSTRUCTIONS', x: 175, y: 129, width: 160, height: 19, variant: 'primary', color: '#38bdf8' }),
+        new UIButton({ id: 'settings', label: 'SETTINGS', x: 175, y: 152, width: 160, height: 19, variant: 'secondary', color: '#a855f7' }),
+        new UIButton({ id: 'quit', label: 'QUIT', x: 175, y: 175, width: 160, height: 19, variant: 'danger', color: '#ef4444' })
       ],
       [GameState.PAUSED]: [
         new UIButton({ id: 'resume', label: 'RESUME', x: 125, y: 114, width: 150, height: 17, variant: 'success', color: '#22c55e' }),
@@ -179,24 +179,30 @@ export class Game {
 
     // 3. Mouse Hover over Cards
     const cardRects = [
-      { x: 18, y: 48, w: 114, h: 142 },
-      { x: 143, y: 48, w: 114, h: 142 },
-      { x: 268, y: 48, w: 114, h: 142 }
+      { x: 22, y: 44, w: 110, h: 142 },
+      { x: 145, y: 44, w: 110, h: 142 },
+      { x: 268, y: 44, w: 110, h: 142 }
     ];
 
-    if (mousePos.x >= 0 && mousePos.y >= 0) {
-      for (let i = 0; i < cardRects.length; i++) {
-        const c = cardRects[i];
-        if (mousePos.x >= c.x && mousePos.x <= c.x + c.w && mousePos.y >= c.y && mousePos.y <= c.y + c.h) {
-          this.selectedLevelIndex = i;
-          break;
-        }
+    for (let i = 0; i < cardRects.length; i++) {
+      const c = cardRects[i];
+      if (mousePos.x >= c.x && mousePos.x <= c.x + c.w && mousePos.y >= c.y && mousePos.y <= c.y + c.h) {
+        this.selectedLevelIndex = i;
+        break;
       }
     }
 
-    // 4. Mouse Click on Back Button
-    const backBtn = (this.menuButtons[GameState.LEVEL_SELECT] || [])[0];
-    if (isClick && backBtn && backBtn.contains(mousePos.x, mousePos.y)) {
+    // 4. Back Button Hover & Click
+    const backBtn = this.menuButtons[GameState.LEVEL_SELECT][0];
+    if (backBtn.contains(mousePos.x, mousePos.y)) {
+      this.selectedLevelIndex = 3;
+      if (isClick) {
+        this.executeButtonAction('back_main');
+        return;
+      }
+    }
+
+    if (this.selectedLevelIndex === 3 && isSelect) {
       this.executeButtonAction('back_main');
       return;
     }
@@ -214,7 +220,7 @@ export class Game {
       }
     }
 
-    if (wantsLaunch) {
+    if (wantsLaunch && this.selectedLevelIndex < 3) {
       const targetLevel = this.selectedLevelIndex + 1;
       if (targetLevel <= this.unlockedLevels) {
         this.loadLevel(targetLevel);
@@ -322,16 +328,6 @@ export class Game {
           break;
         }
       }
-      // In settings, also check setting row bounds
-      if (this.gameState === GameState.SETTINGS) {
-        for (let i = 0; i < 3; i++) {
-          const ry = 48 + i * 38;
-          if (mousePos.x >= 18 && mousePos.x <= 382 && mousePos.y >= ry && mousePos.y <= ry + 34) {
-            this.selectedMenuIndex = i;
-            break;
-          }
-        }
-      }
     }
 
     // 3. Trigger Action
@@ -345,54 +341,14 @@ export class Game {
           break;
         }
       }
-      if (!triggeredButton && this.gameState === GameState.SETTINGS) {
-        for (let i = 0; i < 3; i++) {
-          const ry = 48 + i * 38;
-          if (mousePos.x >= 18 && mousePos.x <= 382 && mousePos.y >= ry && mousePos.y <= ry + 34) {
-            triggeredButton = buttons[i];
-            break;
-          }
-        }
-      }
-      if (this.gameState === GameState.MAIN_MENU) {
-        // Support test legacy click coordinates for settings (200, 160)
-        if (mousePos.x >= 175 && mousePos.x <= 335 && mousePos.y >= 145 && mousePos.y <= 175) {
-          triggeredButton = buttons[3];
-        }
-        // Mode toggle button at bottom right (275, 208, 106, 22)
-        else if (mousePos.x >= 270 && mousePos.x <= 390 && mousePos.y >= 204 && mousePos.y <= 236) {
-          triggeredButton = { id: 'toggle_theme' };
-        }
-        // 2x3 Level cards grid
-        else {
-          const colX = [22, 145, 268];
-          const rowY = [94, 132];
-          for (let i = 0; i < 6; i++) {
-            const col = i % 3;
-            const row = Math.floor(i / 3);
-            const cx = colX[col];
-            const cy = rowY[row];
-            if (mousePos.x >= cx && mousePos.x <= cx + 110 && mousePos.y >= cy && mousePos.y <= cy + 34) {
-              if (i < 3) {
-                const targetLvl = i + 1;
-                if (targetLvl <= this.unlockedLevels) {
-                  this.loadLevel(targetLvl);
-                  this.score = 0;
-                  this.levelStartScore = 0;
-                  this.lives = 3;
-                  this.screenFadeAlpha = 1.0;
-                  this.gameState = GameState.PLAYING;
-                  return;
-                } else {
-                  this.showMessage(`MISSION LOCKED! CLEAR LEVEL ${targetLvl - 1} FIRST`, 2.5);
-                  return;
-                }
-              } else {
-                this.showMessage(`SECTOR LOCKED IN DEMO BUILD`, 2.0);
-                return;
-              }
-            }
-          }
+      if (this.gameState === GameState.MAIN_MENU && !triggeredButton) {
+        // Fallback hit area check for Main Menu items
+        if (mousePos.x >= 170 && mousePos.x <= 340) {
+          if (mousePos.y >= 80 && mousePos.y <= 103) triggeredButton = buttons[0];
+          else if (mousePos.y >= 104 && mousePos.y <= 126) triggeredButton = buttons[1];
+          else if (mousePos.y >= 127 && mousePos.y <= 149) triggeredButton = buttons[2];
+          else if (mousePos.y >= 150 && mousePos.y <= 172) triggeredButton = buttons[3];
+          else if (mousePos.y >= 173 && mousePos.y <= 196) triggeredButton = buttons[4];
         }
       }
     }
@@ -428,12 +384,13 @@ export class Game {
         this.selectedMenuIndex = 0;
         this.ui.resetSettingsAnimation();
         break;
-      case 'toggle_theme':
       case 'quit':
-        if (this.ui && this.ui.settings) {
-          this.ui.settings.themeMode = (this.ui.settings.themeMode === 'CLASSIC') ? 'RECHARGED' : 'CLASSIC';
-          if (this.sound) this.sound.playSelect();
-        }
+        this.gameState = GameState.QUIT;
+        this.selectedMenuIndex = 0;
+        break;
+      case 'return_title':
+        this.gameState = GameState.MAIN_MENU;
+        this.selectedMenuIndex = 0;
         break;
       case 'resume':
         this.gameState = GameState.PLAYING;

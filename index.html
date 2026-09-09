@@ -12,39 +12,60 @@
 <body>
   <div class="arcade-cabinet">
     <header class="game-header">
-      <div class="game-title">DANGEROUS ADVENTURE</div>
-      <div class="game-subtitle">A Retro Platformer | College Mini-Project</div>
+      <div class="header-content">
+        <div class="header-titles">
+          <h1 class="game-title">DANGEROUS ADVENTURE</h1>
+          <div class="game-subtitle">A Retro Platformer | College Mini-Project</div>
+        </div>
+
+        <div class="header-actions">
+          <!-- Hoverable Controls Button & Popover Tooltip -->
+          <div class="controls-dropdown-wrapper" id="controlsWrapper">
+            <button id="btnHelp" class="arcade-btn" aria-label="Controls" title="Hover to view controls">
+              <span class="btn-icon">🎮</span> CONTROLS
+            </button>
+            <div class="controls-popover" id="controlsPopover">
+              <div class="popover-header">⚡ TACTICAL CONTROLS</div>
+              <div class="popover-grid">
+                <div class="popover-item">
+                  <span class="key-cap">A</span> / <span class="key-cap">◀</span>
+                  <span class="popover-label">Move Left</span>
+                </div>
+                <div class="popover-item">
+                  <span class="key-cap">D</span> / <span class="key-cap">▶</span>
+                  <span class="popover-label">Move Right</span>
+                </div>
+                <div class="popover-item">
+                  <span class="key-cap">W</span> / <span class="key-cap">▲</span> / <span class="key-cap">Space</span>
+                  <span class="popover-label">Jump</span>
+                </div>
+                <div class="popover-item">
+                  <span class="key-cap">F</span>
+                  <span class="popover-label">Plasma Blaster</span>
+                </div>
+                <div class="popover-item">
+                  <span class="key-cap">P</span> / <span class="key-cap">ESC</span>
+                  <span class="popover-label">Pause / Menu</span>
+                </div>
+                <div class="popover-item">
+                  <span class="key-cap">Enter</span> / <span class="key-cap">Mouse</span>
+                  <span class="popover-label">Select / Click</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fullscreen Button -->
+          <button id="btnFullscreen" class="arcade-btn" aria-label="Toggle Fullscreen" title="Toggle Fullscreen (or Double-Click Game Screen)">
+            <span class="btn-icon">⛶</span> FULLSCREEN
+          </button>
+        </div>
+      </div>
     </header>
 
     <div class="screen-frame">
       <canvas id="gameCanvas" width="400" height="240"></canvas>
     </div>
-
-    <footer class="controls-panel">
-      <div class="controls-guide">
-        <div class="control-item">
-          <span class="key-badge">A</span> / <span class="key-badge">◀</span> : Move Left
-        </div>
-        <div class="control-item">
-          <span class="key-badge">D</span> / <span class="key-badge">▶</span> : Move Right
-        </div>
-        <div class="control-item">
-          <span class="key-badge">W</span> / <span class="key-badge">▲</span> / <span class="key-badge">Space</span> : Jump
-        </div>
-        <div class="control-item">
-          <span class="key-badge">F</span> : Shoot Blaster
-        </div>
-        <div class="control-item">
-          <span class="key-badge">P</span> / <span class="key-badge">ESC</span> : Pause Game
-        </div>
-        <div class="control-item">
-          <span class="key-badge">Enter</span> / <span class="key-badge">Mouse</span> : Select
-        </div>
-      </div>
-      <div class="status-indicator">
-        <span class="status-dot"></span> Game State Engine: Active (60 FPS) | Dual Input: Keyboard & Mouse
-      </div>
-    </footer>
   </div>
 
   <script type="module" src="src/main.js"></script>
