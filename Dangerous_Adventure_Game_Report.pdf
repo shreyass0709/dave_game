@@ -1,0 +1,1189 @@
+%PDF-1.4
+%âãÏÓ
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [8 0 R 10 0 R] >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Oblique /Encoding /WinAnsiEncoding >>
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>
+endobj
+6 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier-Bold /Encoding /WinAnsiEncoding >>
+endobj
+7 0 obj
+<< /Length 10069 >>
+stream
+0.035 0.051 0.086 rg
+40.00 701.89 515.28 100.00 re f
+1.5 w
+0.150 0.220 0.330 RG
+40.00 701.89 515.28 100.00 re S
+0.220 0.741 0.973 rg
+40.00 798.89 12.00 3.00 re f
+0.220 0.741 0.973 rg
+40.00 789.89 3.00 12.00 re f
+0.220 0.741 0.973 rg
+543.28 798.89 12.00 3.00 re f
+0.220 0.741 0.973 rg
+552.28 789.89 3.00 12.00 re f
+BT
+/F2 8 Tf
+0.220 0.741 0.973 rg
+56.00 779.89 Td
+(ENGINEERING & ARCHITECTURAL REPORT) Tj
+ET
+BT
+/F2 18 Tf
+0.950 0.970 1.000 rg
+56.00 757.89 Td
+(DANGEROUS ADVENTURE) Tj
+ET
+BT
+/F1 9.5 Tf
+0.700 0.780 0.900 rg
+56.00 741.89 Td
+(Modern Retro Platformer Engine • Architecture & Comprehensive Comparison) Tj
+ET
+0.75 w
+0.180 0.250 0.380 RG
+56.00 729.89 m 539.28 729.89 l S
+BT
+/F1 8 Tf
+0.750 0.820 0.920 rg
+56.00 713.89 Td
+(Platform: Web \(HTML5 Canvas + Web Audio API\)) Tj
+ET
+BT
+/F1 8 Tf
+0.750 0.820 0.920 rg
+255.00 713.89 Td
+(Architecture: ES6 Modular Engine \(0 Deps\)) Tj
+ET
+BT
+/F2 8 Tf
+0.133 0.773 0.369 rg
+431.12 713.89 Td
+(Tests: 16/16 Passed \(100%\)) Tj
+ET
+BT
+/F2 12 Tf
+0.060 0.090 0.160 rg
+40.00 681.89 Td
+(1. Executive Summary & Game Concept) Tj
+ET
+1.5 w
+0.220 0.741 0.973 RG
+40.00 677.89 m 555.28 677.89 l S
+BT
+/F1 9.5 Tf
+0.200 0.250 0.300 rg
+40.00 665.89 Td
+(Dangerous Adventure is a modernized indie platformer built from scratch in pure Vanilla web) Tj
+ET
+BT
+/F1 9.5 Tf
+0.200 0.250 0.300 rg
+40.00 652.39 Td
+(technologies. It pays homage to John Romero’s iconic 1988/1990 MS-DOS classic "Dangerous Dave in the) Tj
+ET
+BT
+/F1 9.5 Tf
+0.200 0.250 0.300 rg
+40.00 638.89 Td
+(Deserted Pirate's Hideout", while completely re-engineering the physics engine, combat systems, audio) Tj
+ET
+BT
+/F1 9.5 Tf
+0.200 0.250 0.300 rg
+40.00 625.39 Td
+(synthesis, camera controls, and user interface for a fluid 60 FPS indie experience.) Tj
+ET
+BT
+/F1 9.5 Tf
+0.200 0.250 0.300 rg
+40.00 607.89 Td
+(Built with zero heavy runtime frameworks \(no React, Phaser, Unity, or Tailwind\), the engine compiles) Tj
+ET
+BT
+/F1 9.5 Tf
+0.200 0.250 0.300 rg
+40.00 594.39 Td
+(native retro pixel art at 400x240 pixels scaled crisply on high-DPI displays. It delivers fluid) Tj
+ET
+BT
+/F1 9.5 Tf
+0.200 0.250 0.300 rg
+40.00 580.89 Td
+(sub-pixel movement, variable jump heights, dual-mode combat \(plasma shooting + enemy stomping\),) Tj
+ET
+BT
+/F1 9.5 Tf
+0.200 0.250 0.300 rg
+40.00 567.39 Td
+(procedural 8-bit sound synthesis, and an animated glassmorphic indie UI.) Tj
+ET
+BT
+/F2 12 Tf
+0.060 0.090 0.160 rg
+40.00 539.89 Td
+(2. Deep Comparison: Classic Dangerous Dave vs. Modernized Engine) Tj
+ET
+1.5 w
+0.220 0.741 0.973 RG
+40.00 535.89 m 555.28 535.89 l S
+0.035 0.051 0.086 rg
+40.00 509.89 515.28 16.00 re f
+BT
+/F2 7.5 Tf
+0.950 0.970 1.000 rg
+46.00 513.89 Td
+(GAME DIMENSION) Tj
+ET
+BT
+/F2 7.5 Tf
+0.950 0.600 0.600 rg
+165.00 513.89 Td
+(CLASSIC DANGEROUS DAVE \(1988 DOS\)) Tj
+ET
+BT
+/F2 7.5 Tf
+0.220 0.741 0.973 rg
+355.00 513.89 Td
+(MODERNIZED DAVE ENGINE \(THIS GAME\)) Tj
+ET
+0.5 w
+0.860 0.890 0.930 RG
+40.00 483.89 515.28 26.00 re S
+BT
+/F2 7.5 Tf
+0.060 0.090 0.160 rg
+46.00 497.89 Td
+(Runtime & Architecture) Tj
+ET
+BT
+/F1 7 Tf
+0.450 0.450 0.500 rg
+165.00 501.89 Td
+(16-bit x86 Assembly / C for MS-DOS \(EGA 320x200\).) Tj
+ET
+BT
+/F1 7 Tf
+0.080 0.250 0.150 rg
+355.00 501.89 Td
+(Pure ES6+ JavaScript Modules, HTML5 Canvas 2D, Web) Tj
+ET
+BT
+/F1 7 Tf
+0.080 0.250 0.150 rg
+355.00 492.39 Td
+(Audio API. 0 dependencies.) Tj
+ET
+0.960 0.970 0.980 rg
+40.00 457.89 515.28 26.00 re f
+0.5 w
+0.860 0.890 0.930 RG
+40.00 457.89 515.28 26.00 re S
+BT
+/F2 7.5 Tf
+0.060 0.090 0.160 rg
+46.00 471.89 Td
+(Physics & Frame Rate) Tj
+ET
+BT
+/F1 7 Tf
+0.450 0.450 0.500 rg
+165.00 475.89 Td
+(Fixed ~18-24 FPS with jerky tile-quantized steps.) Tj
+ET
+BT
+/F1 7 Tf
+0.080 0.250 0.150 rg
+355.00 475.89 Td
+(Smooth 60 FPS sub-pixel delta-time integration with) Tj
+ET
+BT
+/F1 7 Tf
+0.080 0.250 0.150 rg
+355.00 466.39 Td
+(acceleration damping.) Tj
+ET
+0.5 w
+0.860 0.890 0.930 RG
+40.00 431.89 515.28 26.00 re S
+BT
+/F2 7.5 Tf
+0.060 0.090 0.160 rg
+46.00 445.89 Td
+(Jump Mechanics) Tj
+ET
+BT
+/F1 7 Tf
+0.450 0.450 0.500 rg
+165.00 449.89 Td
+(Rigid parabolic jump arc; zero control once in) Tj
+ET
+BT
+/F1 7 Tf
+0.450 0.450 0.500 rg
+165.00 440.39 Td
+(the air.) Tj
+ET
+BT
+/F1 7 Tf
+0.080 0.250 0.150 rg
+355.00 449.89 Td
+(Variable Jump Height \(tap vs hold\), Coyote Time &) Tj
+ET
+BT
+/F1 7 Tf
+0.080 0.250 0.150 rg
+355.00 440.39 Td
+(Jump Buffering.) Tj
+ET
+0.960 0.970 0.980 rg
+40.00 405.89 515.28 26.00 re f
+0.5 w
+0.860 0.890 0.930 RG
+40.00 405.89 515.28 26.00 re S
+BT
+/F2 7.5 Tf
+0.060 0.090 0.160 rg
+46.00 419.89 Td
+(Collision & Corners) Tj
+ET
+BT
+/F1 7 Tf
+0.450 0.450 0.500 rg
+165.00 423.89 Td
+(Player snagged or stuck abruptly on tile corners) Tj
+ET
+BT
+/F1 7 Tf
+0.450 0.450 0.500 rg
+165.00 414.39 Td
+(& seams.) Tj
+ET
+BT
+/F1 7 Tf
+0.080 0.250 0.150 rg
+355.00 423.89 Td
+(Continuous Axis-Separated AABB with corner-slide) Tj
+ET
+BT
+/F1 7 Tf
+0.080 0.250 0.150 rg
+355.00 414.39 Td
+(assistance & edge alignment.) Tj
+ET
+0.5 w
+0.860 0.890 0.930 RG
+40.00 379.89 515.28 26.00 re S
+BT
+/F2 7.5 Tf
+0.060 0.090 0.160 rg
+46.00 393.89 Td
+(Combat & Weapons) Tj
+ET
+BT
+/F1 7 Tf
+0.450 0.450 0.500 rg
+165.00 397.89 Td
+(Touch = instant death. Gun was rare pickup with) Tj
+ET
+BT
+/F1 7 Tf
+0.450 0.450 0.500 rg
+165.00 388.39 Td
+(limited ammo.) Tj
+ET
+BT
+/F1 7 Tf
+0.080 0.250 0.150 rg
+355.00 397.89 Td
+(Dual Combat: Built-in Plasma Blaster \(F\) + Enemy) Tj
+ET
+BT
+/F1 7 Tf
+0.080 0.250 0.150 rg
+355.00 388.39 Td
+(Stomp \(+200 pts\) with bounce.) Tj
+ET
+0.960 0.970 0.980 rg
+40.00 353.89 515.28 26.00 re f
+0.5 w
+0.860 0.890 0.930 RG
+40.00 353.89 515.28 26.00 re S
+BT
+/F2 7.5 Tf
+0.060 0.090 0.160 rg
+46.00 367.89 Td
+(Enemy Intelligence) Tj
+ET
+BT
+/F1 7 Tf
+0.450 0.450 0.500 rg
+165.00 371.89 Td
+(Primitive 1D patrol with occasional boundary) Tj
+ET
+BT
+/F1 7 Tf
+0.450 0.450 0.500 rg
+165.00 362.39 Td
+(clipping bugs.) Tj
+ET
+BT
+/F1 7 Tf
+0.080 0.250 0.150 rg
+355.00 371.89 Td
+(Smart Patrol AI: Ledge drop-off detection, wall) Tj
+ET
+BT
+/F1 7 Tf
+0.080 0.250 0.150 rg
+355.00 362.39 Td
+(reversal, stomp hitboxes.) Tj
+ET
+0.5 w
+0.860 0.890 0.930 RG
+40.00 327.89 515.28 26.00 re S
+BT
+/F2 7.5 Tf
+0.060 0.090 0.160 rg
+46.00 341.89 Td
+(Camera & Viewport) Tj
+ET
+BT
+/F1 7 Tf
+0.450 0.450 0.500 rg
+165.00 345.89 Td
+(Rigid screen-by-screen flip transitions without) Tj
+ET
+BT
+/F1 7 Tf
+0.450 0.450 0.500 rg
+165.00 336.39 Td
+(lookahead.) Tj
+ET
+BT
+/F1 7 Tf
+0.080 0.250 0.150 rg
+355.00 345.89 Td
+(Smooth Lookahead Tracking Camera: Lerped horizontal) Tj
+ET
+BT
+/F1 7 Tf
+0.080 0.250 0.150 rg
+355.00 336.39 Td
+(tracking & clamping.) Tj
+ET
+0.960 0.970 0.980 rg
+40.00 301.89 515.28 26.00 re f
+0.5 w
+0.860 0.890 0.930 RG
+40.00 301.89 515.28 26.00 re S
+BT
+/F2 7.5 Tf
+0.060 0.090 0.160 rg
+46.00 315.89 Td
+(Checkpoints & Saves) Tj
+ET
+BT
+/F1 7 Tf
+0.450 0.450 0.500 rg
+165.00 319.89 Td
+(Permadeath: Dying sent you back to the very) Tj
+ET
+BT
+/F1 7 Tf
+0.450 0.450 0.500 rg
+165.00 310.39 Td
+(start.) Tj
+ET
+BT
+/F1 7 Tf
+0.080 0.250 0.150 rg
+355.00 319.89 Td
+(Interactive Checkpoint Beacons auto-save midway) Tj
+ET
+BT
+/F1 7 Tf
+0.080 0.250 0.150 rg
+355.00 310.39 Td
+(spawn points in each level.) Tj
+ET
+0.5 w
+0.860 0.890 0.930 RG
+40.00 275.89 515.28 26.00 re S
+BT
+/F2 7.5 Tf
+0.060 0.090 0.160 rg
+46.00 289.89 Td
+(Campaign Progression) Tj
+ET
+BT
+/F1 7 Tf
+0.450 0.450 0.500 rg
+165.00 293.89 Td
+(Linear locked sequence with no level select or) Tj
+ET
+BT
+/F1 7 Tf
+0.450 0.450 0.500 rg
+165.00 284.39 Td
+(high score saves.) Tj
+ET
+BT
+/F1 7 Tf
+0.080 0.250 0.150 rg
+355.00 293.89 Td
+(3 Hand-Crafted Levels + Dedicated Level Select) Tj
+ET
+BT
+/F1 7 Tf
+0.080 0.250 0.150 rg
+355.00 284.39 Td
+(Screen + High Score Memory.) Tj
+ET
+0.960 0.970 0.980 rg
+40.00 249.89 515.28 26.00 re f
+0.5 w
+0.860 0.890 0.930 RG
+40.00 249.89 515.28 26.00 re S
+BT
+/F2 7.5 Tf
+0.060 0.090 0.160 rg
+46.00 263.89 Td
+(Audio & Soundtrack) Tj
+ET
+BT
+/F1 7 Tf
+0.450 0.450 0.500 rg
+165.00 267.89 Td
+(1-bit PC Speaker square-wave beeper.) Tj
+ET
+BT
+/F1 7 Tf
+0.080 0.250 0.150 rg
+355.00 267.89 Td
+(Real-time procedural Web Audio API chiptune synth) Tj
+ET
+BT
+/F1 7 Tf
+0.080 0.250 0.150 rg
+355.00 258.39 Td
+(with 0ms asset lag.) Tj
+ET
+0.5 w
+0.860 0.890 0.930 RG
+40.00 223.89 515.28 26.00 re S
+BT
+/F2 7.5 Tf
+0.060 0.090 0.160 rg
+46.00 237.89 Td
+(UI & Typography) Tj
+ET
+BT
+/F1 7 Tf
+0.450 0.450 0.500 rg
+165.00 241.89 Td
+(Crude, unreadable low-resolution DOS text) Tj
+ET
+BT
+/F1 7 Tf
+0.450 0.450 0.500 rg
+165.00 232.39 Td
+(overlays.) Tj
+ET
+BT
+/F1 7 Tf
+0.080 0.250 0.150 rg
+355.00 241.89 Td
+(Dual Typography: Arcade headers \(Press Start 2P\) +) Tj
+ET
+BT
+/F1 7 Tf
+0.080 0.250 0.150 rg
+355.00 232.39 Td
+(Crisp body \(Outfit 8.5px bold\).) Tj
+ET
+BT
+/F2 12 Tf
+0.060 0.090 0.160 rg
+40.00 207.89 Td
+(3. Technology Stack & Architecture Deep Dive) Tj
+ET
+1.5 w
+0.220 0.741 0.973 RG
+40.00 203.89 m 555.28 203.89 l S
+0.970 0.980 0.990 rg
+40.00 123.89 251.64 68.00 re f
+1 w
+0.860 0.890 0.930 RG
+40.00 123.89 251.64 68.00 re S
+BT
+/F2 8.5 Tf
+0.060 0.090 0.160 rg
+48.00 177.89 Td
+(⚡ Core Language & Runtime) Tj
+ET
+BT
+/F1 7.5 Tf
+0.350 0.420 0.520 rg
+48.00 165.89 Td
+(Pure JavaScript \(ES6+ Modules\), HTML5, and Vanilla CSS3.) Tj
+ET
+BT
+/F1 7.5 Tf
+0.350 0.420 0.520 rg
+48.00 155.89 Td
+(Zero runtime frameworks \(no React, Phaser, or Tailwind\) for) Tj
+ET
+BT
+/F1 7.5 Tf
+0.350 0.420 0.520 rg
+48.00 145.89 Td
+(instant <50ms initial load time and lightweight 60 FPS) Tj
+ET
+BT
+/F1 7.5 Tf
+0.350 0.420 0.520 rg
+48.00 135.89 Td
+(performance.) Tj
+ET
+0.970 0.980 0.990 rg
+303.64 123.89 251.64 68.00 re f
+1 w
+0.860 0.890 0.930 RG
+303.64 123.89 251.64 68.00 re S
+BT
+/F2 8.5 Tf
+0.060 0.090 0.160 rg
+311.64 177.89 Td
+(🎨 HTML5 Canvas 2D Graphics Engine) Tj
+ET
+BT
+/F1 7.5 Tf
+0.350 0.420 0.520 rg
+311.64 165.89 Td
+(Hardware-accelerated 400x240 pixel-art viewport scaled) Tj
+ET
+BT
+/F1 7.5 Tf
+0.350 0.420 0.520 rg
+311.64 155.89 Td
+(crisply with nearest-neighbor rendering. Procedural entity) Tj
+ET
+BT
+/F1 7.5 Tf
+0.350 0.420 0.520 rg
+311.64 145.89 Td
+(drawing, pre-allocated particle pools, and optional CRT) Tj
+ET
+BT
+/F1 7.5 Tf
+0.350 0.420 0.520 rg
+311.64 135.89 Td
+(scanlines filter.) Tj
+ET
+0.75 w
+0.850 0.880 0.920 RG
+40.00 28.00 m 555.28 28.00 l S
+BT
+/F1 7.5 Tf
+0.550 0.600 0.700 rg
+40.00 18.00 Td
+(Confidential & Engineering Specification) Tj
+ET
+BT
+/F2 7.5 Tf
+0.350 0.400 0.500 rg
+512.38 18.00 Td
+(Page 1 of 2) Tj
+ET
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Contents 7 0 R /Resources << /Font << /F1 2 0 R /F2 3 0 R /F3 4 0 R /F4 5 0 R /F5 6 0 R >> >> >>
+endobj
+9 0 obj
+<< /Length 10658 >>
+stream
+0.970 0.980 0.990 rg
+40.00 733.89 251.64 68.00 re f
+1 w
+0.860 0.890 0.930 RG
+40.00 733.89 251.64 68.00 re S
+BT
+/F2 8.5 Tf
+0.060 0.090 0.160 rg
+48.00 787.89 Td
+(🔊 Procedural Web Audio API Synth) Tj
+ET
+BT
+/F1 7.5 Tf
+0.350 0.420 0.520 rg
+48.00 775.89 Td
+(Real-time 8-bit chiptune synthesis using OscillatorNode,) Tj
+ET
+BT
+/F1 7.5 Tf
+0.350 0.420 0.520 rg
+48.00 765.89 Td
+(GainNode, and noise buffers. Procedural sound effects for) Tj
+ET
+BT
+/F1 7.5 Tf
+0.350 0.420 0.520 rg
+48.00 755.89 Td
+(blaster shots, coin chimes, gem arpeggios, and trophy) Tj
+ET
+BT
+/F1 7.5 Tf
+0.350 0.420 0.520 rg
+48.00 745.89 Td
+(fanfares with zero audio download latency.) Tj
+ET
+0.970 0.980 0.990 rg
+303.64 733.89 251.64 68.00 re f
+1 w
+0.860 0.890 0.930 RG
+303.64 733.89 251.64 68.00 re S
+BT
+/F2 8.5 Tf
+0.060 0.090 0.160 rg
+311.64 787.89 Td
+(📐 Sub-Pixel Delta-Time Physics & AABB) Tj
+ET
+BT
+/F1 7.5 Tf
+0.350 0.420 0.520 rg
+311.64 775.89 Td
+(Axis-separated continuous collision queries with obstacle) Tj
+ET
+BT
+/F1 7.5 Tf
+0.350 0.420 0.520 rg
+311.64 765.89 Td
+(detection, variable jump gravity scaling, 6-frame coyote) Tj
+ET
+BT
+/F1 7.5 Tf
+0.350 0.420 0.520 rg
+311.64 755.89 Td
+(time ledge forgiveness, and 5-frame jump buffering for) Tj
+ET
+BT
+/F1 7.5 Tf
+0.350 0.420 0.520 rg
+311.64 745.89 Td
+(responsive platforming.) Tj
+ET
+BT
+/F2 8.5 Tf
+0.060 0.090 0.160 rg
+40.00 719.89 Td
+(Codebase Modular Architecture:) Tj
+ET
+0.035 0.051 0.086 rg
+40.00 643.89 515.28 68.00 re f
+1 w
+0.150 0.220 0.330 RG
+40.00 643.89 515.28 68.00 re S
+BT
+/F4 6.5 Tf
+0.750 0.850 0.950 rg
+50.00 701.89 Td
+(src/main.js     • Game loop \(requestAnimationFrame\), state machine, camera, events) Tj
+ET
+BT
+/F4 6.5 Tf
+0.750 0.850 0.950 rg
+50.00 693.39 Td
+(src/map.js      • Hand-crafted tilemaps \(Levels 1-3\), entity spawn coordinates, doors) Tj
+ET
+BT
+/F4 6.5 Tf
+0.750 0.850 0.950 rg
+50.00 684.89 Td
+(src/physics.js  • Axis-separated AABB collision solver, gravity, platform landing) Tj
+ET
+BT
+/F4 6.5 Tf
+0.750 0.850 0.950 rg
+50.00 676.39 Td
+(src/player.js   • Dave entity states \(IDLE, RUN, JUMP, FALL, SHOOT, DIE\), blaster) Tj
+ET
+BT
+/F4 6.5 Tf
+0.750 0.850 0.950 rg
+50.00 667.89 Td
+(src/enemies.js  • Smart patrol AI, ledge turnaround, stomp hitboxes, bullet damage) Tj
+ET
+BT
+/F4 6.5 Tf
+0.750 0.850 0.950 rg
+50.00 659.39 Td
+(src/audio.js    • Web Audio API procedural 8-bit chiptune sound synthesizer) Tj
+ET
+BT
+/F4 6.5 Tf
+0.750 0.850 0.950 rg
+50.00 650.89 Td
+(src/ui.js       • Glassmorphic UI design system, Main Menu, HUD, Level Select, Settings) Tj
+ET
+BT
+/F2 12 Tf
+0.060 0.090 0.160 rg
+40.00 629.89 Td
+(4. Critical Bugs & UX Problems Fixed in This Game) Tj
+ET
+1.5 w
+0.220 0.741 0.973 RG
+40.00 625.89 m 555.28 625.89 l S
+0.970 0.980 0.990 rg
+40.00 545.89 251.64 68.00 re f
+1 w
+0.860 0.890 0.930 RG
+40.00 545.89 251.64 68.00 re S
+BT
+/F2 7.5 Tf
+0.060 0.090 0.160 rg
+48.00 601.89 Td
+(🚫 1. Elimination of Path-Blocking Popups) Tj
+ET
+BT
+/F1 6.8 Tf
+0.600 0.250 0.250 rg
+48.00 591.89 Td
+(Problem: In-game popup messages \("LEVEL X: FIND TROPHY & GO TO) Tj
+ET
+BT
+/F1 6.8 Tf
+0.600 0.250 0.250 rg
+48.00 583.09 Td
+(EXIT!"\) were anchored at the bottom floor \(y=218\), completely) Tj
+ET
+BT
+/F1 6.8 Tf
+0.600 0.250 0.250 rg
+48.00 574.29 Td
+(covering Dave, walking paths, coins, spikes, and enemies.) Tj
+ET
+BT
+/F1 6.8 Tf
+0.100 0.450 0.200 rg
+48.00 569.89 Td
+(Solution: Relocated all toast banners to the top ceiling/sky zone) Tj
+ET
+BT
+/F1 6.8 Tf
+0.100 0.450 0.200 rg
+48.00 561.09 Td
+(\(y=24\), providing 150px+ vertical clearance above the walking path) Tj
+ET
+BT
+/F1 6.8 Tf
+0.100 0.450 0.200 rg
+48.00 552.29 Td
+(so gameplay is never obstructed.) Tj
+ET
+0.970 0.980 0.990 rg
+303.64 545.89 251.64 68.00 re f
+1 w
+0.860 0.890 0.930 RG
+303.64 545.89 251.64 68.00 re S
+BT
+/F2 7.5 Tf
+0.060 0.090 0.160 rg
+311.64 601.89 Td
+(💥 2. Duplicate Intro Message Collisions) Tj
+ET
+BT
+/F1 6.8 Tf
+0.600 0.250 0.250 rg
+311.64 591.89 Td
+(Problem: On level start, a legacy message toast and the modern) Tj
+ET
+BT
+/F1 6.8 Tf
+0.600 0.250 0.250 rg
+311.64 583.09 Td
+(cinematic Mission Intro card triggered simultaneously at the same) Tj
+ET
+BT
+/F1 6.8 Tf
+0.600 0.250 0.250 rg
+311.64 574.29 Td
+(top coordinates, causing ugly text collisions.) Tj
+ET
+BT
+/F1 6.8 Tf
+0.100 0.450 0.200 rg
+311.64 569.89 Td
+(Solution: Removed redundant legacy level-start toasts; added an) Tj
+ET
+BT
+/F1 6.8 Tf
+0.100 0.450 0.200 rg
+311.64 561.09 Td
+(active-screen mutual-exclusion safety guard in) Tj
+ET
+BT
+/F1 6.8 Tf
+0.100 0.450 0.200 rg
+311.64 552.29 Td
+(renderMessageBanner.) Tj
+ET
+0.970 0.980 0.990 rg
+40.00 471.89 251.64 68.00 re f
+1 w
+0.860 0.890 0.930 RG
+40.00 471.89 251.64 68.00 re S
+BT
+/F2 7.5 Tf
+0.060 0.090 0.160 rg
+48.00 527.89 Td
+(🔍 3. Unreadable 4.5px Bitmap Typography) Tj
+ET
+BT
+/F1 6.8 Tf
+0.600 0.250 0.250 rg
+48.00 517.89 Td
+(Problem: The 8-bit bitmap font \("Press Start 2P"\) scaled down to) Tj
+ET
+BT
+/F1 6.8 Tf
+0.600 0.250 0.250 rg
+48.00 509.09 Td
+(4.5px-5.5px blurred into illegible antialiased smudges on) Tj
+ET
+BT
+/F1 6.8 Tf
+0.600 0.250 0.250 rg
+48.00 500.29 Td
+(instructions, settings, and menus.) Tj
+ET
+BT
+/F1 6.8 Tf
+0.100 0.450 0.200 rg
+48.00 495.89 Td
+(Solution: Built a Dual-Layer Typography System: retro headers in) Tj
+ET
+BT
+/F1 6.8 Tf
+0.100 0.450 0.200 rg
+48.00 487.09 Td
+("Press Start 2P", descriptions and controls in razor-sharp) Tj
+ET
+BT
+/F1 6.8 Tf
+0.100 0.450 0.200 rg
+48.00 478.29 Td
+("Outfit" / "Segoe UI" \(7.5px-8.5px bold\).) Tj
+ET
+0.970 0.980 0.990 rg
+303.64 471.89 251.64 68.00 re f
+1 w
+0.860 0.890 0.930 RG
+303.64 471.89 251.64 68.00 re S
+BT
+/F2 7.5 Tf
+0.060 0.090 0.160 rg
+311.64 527.89 Td
+(🎛️ 4. Settings Button & Badge Overlaps) Tj
+ET
+BT
+/F1 6.8 Tf
+0.600 0.250 0.250 rg
+311.64 517.89 Td
+(Problem: Button labels \("SOUND FX", "CRT FILTER"\) collided) Tj
+ET
+BT
+/F1 6.8 Tf
+0.600 0.250 0.250 rg
+311.64 509.09 Td
+(directly over "[ ON ]" / "[ OFF ]" badges and selection chevrons) Tj
+ET
+BT
+/F1 6.8 Tf
+0.600 0.250 0.250 rg
+311.64 500.29 Td
+(\(▶, ◀\).) Tj
+ET
+BT
+/F1 6.8 Tf
+0.100 0.450 0.200 rg
+311.64 495.89 Td
+(Solution: Converted toggle buttons into clean, centered status) Tj
+ET
+BT
+/F1 6.8 Tf
+0.100 0.450 0.200 rg
+311.64 487.09 Td
+(pills with emerald green / slate gray color feedback and zero) Tj
+ET
+BT
+/F1 6.8 Tf
+0.100 0.450 0.200 rg
+311.64 478.29 Td
+(overlapping text.) Tj
+ET
+0.970 0.980 0.990 rg
+40.00 397.89 251.64 68.00 re f
+1 w
+0.860 0.890 0.930 RG
+40.00 397.89 251.64 68.00 re S
+BT
+/F2 7.5 Tf
+0.060 0.090 0.160 rg
+48.00 453.89 Td
+(📏 5. Footer Text Clipping on Canvas) Tj
+ET
+BT
+/F1 6.8 Tf
+0.600 0.250 0.250 rg
+48.00 443.89 Td
+(Problem: The 56-character bottom navigation legend overflowed off) Tj
+ET
+BT
+/F1 6.8 Tf
+0.600 0.250 0.250 rg
+48.00 435.09 Td
+(the right edge of the 400px canvas.) Tj
+ET
+BT
+/F1 6.8 Tf
+0.100 0.450 0.200 rg
+48.00 421.89 Td
+(Solution: Scaled legend font using proportional modern typography) Tj
+ET
+BT
+/F1 6.8 Tf
+0.100 0.450 0.200 rg
+48.00 413.09 Td
+(to fit comfortably with 30px+ padding and zero screen boundary) Tj
+ET
+BT
+/F1 6.8 Tf
+0.100 0.450 0.200 rg
+48.00 404.29 Td
+(breaches.) Tj
+ET
+0.970 0.980 0.990 rg
+303.64 397.89 251.64 68.00 re f
+1 w
+0.860 0.890 0.930 RG
+303.64 397.89 251.64 68.00 re S
+BT
+/F2 7.5 Tf
+0.060 0.090 0.160 rg
+311.64 453.89 Td
+(🎮 6. Header & Controls Streamlining) Tj
+ET
+BT
+/F1 6.8 Tf
+0.600 0.250 0.250 rg
+311.64 443.89 Td
+(Problem: Cluttered bottom control bars took up precious screen) Tj
+ET
+BT
+/F1 6.8 Tf
+0.600 0.250 0.250 rg
+311.64 435.09 Td
+(real estate.) Tj
+ET
+BT
+/F1 6.8 Tf
+0.100 0.450 0.200 rg
+311.64 421.89 Td
+(Solution: Built an interactive, hoverable 🎮 CONTROLS popover in) Tj
+ET
+BT
+/F1 6.8 Tf
+0.100 0.450 0.200 rg
+311.64 413.09 Td
+(the top header alongside a ⛶ FULLSCREEN toggle button.) Tj
+ET
+BT
+/F2 12 Tf
+0.060 0.090 0.160 rg
+40.00 381.89 Td
+(5. Quality Assurance & Automated Test Coverage) Tj
+ET
+1.5 w
+0.220 0.741 0.973 RG
+40.00 377.89 m 555.28 377.89 l S
+BT
+/F1 9.5 Tf
+0.200 0.250 0.300 rg
+40.00 365.89 Td
+(The game engine is backed by 16 automated test suites executed via Node.js \(scratch/run_all_tests.js\).) Tj
+ET
+BT
+/F1 9.5 Tf
+0.200 0.250 0.300 rg
+40.00 352.39 Td
+(All tests validate physics, combat, audio sync, UI bounding boxes, and state transitions with 100% pass) Tj
+ET
+BT
+/F1 9.5 Tf
+0.200 0.250 0.300 rg
+40.00 338.89 Td
+(rate:) Tj
+ET
+0.940 0.980 0.950 rg
+40.00 251.39 515.28 68.00 re f
+1 w
+0.700 0.900 0.750 RG
+40.00 251.39 515.28 68.00 re S
+BT
+/F1 6.8 Tf
+0.080 0.350 0.150 rg
+48.00 309.39 Td
+(✔ test_physics.js: Gravity, jump arcs, AABB tile collisions) Tj
+ET
+BT
+/F1 6.8 Tf
+0.080 0.350 0.150 rg
+307.64 309.39 Td
+(✔ test_p0_fixes.js: Critical physics & ceiling hit handling) Tj
+ET
+BT
+/F1 6.8 Tf
+0.080 0.350 0.150 rg
+48.00 301.89 Td
+(✔ test_shooting.js: Plasma blaster projectile velocity & culling) Tj
+ET
+BT
+/F1 6.8 Tf
+0.080 0.350 0.150 rg
+307.64 301.89 Td
+(✔ test_p1_improvements.js: Coyote time & jump buffering) Tj
+ET
+BT
+/F1 6.8 Tf
+0.080 0.350 0.150 rg
+48.00 294.39 Td
+(✔ test_enemies.js: Patrol AI, ledge turnaround, stomp hitboxes) Tj
+ET
+BT
+/F1 6.8 Tf
+0.080 0.350 0.150 rg
+307.64 294.39 Td
+(✔ test_main_menu.js: Hologram pedestal & button focus) Tj
+ET
+BT
+/F1 6.8 Tf
+0.080 0.350 0.150 rg
+48.00 286.89 Td
+(✔ test_collectibles.js: Coins \(+250\), gems \(+500\), trophy) Tj
+ET
+BT
+/F1 6.8 Tf
+0.080 0.350 0.150 rg
+307.64 286.89 Td
+(✔ test_level_select.js: Unlocked stage access & locked feedback) Tj
+ET
+BT
+/F1 6.8 Tf
+0.080 0.350 0.150 rg
+48.00 279.39 Td
+(✔ test_level1.js: Map tiles, hazard triggers, spawn mechanics) Tj
+ET
+BT
+/F1 6.8 Tf
+0.080 0.350 0.150 rg
+307.64 279.39 Td
+(✔ test_settings_instructions.js: Instructions layout & SFX/Music toggles) Tj
+ET
+BT
+/F1 6.8 Tf
+0.080 0.350 0.150 rg
+48.00 271.89 Td
+(✔ test_level_completion.js: Trophy exit door unlock conditions) Tj
+ET
+BT
+/F1 6.8 Tf
+0.080 0.350 0.150 rg
+307.64 271.89 Td
+(✔ test_hud.js: Glassmorphic top bar, lives, trophy pulse) Tj
+ET
+BT
+/F1 6.8 Tf
+0.080 0.350 0.150 rg
+48.00 264.39 Td
+(✔ test_multilevel.js: Level 1 -> Level 2 -> Level 3 progression) Tj
+ET
+BT
+/F1 6.8 Tf
+0.080 0.350 0.150 rg
+307.64 264.39 Td
+(✔ test_pause_gameover.js: Pause modal resume & Game Over restart) Tj
+ET
+BT
+/F1 6.8 Tf
+0.080 0.350 0.150 rg
+48.00 256.89 Td
+(✔ test_ui.js: Main Menu & Level Select state transitions) Tj
+ET
+BT
+/F1 6.8 Tf
+0.080 0.350 0.150 rg
+307.64 256.89 Td
+(✔ test_completion_victory.js: Grand Victory celebration sequence) Tj
+ET
+0.75 w
+0.850 0.880 0.920 RG
+40.00 816.89 m 555.28 816.89 l S
+BT
+/F1 7.5 Tf
+0.550 0.600 0.700 rg
+40.00 821.89 Td
+(Dangerous Adventure - Technical & Architectural Report) Tj
+ET
+0.75 w
+0.850 0.880 0.920 RG
+40.00 28.00 m 555.28 28.00 l S
+BT
+/F1 7.5 Tf
+0.550 0.600 0.700 rg
+40.00 18.00 Td
+(Confidential & Engineering Specification) Tj
+ET
+BT
+/F2 7.5 Tf
+0.350 0.400 0.500 rg
+512.38 18.00 Td
+(Page 2 of 2) Tj
+ET
+endstream
+endobj
+10 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Contents 9 0 R /Resources << /Font << /F1 2 0 R /F2 3 0 R /F3 4 0 R /F4 5 0 R /F5 6 0 R >> >> >>
+endobj
+xref
+0 11
+0000000000 65535 f 
+0000000019 00000 n 
+0000000068 00000 n 
+0000000132 00000 n 
+0000000234 00000 n 
+0000000339 00000 n 
+0000000434 00000 n 
+0000000534 00000 n 
+0000010656 00000 n 
+0000010828 00000 n 
+0000021539 00000 n 
+trailer
+<< /Size 11 /Root 1 0 R >>
+startxref
+21712
+%%EOF

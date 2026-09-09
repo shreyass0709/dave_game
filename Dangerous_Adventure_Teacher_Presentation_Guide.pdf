@@ -1,0 +1,742 @@
+%PDF-1.4
+%âãÏÓ
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [8 0 R 10 0 R] >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Oblique /Encoding /WinAnsiEncoding >>
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>
+endobj
+6 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier-Bold /Encoding /WinAnsiEncoding >>
+endobj
+7 0 obj
+<< /Length 10293 >>
+stream
+0.035 0.051 0.086 rg
+38.00 711.89 519.28 92.00 re f
+1.5 w
+0.150 0.220 0.330 RG
+38.00 711.89 519.28 92.00 re S
+BT
+/F2 8 Tf
+0.220 0.741 0.973 rg
+54.00 783.89 Td
+(PROJECT PRESENTATION & VIVA DEFENSE GUIDE) Tj
+ET
+BT
+/F2 17 Tf
+0.950 0.970 1.000 rg
+54.00 763.89 Td
+(DANGEROUS ADVENTURE) Tj
+ET
+BT
+/F1 9 Tf
+0.700 0.780 0.900 rg
+54.00 747.89 Td
+(How to Explain the Architecture, Physics Engine & Technical Innovation to Your Teacher) Tj
+ET
+0.75 w
+0.180 0.250 0.380 RG
+54.00 735.89 m 541.28 735.89 l S
+BT
+/F1 7.5 Tf
+0.750 0.820 0.920 rg
+54.00 721.89 Td
+(Topic: Modern 60 FPS Platformer Game Engine) Tj
+ET
+BT
+/F1 7.5 Tf
+0.750 0.820 0.920 rg
+253.00 721.89 Td
+(Tech: Vanilla JS \(ES6\) + Canvas + Web Audio) Tj
+ET
+BT
+/F2 7.5 Tf
+0.133 0.773 0.369 rg
+420.38 721.89 Td
+(Score: 16/16 Test Suites Passed) Tj
+ET
+BT
+/F2 11 Tf
+0.060 0.090 0.160 rg
+38.00 693.89 Td
+(1. The 30-Second Elevator Pitch \(Start with This\)) Tj
+ET
+1.5 w
+0.220 0.741 0.973 RG
+38.00 690.89 m 557.28 690.89 l S
+0.940 0.970 1.000 rg
+38.00 633.89 519.28 46.00 re f
+1 w
+0.700 0.850 0.980 RG
+38.00 633.89 519.28 46.00 re S
+BT
+/F3 8 Tf
+0.080 0.200 0.350 rg
+48.00 667.89 Td
+("Good morning/afternoon, Sir/Ma'am. My project is Dangerous Adventure, a full-featured 2D platformer game) Tj
+ET
+BT
+/F3 8 Tf
+0.080 0.200 0.350 rg
+48.00 657.89 Td
+(engine built entirely in pure Vanilla JavaScript and HTML5 Canvas with zero external dependencies.) Tj
+ET
+BT
+/F3 8 Tf
+0.080 0.200 0.350 rg
+48.00 647.89 Td
+(It re-engineers the classic DOS Dangerous Dave game with smooth 60 FPS sub-pixel physics, real-time procedural) Tj
+ET
+BT
+/F3 8 Tf
+0.080 0.200 0.350 rg
+48.00 637.89 Td
+(8-bit sound synthesis, dual combat mechanics, and a multi-level campaign validated by 16 automated test suites.") Tj
+ET
+BT
+/F2 11 Tf
+0.060 0.090 0.160 rg
+38.00 619.89 Td
+(2. The 5 Core Engineering Pillars \(Technical Highlights\)) Tj
+ET
+1.5 w
+0.220 0.741 0.973 RG
+38.00 616.89 m 557.28 616.89 l S
+0.970 0.980 0.990 rg
+38.00 561.89 519.28 44.00 re f
+1 w
+0.860 0.890 0.930 RG
+38.00 561.89 519.28 44.00 re S
+0.035 0.051 0.086 rg
+46.00 581.89 18.00 18.00 re f
+BT
+/F2 9 Tf
+0.220 0.741 0.973 rg
+52.66 590.89 Td
+(1) Tj
+ET
+BT
+/F2 8.5 Tf
+0.060 0.090 0.160 rg
+72.00 593.89 Td
+(Custom Axis-Separated AABB Physics & Game Loop) Tj
+ET
+BT
+/F1 7.2 Tf
+0.350 0.420 0.520 rg
+72.00 583.89 Td
+(Explain: "Instead of third-party physics libraries, I wrote a custom continuous Axis-Aligned Bounding Box \(AABB\) collision) Tj
+ET
+BT
+/F1 7.2 Tf
+0.350 0.420 0.520 rg
+72.00 574.39 Td
+(solver. Movement is decoupled from monitor frame rates using fixed-time delta-time \(dt\) integration. I also engineered Coyote) Tj
+ET
+BT
+/F1 7.2 Tf
+0.350 0.420 0.520 rg
+72.00 564.89 Td
+(Time \(ledge forgiveness\) and Jump Buffering for precision platforming.") Tj
+ET
+0.970 0.980 0.990 rg
+38.00 511.89 519.28 44.00 re f
+1 w
+0.860 0.890 0.930 RG
+38.00 511.89 519.28 44.00 re S
+0.035 0.051 0.086 rg
+46.00 531.89 18.00 18.00 re f
+BT
+/F2 9 Tf
+0.220 0.741 0.973 rg
+52.66 540.89 Td
+(2) Tj
+ET
+BT
+/F2 8.5 Tf
+0.060 0.090 0.160 rg
+72.00 543.89 Td
+(Procedural Web Audio API Sound Synthesizer) Tj
+ET
+BT
+/F1 7.2 Tf
+0.350 0.420 0.520 rg
+72.00 533.89 Td
+(Explain: "The game requires zero external .mp3 audio files. Using the browser's native Web Audio API, I synthesize square,) Tj
+ET
+BT
+/F1 7.2 Tf
+0.350 0.420 0.520 rg
+72.00 524.39 Td
+(triangle, and noise waves procedurally on-the-fly for blaster shots, coin chimes, explosions, and fanfares with zero download) Tj
+ET
+BT
+/F1 7.2 Tf
+0.350 0.420 0.520 rg
+72.00 514.89 Td
+(lag.") Tj
+ET
+0.970 0.980 0.990 rg
+38.00 461.89 519.28 44.00 re f
+1 w
+0.860 0.890 0.930 RG
+38.00 461.89 519.28 44.00 re S
+0.035 0.051 0.086 rg
+46.00 481.89 18.00 18.00 re f
+BT
+/F2 9 Tf
+0.220 0.741 0.973 rg
+52.66 490.89 Td
+(3) Tj
+ET
+BT
+/F2 8.5 Tf
+0.060 0.090 0.160 rg
+72.00 493.89 Td
+(Dual-Mode Combat & Smart Enemy AI System) Tj
+ET
+BT
+/F1 7.2 Tf
+0.350 0.420 0.520 rg
+72.00 483.89 Td
+(Explain: "Classic Dave only had one-hit deaths. I implemented a dual combat system where Dave can fire high-velocity Plasma) Tj
+ET
+BT
+/F1 7.2 Tf
+0.350 0.420 0.520 rg
+72.00 474.39 Td
+(Bolts \(F key\) OR perform a Super Mario-style Enemy Stomp from above for a bounce and +200 points. The enemies feature) Tj
+ET
+BT
+/F1 7.2 Tf
+0.350 0.420 0.520 rg
+72.00 464.89 Td
+(intelligent patrol AI with ledge detection.") Tj
+ET
+0.970 0.980 0.990 rg
+38.00 411.89 519.28 44.00 re f
+1 w
+0.860 0.890 0.930 RG
+38.00 411.89 519.28 44.00 re S
+0.035 0.051 0.086 rg
+46.00 431.89 18.00 18.00 re f
+BT
+/F2 9 Tf
+0.220 0.741 0.973 rg
+52.66 440.89 Td
+(4) Tj
+ET
+BT
+/F2 8.5 Tf
+0.060 0.090 0.160 rg
+72.00 443.89 Td
+(Modular ES6 Architecture & Finite State Machine \(FSM\)) Tj
+ET
+BT
+/F1 7.2 Tf
+0.350 0.420 0.520 rg
+72.00 433.89 Td
+(Explain: "The game is architected around a strict Finite State Machine governing 9 distinct states \(Main Menu, Level Select,) Tj
+ET
+BT
+/F1 7.2 Tf
+0.350 0.420 0.520 rg
+72.00 424.39 Td
+(Instructions, Settings, Playing, Paused, Game Over, Level Complete, and Victory\) with decoupled single-responsibility modules.") Tj
+ET
+0.970 0.980 0.990 rg
+38.00 361.89 519.28 44.00 re f
+1 w
+0.860 0.890 0.930 RG
+38.00 361.89 519.28 44.00 re S
+0.035 0.051 0.086 rg
+46.00 381.89 18.00 18.00 re f
+BT
+/F2 9 Tf
+0.220 0.741 0.973 rg
+52.66 390.89 Td
+(5) Tj
+ET
+BT
+/F2 8.5 Tf
+0.060 0.090 0.160 rg
+72.00 393.89 Td
+(16 Automated Headless Test Suites \(Quality Assurance\)) Tj
+ET
+BT
+/F1 7.2 Tf
+0.350 0.420 0.520 rg
+72.00 383.89 Td
+(Explain: "To guarantee rock-solid stability and zero regressions, I built a test harness with 16 automated test suites executed) Tj
+ET
+BT
+/F1 7.2 Tf
+0.350 0.420 0.520 rg
+72.00 374.39 Td
+(via Node.js verifying physics, hitboxes, door logic, score persistence, and HUD rendering with 100% pass rate.") Tj
+ET
+BT
+/F2 11 Tf
+0.060 0.090 0.160 rg
+38.00 347.89 Td
+(3. Live Project Demonstration Script \(What to Show & Say\)) Tj
+ET
+1.5 w
+0.220 0.741 0.973 RG
+38.00 344.89 m 557.28 344.89 l S
+0.980 0.980 0.990 rg
+38.00 307.89 519.28 26.00 re f
+0.75 w
+0.860 0.890 0.930 RG
+38.00 307.89 519.28 26.00 re S
+BT
+/F2 7.5 Tf
+0.100 0.350 0.600 rg
+46.00 323.89 Td
+(Step 1: Main Menu & Settings) Tj
+ET
+BT
+/F1 7 Tf
+0.250 0.300 0.350 rg
+46.00 314.89 Td
+(Show the hologram pedestal and 60 FPS menu. Navigate into Settings to show the dynamic [ ON ] / [ OFF ] sound/CRT toggles and explain that) Tj
+ET
+BT
+/F1 7 Tf
+0.250 0.300 0.350 rg
+46.00 305.89 Td
+(all settings persist across games.) Tj
+ET
+0.980 0.980 0.990 rg
+38.00 277.89 519.28 26.00 re f
+0.75 w
+0.860 0.890 0.930 RG
+38.00 277.89 519.28 26.00 re S
+BT
+/F2 7.5 Tf
+0.100 0.350 0.600 rg
+46.00 293.89 Td
+(Step 2: Level 1 & Physics Demo) Tj
+ET
+BT
+/F1 7 Tf
+0.250 0.300 0.350 rg
+46.00 284.89 Td
+(Click PLAY or LEVEL 1. Show the smooth variable jump \(light tap vs. high jump\), coin collection, and smooth camera tracking. Show that) Tj
+ET
+BT
+/F1 7 Tf
+0.250 0.300 0.350 rg
+46.00 275.89 Td
+(Dave never snags on wall seams.) Tj
+ET
+0.980 0.980 0.990 rg
+38.00 247.89 519.28 26.00 re f
+0.75 w
+0.860 0.890 0.930 RG
+38.00 247.89 519.28 26.00 re S
+BT
+/F2 7.5 Tf
+0.100 0.350 0.600 rg
+46.00 263.89 Td
+(Step 3: Combat \(Blaster & Stomp\)) Tj
+ET
+BT
+/F1 7 Tf
+0.250 0.300 0.350 rg
+46.00 254.89 Td
+(Press F to shoot a robot with the Plasma Blaster. Then jump on top of a patrolling guard to demonstrate the Stomp kill bounce \(+200 pts\).) Tj
+ET
+0.980 0.980 0.990 rg
+38.00 217.89 519.28 26.00 re f
+0.75 w
+0.860 0.890 0.930 RG
+38.00 217.89 519.28 26.00 re S
+BT
+/F2 7.5 Tf
+0.100 0.350 0.600 rg
+46.00 233.89 Td
+(Step 4: Checkpoints & Trophy Goal) Tj
+ET
+BT
+/F1 7 Tf
+0.250 0.300 0.350 rg
+46.00 224.89 Td
+(Walk into a green Checkpoint Beacon to show auto-saving. Grab the Golden Trophy \(HUD changes to [ACQUIRED]\) and enter the Exit Door to) Tj
+ET
+BT
+/F1 7 Tf
+0.250 0.300 0.350 rg
+46.00 215.89 Td
+(complete the level.) Tj
+ET
+0.980 0.980 0.990 rg
+38.00 187.89 519.28 26.00 re f
+0.75 w
+0.860 0.890 0.930 RG
+38.00 187.89 519.28 26.00 re S
+BT
+/F2 7.5 Tf
+0.100 0.350 0.600 rg
+46.00 203.89 Td
+(Step 5: Automated Test Execution) Tj
+ET
+BT
+/F1 7 Tf
+0.250 0.300 0.350 rg
+46.00 194.89 Td
+(Open the terminal and run "node scratch/run_all_tests.js" to show the examiner 16/16 test suites passing in under 2 seconds.) Tj
+ET
+BT
+/F2 11 Tf
+0.060 0.090 0.160 rg
+38.00 175.89 Td
+(4. Likely Teacher / Viva Questions & Exact Answers) Tj
+ET
+1.5 w
+0.220 0.741 0.973 RG
+38.00 172.89 m 557.28 172.89 l S
+0.970 0.980 0.990 rg
+38.00 93.89 254.64 68.00 re f
+1 w
+0.860 0.890 0.930 RG
+38.00 93.89 254.64 68.00 re S
+BT
+/F2 7.2 Tf
+0.100 0.250 0.450 rg
+44.00 151.89 Td
+(Q1: Why did you build this in Vanilla JS instead of using) Tj
+ET
+BT
+/F2 7.2 Tf
+0.100 0.250 0.450 rg
+44.00 142.89 Td
+(Phaser, Unity, or React?) Tj
+ET
+BT
+/F1 6.8 Tf
+0.150 0.350 0.200 rg
+44.00 131.89 Td
+(Answer: "Building in Vanilla JS demonstrates a deep understanding of) Tj
+ET
+BT
+/F1 6.8 Tf
+0.150 0.350 0.200 rg
+44.00 123.09 Td
+(core computer science fundamentals—game loops, vector math,) Tj
+ET
+BT
+/F1 6.8 Tf
+0.150 0.350 0.200 rg
+44.00 114.29 Td
+(collision physics, and audio synthesis—without relying on heavy) Tj
+ET
+BT
+/F1 6.8 Tf
+0.150 0.350 0.200 rg
+44.00 105.49 Td
+(black-box engine abstractions. It also results in near-instant load) Tj
+ET
+BT
+/F1 6.8 Tf
+0.150 0.350 0.200 rg
+44.00 96.69 Td
+(times \(<50ms\) and minimal memory footprint.") Tj
+ET
+0.970 0.980 0.990 rg
+302.64 93.89 254.64 68.00 re f
+1 w
+0.860 0.890 0.930 RG
+302.64 93.89 254.64 68.00 re S
+BT
+/F2 7.2 Tf
+0.100 0.250 0.450 rg
+308.64 151.89 Td
+(Q2: How does your collision detection work without tile) Tj
+ET
+BT
+/F2 7.2 Tf
+0.100 0.250 0.450 rg
+308.64 142.89 Td
+(clipping?) Tj
+ET
+BT
+/F1 6.8 Tf
+0.150 0.350 0.200 rg
+308.64 131.89 Td
+(Answer: "I use Axis-Separated Continuous AABB \(Axis-Aligned Bounding) Tj
+ET
+BT
+/F1 6.8 Tf
+0.150 0.350 0.200 rg
+308.64 123.09 Td
+(Box\) testing. In each frame, horizontal displacement \(dx\) is tested) Tj
+ET
+BT
+/F1 6.8 Tf
+0.150 0.350 0.200 rg
+308.64 114.29 Td
+(and clamped against solid map tiles first, followed by vertical) Tj
+ET
+BT
+/F1 6.8 Tf
+0.150 0.350 0.200 rg
+308.64 105.49 Td
+(displacement \(dy\). This guarantees Dave never snags on corners or) Tj
+ET
+BT
+/F1 6.8 Tf
+0.150 0.350 0.200 rg
+308.64 96.69 Td
+(falls through floors.") Tj
+ET
+0.75 w
+0.850 0.880 0.920 RG
+38.00 26.00 m 557.28 26.00 l S
+BT
+/F1 7.5 Tf
+0.550 0.600 0.700 rg
+38.00 16.00 Td
+(Student Project Presentation Script & Technical Q&A Guide) Tj
+ET
+BT
+/F2 7.5 Tf
+0.350 0.400 0.500 rg
+514.38 16.00 Td
+(Page 1 of 2) Tj
+ET
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Contents 7 0 R /Resources << /Font << /F1 2 0 R /F2 3 0 R /F3 4 0 R /F4 5 0 R /F5 6 0 R >> >> >>
+endobj
+9 0 obj
+<< /Length 3708 >>
+stream
+0.970 0.980 0.990 rg
+38.00 735.89 254.64 68.00 re f
+1 w
+0.860 0.890 0.930 RG
+38.00 735.89 254.64 68.00 re S
+BT
+/F2 7.2 Tf
+0.100 0.250 0.450 rg
+44.00 793.89 Td
+(Q3: How does your audio work without importing MP3/WAV files?) Tj
+ET
+BT
+/F1 6.8 Tf
+0.150 0.350 0.200 rg
+44.00 773.89 Td
+(Answer: "I utilize the Web Audio API AudioContext. When an event) Tj
+ET
+BT
+/F1 6.8 Tf
+0.150 0.350 0.200 rg
+44.00 765.09 Td
+(fires \(e.g. blaster shot\), the engine instantiates an) Tj
+ET
+BT
+/F1 6.8 Tf
+0.150 0.350 0.200 rg
+44.00 756.29 Td
+(OscillatorNode, sets its frequency curve \(880Hz to 110Hz\), routes it) Tj
+ET
+BT
+/F1 6.8 Tf
+0.150 0.350 0.200 rg
+44.00 747.49 Td
+(through a GainNode envelope, and plays the procedural chiptune wave) Tj
+ET
+BT
+/F1 6.8 Tf
+0.150 0.350 0.200 rg
+44.00 738.69 Td
+(with zero network latency.") Tj
+ET
+0.970 0.980 0.990 rg
+302.64 735.89 254.64 68.00 re f
+1 w
+0.860 0.890 0.930 RG
+302.64 735.89 254.64 68.00 re S
+BT
+/F2 7.2 Tf
+0.100 0.250 0.450 rg
+308.64 793.89 Td
+(Q4: What is delta-time \(dt\) and why is it important in your game) Tj
+ET
+BT
+/F2 7.2 Tf
+0.100 0.250 0.450 rg
+308.64 784.89 Td
+(loop?) Tj
+ET
+BT
+/F1 6.8 Tf
+0.150 0.350 0.200 rg
+308.64 773.89 Td
+(Answer: "Delta-time is the exact elapsed time between consecutive) Tj
+ET
+BT
+/F1 6.8 Tf
+0.150 0.350 0.200 rg
+308.64 765.09 Td
+(animation frames. Multiplying velocity by dt ensures that Dave and) Tj
+ET
+BT
+/F1 6.8 Tf
+0.150 0.350 0.200 rg
+308.64 756.29 Td
+(enemies move at the exact same physical speed regardless of whether) Tj
+ET
+BT
+/F1 6.8 Tf
+0.150 0.350 0.200 rg
+308.64 747.49 Td
+(the user is playing on a 60Hz, 120Hz, or 144Hz display.") Tj
+ET
+0.970 0.980 0.990 rg
+38.00 661.89 254.64 68.00 re f
+1 w
+0.860 0.890 0.930 RG
+38.00 661.89 254.64 68.00 re S
+BT
+/F2 7.2 Tf
+0.100 0.250 0.450 rg
+44.00 719.89 Td
+(Q5: How did you solve the text readability and layout bugs in) Tj
+ET
+BT
+/F2 7.2 Tf
+0.100 0.250 0.450 rg
+44.00 710.89 Td
+(retro canvas?) Tj
+ET
+BT
+/F1 6.8 Tf
+0.150 0.350 0.200 rg
+44.00 699.89 Td
+(Answer: "Retro canvas bitmap fonts blur when scaled down below 6px.) Tj
+ET
+BT
+/F1 6.8 Tf
+0.150 0.350 0.200 rg
+44.00 691.09 Td
+(I engineered a Dual-Layer Typography System: retro fonts \(Press) Tj
+ET
+BT
+/F1 6.8 Tf
+0.150 0.350 0.200 rg
+44.00 682.29 Td
+(Start 2P\) are preserved for arcade titles, while body text and) Tj
+ET
+BT
+/F1 6.8 Tf
+0.150 0.350 0.200 rg
+44.00 673.49 Td
+(instructions use clean, high-contrast typography \(Outfit 8.5px bold\)) Tj
+ET
+BT
+/F1 6.8 Tf
+0.150 0.350 0.200 rg
+44.00 664.69 Td
+(with bounded coordinate clipping.") Tj
+ET
+0.970 0.980 0.990 rg
+302.64 661.89 254.64 68.00 re f
+1 w
+0.860 0.890 0.930 RG
+302.64 661.89 254.64 68.00 re S
+BT
+/F2 7.2 Tf
+0.100 0.250 0.450 rg
+308.64 719.89 Td
+(Q6: How do you verify that changes don't break existing levels) Tj
+ET
+BT
+/F2 7.2 Tf
+0.100 0.250 0.450 rg
+308.64 710.89 Td
+(or physics?) Tj
+ET
+BT
+/F1 6.8 Tf
+0.150 0.350 0.200 rg
+308.64 699.89 Td
+(Answer: "I created 16 automated headless test suites that simulate) Tj
+ET
+BT
+/F1 6.8 Tf
+0.150 0.350 0.200 rg
+308.64 691.09 Td
+(user inputs, physics ticks, and mock canvas draw commands. Running) Tj
+ET
+BT
+/F1 6.8 Tf
+0.150 0.350 0.200 rg
+308.64 682.29 Td
+(`node scratch/run_all_tests.js` executes and validates all 16 test) Tj
+ET
+BT
+/F1 6.8 Tf
+0.150 0.350 0.200 rg
+308.64 673.49 Td
+(suites in seconds.") Tj
+ET
+0.75 w
+0.850 0.880 0.920 RG
+38.00 817.89 m 557.28 817.89 l S
+BT
+/F1 7.5 Tf
+0.550 0.600 0.700 rg
+38.00 823.89 Td
+(Dangerous Adventure - Student Project Presentation & Viva Guide) Tj
+ET
+0.75 w
+0.850 0.880 0.920 RG
+38.00 26.00 m 557.28 26.00 l S
+BT
+/F1 7.5 Tf
+0.550 0.600 0.700 rg
+38.00 16.00 Td
+(Student Project Presentation Script & Technical Q&A Guide) Tj
+ET
+BT
+/F2 7.5 Tf
+0.350 0.400 0.500 rg
+514.38 16.00 Td
+(Page 2 of 2) Tj
+ET
+endstream
+endobj
+10 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Contents 9 0 R /Resources << /Font << /F1 2 0 R /F2 3 0 R /F3 4 0 R /F4 5 0 R /F5 6 0 R >> >> >>
+endobj
+xref
+0 11
+0000000000 65535 f 
+0000000019 00000 n 
+0000000068 00000 n 
+0000000132 00000 n 
+0000000234 00000 n 
+0000000339 00000 n 
+0000000434 00000 n 
+0000000534 00000 n 
+0000010880 00000 n 
+0000011052 00000 n 
+0000014812 00000 n 
+trailer
+<< /Size 11 /Root 1 0 R >>
+startxref
+14985
+%%EOF

@@ -1,100 +1,89 @@
-# 2D Retro Platformer Game: DANGEROUS ADVENTURE
+# 🎮 DANGEROUS ADVENTURE — 2D Retro Platformer Engine
 
-An authentic 2D retro platformer engine built with **HTML5 Canvas, Vanilla JavaScript (ES6 modules), and CSS3**. Inspired by classic DOS platformers such as *Dangerous Dave*, featuring original pixel art graphics, axis-separated AABB physics, tile-based level collision, smooth horizontal camera side-scrolling, hazards, rich collectibles & scoring with visual floating popups, intelligent retro enemies with stomp mechanics, responsive shooting blaster mechanics, complete retro UI system with dual Keyboard + Mouse support, multi-level campaign progression, and retro arcade presentation.
+[![GitHub Pages](https://img.shields.io/badge/Live_Demo-GitHub_Pages-brightgreen?style=for-the-badge&logo=github)](https://shreyass0709.github.io/dave_game/)
+[![JavaScript](https://img.shields.io/badge/JavaScript-ES6_Modules-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![HTML5 Canvas](https://img.shields.io/badge/HTML5-Canvas_2D-E34F26?style=for-the-badge&logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API)
+[![Web Audio API](https://img.shields.io/badge/Web_Audio_API-Procedural_Synth-38BDF8?style=for-the-badge)](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
+[![Tests](https://img.shields.io/badge/Tests-16%2F16_Passed-22C55E?style=for-the-badge)](scratch/run_all_tests.js)
 
----
+> 🕹️ **Play Live on GitHub Pages:** [https://shreyass0709.github.io/dave_game/](https://shreyass0709.github.io/dave_game/)
 
-## 🖥️ Complete Retro UI System ([src/ui.js](file:///c:/Users/shrey/OneDrive/Desktop/dave_game/src/ui.js))
-
-### 1. Main Menu
-* **Title**: `DANGEROUS ADVENTURE` with golden pixel drop shadow and glow
-* **Subtitle**: `~ A Retro Platformer ~`
-* **Buttons**:
-  * `PLAY` -> Starts the campaign at Level 1 with 3 lives.
-  * `INSTRUCTIONS` -> Opens the full controls and objective manual.
-  * `SETTINGS` -> Opens audio/SFX and CRT scanline toggles.
-  * `QUIT` -> Displays a retro farewell screen with return button.
-
-### 2. Screen-Space Retro HUD
-* **Top-Left**: ❤️ `Health / Lives` (`❤ ❤ ❤  x3`)
-* **Top-Center**: ⭐ `Score` (`⭐ SCORE: 00500  [LVL 01]`)
-* **Top-Right**: 💎 `Collectibles` (`🏆 TROPHY: [YES/NO]`)
-* **Bottom Banner**: Temporary objective toast hints (`"FIND THE GOLDEN TROPHY TO OPEN EXIT!"`)
-
-### 3. Pause Menu (Key: `P` or `ESC`)
-* `RESUME` -> Smoothly unpauses gameplay.
-* `RESTART LEVEL` -> Reloads the current level from initial spawn.
-* `MAIN MENU` -> Saves state and returns to Title Screen.
-
-### 4. Game Over Screen
-* Displays `*** GAME OVER ***` with final accumulated score.
-* `RESTART` -> Restarts campaign from Level 1 with fresh lives.
-* `MAIN MENU` -> Returns to Title Screen.
-
-### 5. Level Complete Screen
-* Displays `*** LEVEL <N> COMPLETE! ***` with stage score and `+500` bonus.
-* `NEXT LEVEL` -> Advances to next stage.
-* `MAIN MENU` -> Returns to Title Screen.
-
-### 6. Final Victory Screen
-* Displays `*** YOU WIN! ***` with `ALL 3 LEVELS CONQUERED!` and `+2000` Grand Victory Bonus.
-* `PLAY AGAIN` -> Restarts campaign from Level 1.
-* `MAIN MENU` -> Returns to Title Screen.
-
-### 7. Instructions Screen
-* Complete key bindings guide and objective breakdown.
-* `BACK` -> Returns to Title Screen.
-
-### 8. Settings Screen
-* Interactive toggles for `SOUND FX`, `MUSIC`, and `CRT SCANLINES`.
-* `BACK` -> Returns to Title Screen.
+An authentic 60 FPS 2D retro platformer engine built in pure **Vanilla JavaScript, HTML5 Canvas 2D, and Web Audio API** with **zero external dependencies**. Inspired by John Romero’s classic 1988 MS-DOS game *Dangerous Dave*, modernized with sub-pixel physics, variable jump heights, dual-mode combat, procedural 8-bit sound synthesis, and multi-level progression.
 
 ---
 
-## 🎮 Multi-Level Progression System
+## 📄 Project Documentation & Reports
 
-1. **Level 1: The Training Vault (Easy)**:
-   * **Size**: 68 cols × 15 rows.
-   * Basic platforming, ground coins, 2 fire pits, 1 spike pit, secret high ledge, 3 Cyber-Crawler enemy patrols.
-   * **Goal**: Collect Golden Trophy (Col 51) and reach Exit Door (Col 64).
-
-2. **Level 2: The Cyber Factory (Medium)**:
-   * **Size**: 76 cols × 15 rows.
-   * Suspended industrial steel girders, stepped conveyors over fire/spikes, high tower, 4 enemy patrols.
-   * **Goal**: Ascend crane altar for Golden Trophy (Col 56) and reach Exit Gate (Col 72).
-
-3. **Level 3: The Dave Fortress (Hard / Climax)**:
-   * **Size**: 86 cols × 15 rows.
-   * Deep lava chasms, ascending castle spires, multi-tiered platforms, 6 enemy patrols.
-   * **Goal**: Claim the Grand Trophy (Col 61) and reach Master Exit Portal (Col 82) to achieve **GRAND VICTORY**.
+- 📑 **[Teacher Presentation & Viva Defense Guide (PDF)](Dangerous_Adventure_Teacher_Presentation_Guide.pdf)** — Presentation script, live demo walkthrough, and technical viva Q&A.
+- 📄 **[Comprehensive Technical & Architectural Report (PDF)](Dangerous_Adventure_Game_Report.pdf)** — Detailed engineering specification, comparison matrix, and subsystem deep dive.
 
 ---
 
-## 🕹️ Controls Legend
+## 🌟 Key Features
+
+1. **60 FPS Delta-Time (`dt`) Physics Engine**:
+   - Axis-separated continuous **AABB (Axis-Aligned Bounding Box)** collision solver.
+   - **Variable Jump Heights**: Tap for small hop, hold for maximum jump height.
+   - **Coyote Time** (ledge jump forgiveness) & **Jump Buffering** for responsive controls.
+
+2. **Dual Combat & Intelligent Enemy AI**:
+   - **Plasma Blaster (`F`)**: High-velocity energy bolts with muzzle flash and screen culling.
+   - **Enemy Stomp (+200 pts)**: Defeat patrolling robotic guards from above with an upward bounce.
+   - **Patrol AI**: Ledge drop-off detection, wall reversal, and animated walk cycles.
+
+3. **Procedural Web Audio API Synthesizer**:
+   - Real-time 8-bit chiptune sound waves constructed on-the-fly using `OscillatorNode`, `GainNode`, and frequency sweeps (0ms asset load latency).
+
+4. **Multi-Level Campaign & Checkpoints**:
+   - **Level 1**: *The Lost Vault* (Platforming basics, fire hazards, high trophy ledge).
+   - **Level 2**: *The Cyber Factory* (Suspended girders, stepped conveyors, enemy drones).
+   - **Level 3**: *The Dave Fortress* (Lava chasms, ascending spires, climax fortress).
+   - **Interactive Checkpoint Beacons**: Auto-saves midway spawn points.
+
+5. **Modern Glassmorphic Indie UI**:
+   - Dual-Layer Typography (`Press Start 2P` arcade headers + `Outfit` 8.5px high-contrast body).
+   - Interactive hoverable **🎮 CONTROLS** popover & **⛶ FULLSCREEN** mode.
+   - Dynamic Settings toggles for Sound FX, BGM, and CRT scanlines.
+
+---
+
+## 🕹️ Controls
 
 | Action | Primary Key | Secondary Key / Mouse |
 | :--- | :--- | :--- |
 | **Move Left** | `A` | `Left Arrow` (◀) |
 | **Move Right** | `D` | `Right Arrow` (▶) |
 | **Jump / Stomp** | `W` | `Up Arrow` (▲) / `Space` |
-| **Shoot Blaster** | `F` | - |
+| **Plasma Blaster** | `F` | - |
 | **Pause / Resume** | `P` | `ESC` |
-| **Menu Navigation** | `▲` / `▼` (`W` / `S`) | Mouse Hover |
+| **Menu Navigate** | `▲` / `▼` (`W` / `S`) | Mouse Hover |
 | **Menu Select** | `Enter` / `Space` | Mouse Left Click |
-| **Test Death State** | `K` | - |
 | **Toggle Telemetry** | `B` | - |
 
 ---
 
-## 🚀 How to Run the Game
+## 🚀 How to Run Locally
 
-1. Start local server in the project directory:
-   ```powershell
-   python -m http.server 8000
-   ```
-2. Open your browser to:
-   ```
-   http://localhost:8000
-   ```
+```bash
+# Clone the repository
+git clone https://github.com/shreyass0709/dave_game.git
+cd dave_game
+
+# Run using any local static server:
+npx serve .
+# Or using Python:
+python -m http.server 3000
+```
+Open your browser at `http://localhost:3000`.
+
+---
+
+## 🧪 Automated Testing
+
+Execute the 16 automated test suites covering physics, shooting, enemy AI, collectibles, and UI states:
+```bash
+node scratch/run_all_tests.js
+```
+Result: **16/16 Test Suites Passed (100%)**.
 
 
