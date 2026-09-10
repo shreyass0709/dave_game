@@ -5,7 +5,7 @@
  * reusable UIPanel / modal card containers, motion easing utilities, and screen state renders.
  */
 
-import { LEVEL_METADATA } from './map.js';
+import { LEVEL_METADATA } from './map.js?v=10.1';
 
 // =============================================================================
 // 1. DESIGN TOKENS & PALETTE

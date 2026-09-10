@@ -6,14 +6,14 @@
  * and dual Keyboard + Mouse navigation.
  */
 
-import { GameMap, TILE_SIZE } from './map.js';
+import { GameMap, TILE_SIZE } from './map.js?v=10.1';
 import { Player, PlayerState, Direction } from './player.js';
 import { PhysicsEngine } from './physics.js';
 import { InputHandler } from './input.js';
 import { Camera } from './camera.js';
 import { Enemy } from './enemy.js';
 import { EffectManager } from './effects.js';
-import { UIManager, UIButton } from './ui.js';
+import { UIManager, UIButton } from './ui.js?v=10.1';
 import { SoundSystem } from './audio.js';
 
 export const GameState = {
