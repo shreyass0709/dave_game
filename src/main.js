@@ -59,7 +59,7 @@ export class Game {
     this.score = 0;
     this.levelStartScore = 0;
     this.currentLevel = 1;
-    this.maxLevels = 3;
+    this.maxLevels = 10;
     this.lives = 3;
     this.activeCheckpoint = null;
     this.gameState = GameState.MAIN_MENU;
@@ -67,7 +67,7 @@ export class Game {
     this.selectedLevelIndex = 0;
     this.unlockedLevels = 1;
     this.completedLevels = new Set();
-    this.highScores = { 1: 0, 2: 0, 3: 0 };
+    this.highScores = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0 };
     this.previousState = GameState.MAIN_MENU;
     this.messageBanner = "";
     this.messageTimer = 0;
@@ -152,23 +152,42 @@ export class Game {
   }
 
   /**
-   * Handles dedicated Level Selection screen navigation (Keyboard & Mouse)
+   * Handles dedicated Level Selection screen navigation (Keyboard & Mouse for 10 missions)
    */
   handleLevelSelectNavigation() {
     if (!this.input) return;
 
     const isLeft = this.input.wasMenuLeft ? this.input.wasMenuLeft() : false;
     const isRight = this.input.wasMenuRight ? this.input.wasMenuRight() : false;
+    const isUp = this.input.wasMenuUp ? this.input.wasMenuUp() : false;
+    const isDown = this.input.wasMenuDown ? this.input.wasMenuDown() : false;
     const isSelect = this.input.wasMenuSelect ? this.input.wasMenuSelect() : false;
     const isBack = this.input.wasMenuBack ? this.input.wasMenuBack() : (this.input.wasPauseJustPressed ? this.input.wasPauseJustPressed() : false);
     const isClick = this.input.wasMouseClicked ? this.input.wasMouseClicked() : false;
     const mousePos = this.input.getMousePos ? this.input.getMousePos() : { x: -1, y: -1 };
 
-    // 1. Keyboard Horizontal Selection
+    // 1. Keyboard Navigation
     if (isLeft) {
-      this.selectedLevelIndex = (this.selectedLevelIndex - 1 + 3) % 3;
+      if (this.selectedLevelIndex === 10) {
+        this.selectedLevelIndex = 9;
+      } else {
+        this.selectedLevelIndex = (this.selectedLevelIndex - 1 + 10) % 10;
+      }
     } else if (isRight) {
-      this.selectedLevelIndex = (this.selectedLevelIndex + 1) % 3;
+      if (this.selectedLevelIndex === 10) {
+        this.selectedLevelIndex = 0;
+      } else {
+        this.selectedLevelIndex = (this.selectedLevelIndex + 1) % 10;
+      }
+    } else if (isDown) {
+      if (this.selectedLevelIndex < 10) {
+        this.lastSelectedCardIndex = this.selectedLevelIndex;
+        this.selectedLevelIndex = 10; // Focus Back Button
+      }
+    } else if (isUp) {
+      if (this.selectedLevelIndex === 10) {
+        this.selectedLevelIndex = this.lastSelectedCardIndex !== undefined ? this.lastSelectedCardIndex : 0;
+      }
     }
 
     // 2. Keyboard Back
@@ -177,50 +196,78 @@ export class Game {
       return;
     }
 
-    // 3. Mouse Hover over Cards
-    const cardRects = [
-      { x: 22, y: 44, w: 110, h: 142 },
-      { x: 145, y: 44, w: 110, h: 142 },
-      { x: 268, y: 44, w: 110, h: 142 }
-    ];
+    let wantsLaunch = isSelect;
 
-    for (let i = 0; i < cardRects.length; i++) {
-      const c = cardRects[i];
-      if (mousePos.x >= c.x && mousePos.x <= c.x + c.w && mousePos.y >= c.y && mousePos.y <= c.y + c.h) {
+    // 3. Mouse Interaction: Top Mission Track (10 Chips: 01 to 10)
+    // Centered: 10 chips of 32px with 4px gap = 356px total, startX = 22, startY = 38, h = 15
+    const trackStartX = 22;
+    const trackStartY = 38;
+    const chipW = 32;
+    const chipH = 15;
+    const chipGap = 4;
+
+    for (let i = 0; i < 10; i++) {
+      const cx = trackStartX + i * (chipW + chipGap);
+      if (mousePos.x >= cx && mousePos.x <= cx + chipW && mousePos.y >= trackStartY && mousePos.y <= trackStartY + chipH) {
         this.selectedLevelIndex = i;
+        if (isClick) {
+          wantsLaunch = true;
+        }
         break;
       }
     }
 
-    // 4. Back Button Hover & Click
-    const backBtn = this.menuButtons[GameState.LEVEL_SELECT][0];
-    if (backBtn.contains(mousePos.x, mousePos.y)) {
-      this.selectedLevelIndex = 3;
+    // 4. Mouse Interaction: 3-Card Carousel Window
+    const windowStart = Math.min(Math.max(0, this.selectedLevelIndex - 1), 7);
+    const cardSlots = [
+      { x: 18, y: 56, w: 114, h: 136 },
+      { x: 143, y: 56, w: 114, h: 136 },
+      { x: 268, y: 56, w: 114, h: 136 }
+    ];
+
+    for (let k = 0; k < 3; k++) {
+      const c = cardSlots[k];
+      if (mousePos.x >= c.x && mousePos.x <= c.x + c.w && mousePos.y >= c.y && mousePos.y <= c.y + c.h) {
+        const targetIdx = windowStart + k;
+        this.selectedLevelIndex = targetIdx;
+        if (isClick) {
+          wantsLaunch = true;
+        }
+        break;
+      }
+    }
+
+    // 5. Mouse Interaction: Carousel Left / Right Arrow Buttons
+    // Left Arrow: x: 2, y: 110, w: 14, h: 28
+    if (windowStart > 0 && mousePos.x >= 2 && mousePos.x <= 16 && mousePos.y >= 110 && mousePos.y <= 138) {
+      if (isClick) {
+        this.selectedLevelIndex = Math.max(0, this.selectedLevelIndex - 1);
+      }
+    }
+    // Right Arrow: x: 384, y: 110, w: 14, h: 28
+    if (windowStart < 7 && mousePos.x >= 384 && mousePos.x <= 398 && mousePos.y >= 110 && mousePos.y <= 138) {
+      if (isClick) {
+        this.selectedLevelIndex = Math.min(9, this.selectedLevelIndex + 1);
+      }
+    }
+
+    // 6. Back Button Hover & Click
+    const backBtn = (this.menuButtons[GameState.LEVEL_SELECT] || [])[0];
+    if (backBtn && backBtn.contains(mousePos.x, mousePos.y)) {
+      this.selectedLevelIndex = 10;
       if (isClick) {
         this.executeButtonAction('back_main');
         return;
       }
     }
 
-    if (this.selectedLevelIndex === 3 && isSelect) {
+    if (this.selectedLevelIndex === 10 && isSelect) {
       this.executeButtonAction('back_main');
       return;
     }
 
-    // 5. Card Click or Enter Launch
-    let wantsLaunch = isSelect;
-    if (isClick) {
-      for (let i = 0; i < cardRects.length; i++) {
-        const c = cardRects[i];
-        if (mousePos.x >= c.x && mousePos.x <= c.x + c.w && mousePos.y >= c.y && mousePos.y <= c.y + c.h) {
-          this.selectedLevelIndex = i;
-          wantsLaunch = true;
-          break;
-        }
-      }
-    }
-
-    if (wantsLaunch && this.selectedLevelIndex < 3) {
+    // 7. Mission Launch Execution
+    if (wantsLaunch && this.selectedLevelIndex < 10) {
       const targetLevel = this.selectedLevelIndex + 1;
       if (targetLevel <= this.unlockedLevels) {
         this.loadLevel(targetLevel);

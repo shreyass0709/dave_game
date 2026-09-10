@@ -34,11 +34,18 @@ An authentic 60 FPS 2D retro platformer engine built in pure **Vanilla JavaScrip
 3. **Procedural Web Audio API Synthesizer**:
    - Real-time 8-bit chiptune sound waves constructed on-the-fly using `OscillatorNode`, `GainNode`, and frequency sweeps (0ms asset load latency).
 
-4. **Multi-Level Campaign & Checkpoints**:
+4. **Multi-Level Campaign (10 Progressive Missions) & Checkpoints**:
    - **Level 1**: *The Lost Vault* (Platforming basics, fire hazards, high trophy ledge).
    - **Level 2**: *The Cyber Factory* (Suspended girders, stepped conveyors, enemy drones).
-   - **Level 3**: *The Dave Fortress* (Lava chasms, ascending spires, climax fortress).
-   - **Interactive Checkpoint Beacons**: Auto-saves midway spawn points.
+   - **Level 3**: *The Dave Fortress* (Lava chasms, ascending spires, fortress ramparts).
+   - **Level 4**: *Toxic Sewers* (Acid drainage channels, rusty grates, chemical sludge).
+   - **Level 5**: *Crystal Caverns* (Luminous geode pillars, sparkling stalactites, spike chasms).
+   - **Level 6**: *Magma Core* (Basalt stepping pillars, roaring lava lakes, thermal vents).
+   - **Level 7**: *Neo Skyway* (Floating high-altitude girders, vertigo drops, skyscraper spires).
+   - **Level 8**: *Shadow Citadel* (Midnight laser grids, covert surveillance, obsidian bastions).
+   - **Level 9**: *Quantum Reactor* (High-voltage plasma conduits, accelerator rings).
+   - **Level 10**: *The Emperor's Sanctum* (Grand imperial citadel, royal throne dais, Grand Golden Trophy).
+   - **Interactive Checkpoint Beacons**: Auto-saves midway spawn points on every level.
 
 5. **Modern Glassmorphic Indie UI**:
    - Dual-Layer Typography (`Press Start 2P` arcade headers + `Outfit` 8.5px high-contrast body).

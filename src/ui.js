@@ -5,6 +5,8 @@
  * reusable UIPanel / modal card containers, motion easing utilities, and screen state renders.
  */
 
+import { LEVEL_METADATA } from './map.js';
+
 // =============================================================================
 // 1. DESIGN TOKENS & PALETTE
 // =============================================================================
@@ -902,7 +904,7 @@ export class UIManager {
   }
 
   /**
-   * Screen 1.5: Dedicated Modern Level Selection Screen with Interactive Mission Cards
+   * Screen 1.5: Dedicated Modern Level Selection Screen with Interactive Mission Cards (10 Levels)
    */
   renderLevelSelect(ctx, width, height, selectedLevelIndex, backButton, {
     unlockedLevels = 1,
@@ -910,8 +912,8 @@ export class UIManager {
     highScores = {}
   } = {}) {
     // 1. Atmosphere Shift Background based on selected level
-    const themeHues = ['#0c2338', '#1c1038', '#330e18'];
-    const activeHue = themeHues[selectedLevelIndex] || '#0f172a';
+    const currentMeta = (selectedLevelIndex < 10 && LEVEL_METADATA[selectedLevelIndex + 1]) || LEVEL_METADATA[1];
+    const activeHue = currentMeta.bgHue || '#0c2338';
 
     const bgGradient = ctx.createRadialGradient(
       width * 0.5, height * 0.4, 10,
@@ -967,16 +969,16 @@ export class UIManager {
     ctx.fillRect(8, height - 10, 6, 2); ctx.fillRect(8, height - 14, 2, 6);
     ctx.fillRect(width - 14, height - 10, 6, 2); ctx.fillRect(width - 10, height - 14, 2, 6);
 
-    // 5. Header: "SELECT MISSION" & "CHOOSE YOUR NEXT ADVENTURE"
+    // 5. Header: "SELECT MISSION"
     const headerEnter = Math.min(1, this.levelSelectTimer / 0.45);
     const headerEase = UIAnimation.easeOutBack(headerEnter, 1.1);
-    const headerY = UIAnimation.lerp(12, 22, headerEase);
+    const headerY = UIAnimation.lerp(8, 14, headerEase);
     const headerAlpha = UIAnimation.easeOutQuad(headerEnter);
 
     ctx.save();
     ctx.globalAlpha = headerAlpha;
     UITypography.drawText(ctx, 'SELECT MISSION', width / 2, headerY, {
-      size: '11px',
+      size: '10px',
       color: UITokens.gold,
       align: 'center',
       shadow: true,
@@ -984,92 +986,114 @@ export class UIManager {
       glowColor: UITokens.goldGlow
     });
 
-    UITypography.drawText(ctx, 'CHOOSE YOUR NEXT ADVENTURE', width / 2, headerY + 14, {
-      size: '7px',
-      color: UITokens.primary,
-      align: 'center',
-      shadow: false
-    });
+    // 6. Top 10-Mission Status Track
+    const trackStartX = 22;
+    const trackStartY = 36;
+    const chipW = 32;
+    const chipH = 15;
+    const chipGap = 4;
 
-    // Header divider line
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(width / 2 - 120, headerY + 21);
-    ctx.lineTo(width / 2 - 12, headerY + 21);
-    ctx.moveTo(width / 2 + 12, headerY + 21);
-    ctx.lineTo(width / 2 + 120, headerY + 21);
-    ctx.stroke();
+    for (let i = 0; i < 10; i++) {
+      const lvl = i + 1;
+      const isSelected = (i === selectedLevelIndex);
+      const isUnlocked = lvl <= unlockedLevels;
+      const isCompleted = completedLevels && (completedLevels.has ? completedLevels.has(lvl) : (completedLevels.includes && completedLevels.includes(lvl)));
+      const cx = trackStartX + i * (chipW + chipGap);
 
-    ctx.fillStyle = UITokens.gold;
-    ctx.font = '6px "Press Start 2P", monospace';
-    ctx.fillText('✦', width / 2, headerY + 21);
+      // Chip surface
+      if (isSelected) {
+        ctx.fillStyle = 'rgba(250, 204, 21, 0.28)';
+      } else if (isCompleted) {
+        ctx.fillStyle = 'rgba(34, 197, 94, 0.18)';
+      } else if (isUnlocked) {
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.1)';
+      } else {
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.6)';
+      }
+      ctx.fillRect(cx, trackStartY, chipW, chipH);
+
+      // Chip border
+      if (isSelected) {
+        ctx.strokeStyle = UITokens.gold;
+        ctx.lineWidth = 1.5;
+        ctx.shadowColor = UITokens.goldGlow;
+        ctx.shadowBlur = 6;
+      } else if (isCompleted) {
+        ctx.strokeStyle = '#22c55e';
+        ctx.lineWidth = 1;
+        ctx.shadowBlur = 0;
+      } else if (isUnlocked) {
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+        ctx.lineWidth = 1;
+        ctx.shadowBlur = 0;
+      } else {
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 1;
+        ctx.shadowBlur = 0;
+      }
+      ctx.strokeRect(cx, trackStartY, chipW, chipH);
+      ctx.shadowBlur = 0;
+
+      // Chip text
+      ctx.font = '5px "Press Start 2P", monospace';
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'center';
+
+      if (isCompleted) {
+        ctx.fillStyle = '#4ade80';
+        ctx.fillText(`${String(lvl).padStart(2, '0')}✓`, cx + chipW / 2, trackStartY + chipH / 2 + 1);
+      } else if (isSelected) {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(`✦${String(lvl).padStart(2, '0')}`, cx + chipW / 2, trackStartY + chipH / 2 + 1);
+      } else if (isUnlocked) {
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillText(String(lvl).padStart(2, '0'), cx + chipW / 2, trackStartY + chipH / 2 + 1);
+      } else {
+        ctx.fillStyle = '#64748b';
+        ctx.fillText(`🔒${String(lvl).padStart(2, '0')}`, cx + chipW / 2, trackStartY + chipH / 2 + 1);
+      }
+    }
     ctx.restore();
 
-    // 6. Level Cards Configuration
-    const levelCards = [
-      {
-        level: 1,
-        num: '01',
-        title: 'TRAINING VAULT',
-        themeColor: UITokens.primary,
-        glowColor: UITokens.primaryGlow,
-        stars: '★☆☆☆☆',
-        starsColor: '#38bdf8',
-        desc: 'Master platforming, gather diamonds & collect the Golden Trophy.',
-        x: 18,
-        y: 48,
-        w: 114,
-        h: 142
-      },
-      {
-        level: 2,
-        num: '02',
-        title: 'CYBER FACTORY',
-        themeColor: UITokens.secondary,
-        glowColor: UITokens.secondaryGlow,
-        stars: '★★★☆☆',
-        starsColor: '#a855f7',
-        desc: 'Traverse moving girders, toxic pipes & patrolling slime guards.',
-        x: 143,
-        y: 48,
-        w: 114,
-        h: 142
-      },
-      {
-        level: 3,
-        num: '03',
-        title: 'DAVE FORTRESS',
-        themeColor: UITokens.danger,
-        glowColor: UITokens.dangerGlow,
-        stars: '★★★★★',
-        starsColor: '#ef4444',
-        desc: 'Ascend fortress spires over deep molten lava to final victory.',
-        x: 268,
-        y: 48,
-        w: 114,
-        h: 142
-      }
+    // 7. 3-Card Sliding Carousel Configuration
+    const windowStart = Math.min(Math.max(0, selectedLevelIndex - 1), 7);
+    const cardSlots = [
+      { x: 18, y: 56, w: 114, h: 136 },
+      { x: 143, y: 56, w: 114, h: 136 },
+      { x: 268, y: 56, w: 114, h: 136 }
     ];
 
-    // Render 3 Level Cards
-    for (let i = 0; i < levelCards.length; i++) {
-      const card = levelCards[i];
-      const isSelected = (i === selectedLevelIndex);
-      const isUnlocked = card.level <= unlockedLevels;
-      const isCompleted = completedLevels && (completedLevels.has ? completedLevels.has(card.level) : (completedLevels.includes && completedLevels.includes(card.level)));
-      const bestScore = (highScores && highScores[card.level]) || 0;
+    // Render 3 Visible Cards
+    for (let k = 0; k < 3; k++) {
+      const lvlIdx = windowStart + k;
+      const lvl = lvlIdx + 1;
+      const cardMeta = LEVEL_METADATA[lvl] || LEVEL_METADATA[1];
+      const slot = cardSlots[k];
+      const isSelected = (lvlIdx === selectedLevelIndex);
+      const isUnlocked = lvl <= unlockedLevels;
+      const isCompleted = completedLevels && (completedLevels.has ? completedLevels.has(lvl) : (completedLevels.includes && completedLevels.includes(lvl)));
+      const bestScore = (highScores && highScores[lvl]) || 0;
 
       // Staggered Entrance Animation
-      const cardDelay = 0.08 + i * 0.08;
+      const cardDelay = 0.05 + k * 0.06;
       const cardProgress = Math.min(1, Math.max(0, (this.levelSelectTimer - cardDelay) / 0.35));
       const cardEase = UIAnimation.easeOutBack(cardProgress, 1.05);
-      const slideOffsetY = (1 - cardEase) * 25;
+      const slideOffsetY = (1 - cardEase) * 20;
       const cardAlpha = UIAnimation.easeOutQuad(cardProgress);
 
       this.renderLevelCard(ctx, {
-        ...card,
-        y: card.y + slideOffsetY,
+        level: lvl,
+        num: cardMeta.num,
+        title: cardMeta.title,
+        themeColor: cardMeta.themeColor,
+        glowColor: cardMeta.glowColor,
+        stars: cardMeta.stars,
+        starsColor: cardMeta.starsColor,
+        desc: cardMeta.desc,
+        x: slot.x,
+        y: slot.y + slideOffsetY,
+        w: slot.w,
+        h: slot.h,
         isSelected,
         isUnlocked,
         isCompleted,
@@ -1079,15 +1103,51 @@ export class UIManager {
       });
     }
 
-    // 7. Back Button & Controls Legend
-    if (backButton) {
-      backButton.update(0.016, selectedLevelIndex === 3);
-      backButton.render(ctx, selectedLevelIndex === 3, false);
+    // 8. Carousel Edge Arrow Indicators
+    ctx.save();
+    const arrowPulse = Math.sin(this.animTimer * 5) * 0.2 + 0.8;
+    if (windowStart > 0) {
+      ctx.fillStyle = `rgba(56, 189, 248, ${arrowPulse * 0.3})`;
+      ctx.fillRect(2, 110, 14, 28);
+      ctx.strokeStyle = `rgba(56, 189, 248, ${arrowPulse * 0.8})`;
+      ctx.strokeRect(2, 110, 14, 28);
+      ctx.fillStyle = UITokens.primary;
+      ctx.font = '8px "Press Start 2P", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('◄', 9, 124);
     }
 
-    // Navigation guide
-    UITypography.drawText(ctx, '[◄/►] SELECT MISSION   [ENTER] LAUNCH   [ESC] BACK', width / 2 + 35, height - 16, {
+    if (windowStart < 7) {
+      ctx.fillStyle = `rgba(56, 189, 248, ${arrowPulse * 0.3})`;
+      ctx.fillRect(384, 110, 14, 28);
+      ctx.strokeStyle = `rgba(56, 189, 248, ${arrowPulse * 0.8})`;
+      ctx.strokeRect(384, 110, 14, 28);
+      ctx.fillStyle = UITokens.primary;
+      ctx.font = '8px "Press Start 2P", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('►', 391, 124);
+    }
+    ctx.restore();
+
+    // 9. Back Button & Controls Legend
+    if (backButton) {
+      backButton.update(0.016, selectedLevelIndex === 10);
+      backButton.render(ctx, selectedLevelIndex === 10, false);
+    }
+
+    // Mission position indicator & navigation guide
+    const displayLevel = selectedLevelIndex < 10 ? selectedLevelIndex + 1 : (this.lastSelectedCardIndex !== undefined ? this.lastSelectedCardIndex + 1 : 1);
+    UITypography.drawText(ctx, `MISSION [${String(displayLevel).padStart(2, '0')} / 10]`, 150, height - 13, {
       size: '6px',
+      color: UITokens.gold,
+      align: 'center',
+      shadow: true
+    });
+
+    UITypography.drawText(ctx, '[◄/►] MISSION   [ENTER] LAUNCH   [ESC] BACK', width / 2 + 55, height - 13, {
+      size: '5.5px',
       color: UITokens.textMuted,
       align: 'center',
       shadow: true
@@ -1332,6 +1392,141 @@ export class UIManager {
 
       ctx.fillStyle = '#facc15';
       ctx.fillRect(tx + 62, ty + 5, 6, 6);
+    } else if (level === 4) {
+      // Level 4: Toxic Sewers
+      ctx.fillStyle = '#07150c';
+      ctx.fillRect(tx, ty, tw, th);
+
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(tx + 4, ty + 6, 26, 10);
+      ctx.fillRect(tx + 54, ty + 10, 42, 8);
+
+      // Acid canal
+      ctx.fillStyle = '#166534';
+      ctx.fillRect(tx, ty + 24, tw, 8);
+      ctx.fillStyle = '#22c55e';
+      ctx.fillRect(tx + 12, ty + 25, 24, 2);
+      ctx.fillRect(tx + 50, ty + 26, 30, 2);
+
+      // Yellow caution indicator
+      ctx.fillStyle = '#facc15';
+      ctx.fillRect(tx + 16, ty + 12, 3, 3);
+      ctx.fillRect(tx + 72, ty + 6, 3, 3);
+    } else if (level === 5) {
+      // Level 5: Crystal Caverns
+      ctx.fillStyle = '#070e1f';
+      ctx.fillRect(tx, ty, tw, th);
+
+      // Hanging crystal stalactites
+      ctx.fillStyle = '#06b6d4';
+      ctx.fillRect(tx + 14, ty, 4, 10);
+      ctx.fillRect(tx + 48, ty, 5, 14);
+      ctx.fillRect(tx + 82, ty, 4, 8);
+
+      // Amethyst crystal clusters
+      ctx.fillStyle = '#8b5cf6';
+      ctx.fillRect(tx + 6, ty + 20, 28, 6);
+      ctx.fillRect(tx + 52, ty + 18, 38, 6);
+      ctx.fillStyle = '#c084fc';
+      ctx.fillRect(tx + 18, ty + 16, 4, 4);
+      ctx.fillRect(tx + 70, ty + 14, 4, 4);
+
+      // Sparkles
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(tx + 24, ty + 8, 2, 2);
+      ctx.fillRect(tx + 62, ty + 6, 2, 2);
+    } else if (level === 6) {
+      // Level 6: Magma Core
+      ctx.fillStyle = '#1a0507';
+      ctx.fillRect(tx, ty, tw, th);
+
+      // Basalt chimneys
+      ctx.fillStyle = '#371318';
+      ctx.fillRect(tx + 10, ty + 10, 22, 22);
+      ctx.fillRect(tx + 58, ty + 8, 26, 24);
+
+      // Roaring lava lake
+      ctx.fillStyle = '#dc2626';
+      ctx.fillRect(tx, ty + 25, tw, 7);
+      ctx.fillStyle = '#f97316';
+      ctx.fillRect(tx + 6, ty + 26, 34, 2);
+      ctx.fillRect(tx + 50, ty + 26, 44, 2);
+
+      // Floating magma spark
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(tx + 40, ty + 14, 3, 3);
+    } else if (level === 7) {
+      // Level 7: Neo Skyway
+      ctx.fillStyle = '#07152b';
+      ctx.fillRect(tx, ty, tw, th);
+
+      // Floating highway girder
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(tx + 8, ty + 18, 86, 6);
+      ctx.fillStyle = '#60a5fa';
+      ctx.fillRect(tx + 8, ty + 18, 86, 1);
+
+      // Distant needle tower
+      ctx.fillStyle = '#0f274a';
+      ctx.fillRect(tx + 72, ty + 2, 8, 20);
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(tx + 75, ty, 2, 2);
+
+      // Cloud wisp
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.fillRect(tx + 16, ty + 26, 48, 4);
+    } else if (level === 8) {
+      // Level 8: Shadow Citadel
+      ctx.fillStyle = '#110416';
+      ctx.fillRect(tx, ty, tw, th);
+
+      // Citadel monoliths
+      ctx.fillStyle = '#260c33';
+      ctx.fillRect(tx + 12, ty + 6, 24, 26);
+      ctx.fillRect(tx + 54, ty + 4, 36, 28);
+
+      // Security laser line
+      ctx.fillStyle = '#ec4899';
+      ctx.fillRect(tx, ty + 16, tw, 1);
+      ctx.fillStyle = '#f472b6';
+      ctx.fillRect(tx + 44, ty + 15, 3, 3);
+    } else if (level === 9) {
+      // Level 9: Quantum Reactor
+      ctx.fillStyle = '#06071a';
+      ctx.fillRect(tx, ty, tw, th);
+
+      // Accelerator core
+      ctx.fillStyle = '#1e1b4b';
+      ctx.fillRect(tx + 8, ty + 16, 84, 8);
+      ctx.fillStyle = '#4f46e5';
+      ctx.fillRect(tx + 8, ty + 16, 84, 2);
+
+      // Quantum flux sphere
+      ctx.fillStyle = '#818cf8';
+      ctx.fillRect(tx + 46, ty + 8, 10, 10);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(tx + 49, ty + 11, 4, 4);
+    } else if (level === 10) {
+      // Level 10: The Emperor's Sanctum
+      ctx.fillStyle = '#1a1204';
+      ctx.fillRect(tx, ty, tw, th);
+
+      // Regal colonnades
+      ctx.fillStyle = '#451a03';
+      ctx.fillRect(tx + 8, ty + 4, 18, 28);
+      ctx.fillRect(tx + 74, ty + 4, 18, 28);
+
+      // Golden arch & Dais
+      ctx.fillStyle = '#854d0e';
+      ctx.fillRect(tx + 34, ty + 16, 32, 16);
+      ctx.fillStyle = '#ca8a04';
+      ctx.fillRect(tx + 34, ty + 16, 32, 2);
+
+      // Grand Emperor Trophy
+      ctx.fillStyle = '#facc15';
+      ctx.fillRect(tx + 46, ty + 7, 8, 8);
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(tx + 48, ty + 8, 4, 4);
     }
 
     if (!isUnlocked) {
@@ -1546,12 +1741,8 @@ export class UIManager {
       const cardX = (width - cardW) / 2;
       const cardY = 26;
 
-      const levelNames = {
-        1: 'THE LOST VAULT',
-        2: 'CYBER FACTORY',
-        3: 'DAVE FORTRESS'
-      };
-      const currentLevelName = levelNames[level] || `SECTOR ${level}`;
+      const meta = LEVEL_METADATA[level] || {};
+      const currentLevelName = meta.title || `SECTOR 0${level}`;
 
       ctx.save();
       ctx.globalAlpha = Math.min(1, Math.max(0, introAlpha));
@@ -1637,12 +1828,8 @@ export class UIManager {
     const hasTrophy = meta.hasTrophy || false;
     const hasCheckpoint = meta.hasCheckpoint || false;
 
-    const levelNames = {
-      1: 'THE LOST VAULT',
-      2: 'CYBER FACTORY',
-      3: 'DAVE FORTRESS'
-    };
-    const levelTitle = levelNames[currentLevel] || `SECTOR 0${currentLevel}`;
+    const metaLvl = LEVEL_METADATA[currentLevel] || {};
+    const levelTitle = metaLvl.title || `SECTOR 0${currentLevel}`;
 
     // 1. Dark Translucent Backdrop with Vignette
     ctx.save();
@@ -1791,12 +1978,8 @@ export class UIManager {
       hasCheckpoint = metaOrScore.hasCheckpoint || false;
     }
 
-    const levelNames = {
-      1: 'THE LOST VAULT',
-      2: 'CYBER FACTORY',
-      3: 'DAVE FORTRESS'
-    };
-    const levelTitle = levelNames[currentLevel] || `SECTOR 0${currentLevel}`;
+    const metaLvl = LEVEL_METADATA[currentLevel] || {};
+    const levelTitle = metaLvl.title || `SECTOR 0${currentLevel}`;
 
     // 1. Dark Crimson Backdrop with Edge Vignette
     ctx.save();
@@ -1940,12 +2123,8 @@ export class UIManager {
       bonus = meta.bonus !== undefined ? meta.bonus : 500;
     }
 
-    const levelNames = {
-      1: 'THE LOST VAULT',
-      2: 'CYBER FACTORY',
-      3: 'DAVE FORTRESS'
-    };
-    const levelTitle = levelNames[currentLevel] || `SECTOR 0${currentLevel}`;
+    const metaLvl = LEVEL_METADATA[currentLevel] || {};
+    const levelTitle = metaLvl.title || `SECTOR 0${currentLevel}`;
 
     // 1. Dark Translucent Backdrop with Vignette & Gold Energy
     ctx.save();
@@ -2280,9 +2459,9 @@ export class UIManager {
     ctx.textAlign = 'left';
 
     ctx.fillStyle = '#86efac';
-    ctx.fillText('MISSION 01: THE LOST VAULT  ✓', cardX + 6, cardY + 6);
-    ctx.fillText('MISSION 02: CYBER FACTORY   ✓', cardX + 6, cardY + 16);
-    ctx.fillText('MISSION 03: DAVE FORTRESS   ✓', cardX + 6, cardY + 26);
+    ctx.fillText('ALL 10 MISSIONS CLEARED!  ✓', cardX + 6, cardY + 6);
+    ctx.fillText('CAMPAIGN: 10/10 COMPLETE   ✓', cardX + 6, cardY + 16);
+    ctx.fillText('RANK: LEGENDARY DAVE     ✦', cardX + 6, cardY + 26);
 
     ctx.fillStyle = UITokens.textMuted;
     ctx.fillText('CAMPAIGN STATUS:', cardX + 6, cardY + 36);
@@ -2290,7 +2469,7 @@ export class UIManager {
     ctx.fillText('100% COMPLETE', cardX + 106, cardY + 36);
 
     ctx.fillStyle = UITokens.textMuted;
-    ctx.fillText('GOLDEN TROPHY:', cardX + 6, cardY + 45);
+    ctx.fillText('EMPEROR TROPHY:', cardX + 6, cardY + 45);
     ctx.fillStyle = '#4ade80';
     ctx.fillText('ACQUIRED 🏆', cardX + 106, cardY + 45);
 

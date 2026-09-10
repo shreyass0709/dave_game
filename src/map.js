@@ -1,7 +1,7 @@
 /**
- * Multi-Level Tile Map System (Levels 1, 2, and 3)
+ * Multi-Level Tile Map System (Levels 1 through 10)
  * Provides progressive retro platformer levels with start positions,
- * platforms, hazards, collectibles, enemy spawns, and exit portals.
+ * platforms, hazards, collectibles, checkpoints, enemy spawns, and exit portals.
  */
 
 export const TILE_SIZE = 16;
@@ -23,6 +23,119 @@ export const TILE_TYPES = {
   CHECKPOINT: 12
 };
 
+export const LEVEL_METADATA = {
+  1: {
+    num: '01',
+    title: 'THE LOST VAULT',
+    subtitle: 'TRAINING VAULT',
+    themeColor: '#38bdf8',
+    glowColor: 'rgba(56, 189, 248, 0.45)',
+    stars: '★☆☆☆☆',
+    starsColor: '#38bdf8',
+    desc: 'Master platforming, gather diamonds & collect the Golden Trophy.',
+    bgHue: '#0c2338'
+  },
+  2: {
+    num: '02',
+    title: 'CYBER FACTORY',
+    subtitle: 'INDUSTRIAL CONDUIT',
+    themeColor: '#a855f7',
+    glowColor: 'rgba(168, 85, 247, 0.45)',
+    stars: '★★☆☆☆',
+    starsColor: '#a855f7',
+    desc: 'Traverse moving girders, toxic pipes & patrolling slime guards.',
+    bgHue: '#1c1038'
+  },
+  3: {
+    num: '03',
+    title: 'DAVE FORTRESS',
+    subtitle: 'MOLTEN CITADEL',
+    themeColor: '#f97316',
+    glowColor: 'rgba(249, 115, 22, 0.45)',
+    stars: '★★★☆☆',
+    starsColor: '#f97316',
+    desc: 'Ascend fortress spires over deep molten lava to breach the gate.',
+    bgHue: '#2d0e14'
+  },
+  4: {
+    num: '04',
+    title: 'TOXIC SEWERS',
+    subtitle: 'ACID DRAINAGE',
+    themeColor: '#22c55e',
+    glowColor: 'rgba(34, 197, 94, 0.45)',
+    stars: '★★☆☆☆',
+    starsColor: '#22c55e',
+    desc: 'Navigate acid channels, rusty drainage grates & sludge drones.',
+    bgHue: '#0d2818'
+  },
+  5: {
+    num: '05',
+    title: 'CRYSTAL CAVERNS',
+    subtitle: 'GEODE DEPTHS',
+    themeColor: '#06b6d4',
+    glowColor: 'rgba(6, 182, 212, 0.45)',
+    stars: '★★★☆☆',
+    starsColor: '#06b6d4',
+    desc: 'Leap across luminous geode pillars & subterranean spike chasms.',
+    bgHue: '#092434'
+  },
+  6: {
+    num: '06',
+    title: 'MAGMA CORE',
+    subtitle: 'TECTONIC FOUNDRY',
+    themeColor: '#ef4444',
+    glowColor: 'rgba(239, 68, 68, 0.45)',
+    stars: '★★★★☆',
+    starsColor: '#ef4444',
+    desc: 'Survive intense thermal blasts, basalt stepping pillars & magma vents.',
+    bgHue: '#340f12'
+  },
+  7: {
+    num: '07',
+    title: 'NEO SKYWAY',
+    subtitle: 'FLOATING METROPOLIS',
+    themeColor: '#60a5fa',
+    glowColor: 'rgba(96, 165, 250, 0.45)',
+    stars: '★★★★☆',
+    starsColor: '#60a5fa',
+    desc: 'Scale high-altitude floating suspension girders above neon clouds.',
+    bgHue: '#0f1f3d'
+  },
+  8: {
+    num: '08',
+    title: 'SHADOW CITADEL',
+    subtitle: 'COVERT BASTION',
+    themeColor: '#ec4899',
+    glowColor: 'rgba(236, 72, 153, 0.45)',
+    stars: '★★★★☆',
+    starsColor: '#ec4899',
+    desc: 'Infiltrate midnight laser grids, stealth turrets & obsidian towers.',
+    bgHue: '#290b2c'
+  },
+  9: {
+    num: '09',
+    title: 'QUANTUM REACTOR',
+    subtitle: 'ENERGY ACCELERATOR',
+    themeColor: '#818cf8',
+    glowColor: 'rgba(129, 140, 248, 0.45)',
+    stars: '★★★★★',
+    starsColor: '#818cf8',
+    desc: 'Race along overcharged particle accelerators & pulsating conduits.',
+    bgHue: '#17163b'
+  },
+  10: {
+    num: '10',
+    title: "EMPEROR'S SANCTUM",
+    subtitle: 'THE FINAL THRONE',
+    themeColor: '#facc15',
+    glowColor: 'rgba(250, 204, 21, 0.55)',
+    stars: '★★★★★',
+    starsColor: '#facc15',
+    desc: 'Conquer the royal gilded citadel & claim the Grand Emperor Trophy!',
+    bgHue: '#2a1e06'
+  }
+};
+
 export class GameMap {
   constructor(levelNumber = 1) {
     this.tileSize = TILE_SIZE;
@@ -34,21 +147,25 @@ export class GameMap {
   }
 
   /**
-   * Loads specific level layout and metadata
+   * Loads specific level layout and metadata (Levels 1 to 10)
    */
   loadLevel(levelNumber) {
-    this.levelNumber = levelNumber;
+    this.levelNumber = Math.max(1, Math.min(10, levelNumber));
     this.hasTrophy = false;
     this.checkpoints = [];
 
-    if (levelNumber === 1) {
-      this.buildLevel1();
-    } else if (levelNumber === 2) {
-      this.buildLevel2();
-    } else if (levelNumber === 3) {
-      this.buildLevel3();
-    } else {
-      this.buildLevel1();
+    switch (this.levelNumber) {
+      case 1: this.buildLevel1(); break;
+      case 2: this.buildLevel2(); break;
+      case 3: this.buildLevel3(); break;
+      case 4: this.buildLevel4(); break;
+      case 5: this.buildLevel5(); break;
+      case 6: this.buildLevel6(); break;
+      case 7: this.buildLevel7(); break;
+      case 8: this.buildLevel8(); break;
+      case 9: this.buildLevel9(); break;
+      case 10: this.buildLevel10(); break;
+      default: this.buildLevel1(); break;
     }
   }
 
@@ -369,6 +486,815 @@ export class GameMap {
     this.grid[13][82] = TILE_TYPES.EXIT_DOOR;
   }
 
+  // ==========================================
+  // LEVEL 4: TOXIC SEWERS (Acid Drainage)
+  // ==========================================
+  buildLevel4() {
+    this.cols = 78;
+    this.playerSpawn = { x: 32, y: 192 };
+    this.grid = Array.from({ length: this.rows }, () => new Array(this.cols).fill(TILE_TYPES.EMPTY));
+
+    // Boundaries
+    for (let c = 0; c < this.cols; c++) this.grid[0][c] = TILE_TYPES.STEEL_BLOCK;
+    for (let r = 0; r < this.rows; r++) {
+      this.grid[r][0] = TILE_TYPES.STEEL_BLOCK;
+      this.grid[r][this.cols - 1] = TILE_TYPES.STEEL_BLOCK;
+    }
+
+    // Floor with acid channels (HAZARD_FIRE) and rusted drain spikes (HAZARD_SPIKES)
+    for (let c = 0; c < this.cols; c++) {
+      if ((c >= 12 && c <= 15) || (c >= 50 && c <= 53)) {
+        this.grid[14][c] = TILE_TYPES.HAZARD_FIRE; // Acid sludge pit
+      } else if (c >= 30 && c <= 33) {
+        this.grid[14][c] = TILE_TYPES.HAZARD_SPIKES; // Rusted drain spikes
+      } else {
+        this.grid[14][c] = TILE_TYPES.STEEL_BLOCK;
+      }
+    }
+
+    // Section 1: Pipe Entrance & Early Diamonds
+    this.grid[11][5] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[11][6] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[10][5] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[10][6] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][8] = TILE_TYPES.COLLECTIBLE_COIN;
+
+    // Acid pit 1 hop
+    this.grid[12][10] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[9][13] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][14] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][14] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+    this.grid[12][17] = TILE_TYPES.STEEL_BLOCK;
+
+    // Section 2: Sewer Walkway & Sludge Patrol 1
+    this.grid[13][19] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][21] = TILE_TYPES.ENEMY_SPAWN;
+    this.grid[13][23] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][25] = TILE_TYPES.COLLECTIBLE_COIN;
+
+    // Stepped drainage pipe climb
+    this.grid[11][26] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[11][27] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[10][26] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+    this.grid[8][29] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][30] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[7][30] = TILE_TYPES.COLLECTIBLE_RUBY;
+
+    // Section 3: Central Filtration Hub & Checkpoint 1
+    this.grid[11][34] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[11][35] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[11][36] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[10][35] = TILE_TYPES.CHECKPOINT;
+    this.checkpoints.push({ col: 35, row: 10, x: 35 * this.tileSize, y: 10 * this.tileSize, activated: false });
+
+    // High secret ventilation pipe
+    this.grid[8][38] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][39] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[7][39] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+    this.grid[5][35] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[5][36] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[4][36] = TILE_TYPES.COLLECTIBLE_RUBY;
+
+    // Section 4: Sludge Canal & Patrol 2
+    this.grid[13][42] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][44] = TILE_TYPES.ENEMY_SPAWN;
+    this.grid[13][47] = TILE_TYPES.COLLECTIBLE_COIN;
+
+    // Acid Pit 2 crossing
+    this.grid[12][49] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[9][51] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][52] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][51] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+    this.grid[12][54] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[13][56] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][57] = TILE_TYPES.COLLECTIBLE_COIN;
+
+    // Section 5: Chemical Altar & The Golden Trophy
+    this.grid[9][59] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][60] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][59] = TILE_TYPES.ENEMY_SPAWN; // Ledge Guard
+    this.grid[8][60] = TILE_TYPES.COLLECTIBLE_COIN;
+
+    // High Chemical Altar
+    this.grid[8][62] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[6][64] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[6][65] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[4][64] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[4][65] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[3][64] = TILE_TYPES.COLLECTIBLE_TROPHY;
+    this.grid[3][65] = TILE_TYPES.COLLECTIBLE_RUBY;
+
+    // Section 6: Drainage Descent to Exit
+    this.grid[8][68] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][69] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[11][71] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[11][72] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[10][71] = TILE_TYPES.COLLECTIBLE_COIN;
+
+    // Exit Portal
+    this.grid[12][74] = TILE_TYPES.EXIT_DOOR;
+    this.grid[13][74] = TILE_TYPES.EXIT_DOOR;
+  }
+
+  // ==========================================
+  // LEVEL 5: CRYSTAL CAVERNS (Subterranean Geode)
+  // ==========================================
+  buildLevel5() {
+    this.cols = 82;
+    this.playerSpawn = { x: 32, y: 192 };
+    this.grid = Array.from({ length: this.rows }, () => new Array(this.cols).fill(TILE_TYPES.EMPTY));
+
+    // Boundaries
+    for (let c = 0; c < this.cols; c++) this.grid[0][c] = TILE_TYPES.RED_BRICK;
+    for (let r = 0; r < this.rows; r++) {
+      this.grid[r][0] = TILE_TYPES.RED_BRICK;
+      this.grid[r][this.cols - 1] = TILE_TYPES.RED_BRICK;
+    }
+
+    // Floor with crystal spike chasms (HAZARD_SPIKES)
+    for (let c = 0; c < this.cols; c++) {
+      if ((c >= 13 && c <= 16) || (c >= 32 && c <= 35) || (c >= 52 && c <= 55)) {
+        this.grid[14][c] = TILE_TYPES.HAZARD_SPIKES;
+      } else {
+        this.grid[14][c] = TILE_TYPES.RED_BRICK;
+      }
+    }
+
+    // Section 1: Cavern Entry
+    this.grid[11][4] = TILE_TYPES.RED_BRICK;
+    this.grid[11][5] = TILE_TYPES.RED_BRICK;
+    this.grid[11][6] = TILE_TYPES.RED_BRICK;
+    this.grid[10][4] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[10][5] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[10][6] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+    this.grid[13][9] = TILE_TYPES.COLLECTIBLE_COIN;
+
+    // Spike Chasm 1 crossing
+    this.grid[12][12] = TILE_TYPES.RED_BRICK;
+    this.grid[9][14] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][15] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][15] = TILE_TYPES.COLLECTIBLE_RUBY;
+    this.grid[11][17] = TILE_TYPES.RED_BRICK;
+    this.grid[11][18] = TILE_TYPES.RED_BRICK;
+
+    // Section 2: Amethyst Ledges & Patrol 1 & 2
+    this.grid[13][20] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][22] = TILE_TYPES.ENEMY_SPAWN;
+    this.grid[13][24] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][26] = TILE_TYPES.COLLECTIBLE_COIN;
+
+    this.grid[11][27] = TILE_TYPES.RED_BRICK;
+    this.grid[8][29] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][30] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][31] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[7][30] = TILE_TYPES.ENEMY_SPAWN; // Platform Guard
+    this.grid[7][31] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+
+    // Checkpoint 1 (Crystal Ledge)
+    this.grid[11][30] = TILE_TYPES.RED_BRICK;
+    this.grid[10][30] = TILE_TYPES.CHECKPOINT;
+    this.checkpoints.push({ col: 30, row: 10, x: 30 * this.tileSize, y: 10 * this.tileSize, activated: false });
+
+    // Spike Chasm 2 hop
+    this.grid[9][33] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][34] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][34] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+    this.grid[12][36] = TILE_TYPES.RED_BRICK;
+
+    // Section 3: Vertical Stalagmite Ascent
+    this.grid[10][39] = TILE_TYPES.RED_BRICK;
+    this.grid[10][40] = TILE_TYPES.RED_BRICK;
+    this.grid[9][39] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[7][42] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[7][43] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[6][42] = TILE_TYPES.COLLECTIBLE_RUBY;
+    this.grid[6][43] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+    this.grid[10][46] = TILE_TYPES.RED_BRICK;
+
+    // Ground Patrol 3
+    this.grid[13][48] = TILE_TYPES.ENEMY_SPAWN;
+    this.grid[13][50] = TILE_TYPES.COLLECTIBLE_COIN;
+
+    // Spike Chasm 3 & Checkpoint 2
+    this.grid[9][53] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][54] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][54] = TILE_TYPES.COLLECTIBLE_RUBY;
+
+    this.grid[12][57] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[11][57] = TILE_TYPES.CHECKPOINT;
+    this.checkpoints.push({ col: 57, row: 11, x: 57 * this.tileSize, y: 11 * this.tileSize, activated: false });
+
+    // Section 4: Great Geode Throne & Golden Trophy
+    this.grid[9][60] = TILE_TYPES.RED_BRICK;
+    this.grid[9][61] = TILE_TYPES.RED_BRICK;
+    this.grid[6][63] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[6][64] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[6][65] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[5][64] = TILE_TYPES.ENEMY_SPAWN; // Throne Guardian
+    this.grid[5][65] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+
+    // Crystal Throne Altar
+    this.grid[4][66] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[4][67] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[3][66] = TILE_TYPES.COLLECTIBLE_TROPHY;
+    this.grid[3][67] = TILE_TYPES.COLLECTIBLE_RUBY;
+
+    // Section 5: Portal Descent
+    this.grid[7][70] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[7][71] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[10][73] = TILE_TYPES.RED_BRICK;
+    this.grid[10][74] = TILE_TYPES.RED_BRICK;
+    this.grid[13][76] = TILE_TYPES.COLLECTIBLE_COIN;
+
+    // Exit Door
+    this.grid[12][78] = TILE_TYPES.EXIT_DOOR;
+    this.grid[13][78] = TILE_TYPES.EXIT_DOOR;
+  }
+
+  // ==========================================
+  // LEVEL 6: MAGMA CORE (Tectonic Foundry)
+  // ==========================================
+  buildLevel6() {
+    this.cols = 84;
+    this.playerSpawn = { x: 32, y: 192 };
+    this.grid = Array.from({ length: this.rows }, () => new Array(this.cols).fill(TILE_TYPES.EMPTY));
+
+    // Boundaries
+    for (let c = 0; c < this.cols; c++) this.grid[0][c] = TILE_TYPES.STEEL_BLOCK;
+    for (let r = 0; r < this.rows; r++) {
+      this.grid[r][0] = TILE_TYPES.STEEL_BLOCK;
+      this.grid[r][this.cols - 1] = TILE_TYPES.STEEL_BLOCK;
+    }
+
+    // Floor with deep lava pits (HAZARD_FIRE) and molten heat spikes (HAZARD_SPIKES)
+    for (let c = 0; c < this.cols; c++) {
+      if ((c >= 12 && c <= 16) || (c >= 32 && c <= 37) || (c >= 54 && c <= 59)) {
+        this.grid[14][c] = TILE_TYPES.HAZARD_FIRE;
+      } else if ((c >= 24 && c <= 26) || (c >= 44 && c <= 46)) {
+        this.grid[14][c] = TILE_TYPES.HAZARD_SPIKES;
+      } else {
+        this.grid[14][c] = TILE_TYPES.STEEL_BLOCK;
+      }
+    }
+
+    // Section 1: Foundry Entry
+    this.grid[11][4] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[11][5] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[10][4] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[10][5] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][8] = TILE_TYPES.COLLECTIBLE_COIN;
+
+    // Lava Pit 1 leap
+    this.grid[12][11] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[9][13] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][14] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][14] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+    this.grid[12][17] = TILE_TYPES.STEEL_BLOCK;
+
+    // Section 2: Basalt Runway & Patrol 1
+    this.grid[13][19] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][20] = TILE_TYPES.ENEMY_SPAWN;
+    this.grid[13][22] = TILE_TYPES.COLLECTIBLE_COIN;
+
+    // Spikes 1 hop
+    this.grid[10][24] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[10][25] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[10][26] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][25] = TILE_TYPES.COLLECTIBLE_RUBY;
+    this.grid[12][28] = TILE_TYPES.STEEL_BLOCK;
+
+    // Section 3: High Pumping Station & Checkpoint 1
+    this.grid[10][30] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[10][31] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[9][30] = TILE_TYPES.CHECKPOINT;
+    this.checkpoints.push({ col: 30, row: 9, x: 30 * this.tileSize, y: 9 * this.tileSize, activated: false });
+
+    this.grid[7][33] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[7][34] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[7][35] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[6][34] = TILE_TYPES.ENEMY_SPAWN; // High Platform Guard
+    this.grid[6][35] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+
+    // Lava Caldera 2 crossing
+    this.grid[9][36] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][37] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][36] = TILE_TYPES.COLLECTIBLE_RUBY;
+    this.grid[11][39] = TILE_TYPES.STEEL_BLOCK;
+
+    // Section 4: Heat Exchanger & Checkpoint 2
+    this.grid[13][41] = TILE_TYPES.ENEMY_SPAWN;
+    this.grid[13][42] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[10][44] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[10][45] = TILE_TYPES.STEEL_BLOCK;
+
+    this.grid[12][49] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[11][49] = TILE_TYPES.CHECKPOINT;
+    this.checkpoints.push({ col: 49, row: 11, x: 49 * this.tileSize, y: 11 * this.tileSize, activated: false });
+
+    this.grid[9][50] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][51] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][52] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][51] = TILE_TYPES.ENEMY_SPAWN; // Guard
+    this.grid[8][52] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+
+    // Section 5: The Molten Anvil & Golden Trophy
+    this.grid[10][55] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[7][57] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[7][58] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[6][58] = TILE_TYPES.COLLECTIBLE_RUBY;
+    this.grid[9][60] = TILE_TYPES.STEEL_BLOCK;
+
+    // Great Magma Spire
+    this.grid[7][63] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[7][64] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[5][66] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[5][67] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[4][66] = TILE_TYPES.ENEMY_SPAWN; // Altar Guard
+    this.grid[3][69] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[3][70] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[2][69] = TILE_TYPES.COLLECTIBLE_TROPHY;
+    this.grid[2][70] = TILE_TYPES.COLLECTIBLE_RUBY;
+
+    // Section 6: Cooling Chamber Exit
+    this.grid[6][73] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[6][74] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][76] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[9][77] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[12][79] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[13][80] = TILE_TYPES.COLLECTIBLE_COIN;
+
+    // Exit Door
+    this.grid[12][81] = TILE_TYPES.EXIT_DOOR;
+    this.grid[13][81] = TILE_TYPES.EXIT_DOOR;
+  }
+
+  // ==========================================
+  // LEVEL 7: NEO SKYWAY (Floating Metropolis)
+  // ==========================================
+  buildLevel7() {
+    this.cols = 88;
+    this.playerSpawn = { x: 32, y: 192 };
+    this.grid = Array.from({ length: this.rows }, () => new Array(this.cols).fill(TILE_TYPES.EMPTY));
+
+    // Boundaries
+    for (let c = 0; c < this.cols; c++) this.grid[0][c] = TILE_TYPES.STEEL_BLOCK;
+    for (let r = 0; r < this.rows; r++) {
+      this.grid[r][0] = TILE_TYPES.STEEL_BLOCK;
+      this.grid[r][this.cols - 1] = TILE_TYPES.STEEL_BLOCK;
+    }
+
+    // Floor with bottomless sky abyss gaps (HAZARD_SPIKES representing plasma discharge)
+    for (let c = 0; c < this.cols; c++) {
+      if ((c >= 14 && c <= 18) || (c >= 34 && c <= 38) || (c >= 56 && c <= 61) || (c >= 72 && c <= 75)) {
+        this.grid[14][c] = TILE_TYPES.HAZARD_SPIKES;
+      } else {
+        this.grid[14][c] = TILE_TYPES.STEEL_BLOCK;
+      }
+    }
+
+    // Section 1: Sky Launch Pad
+    this.grid[11][5] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[11][6] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[10][5] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[10][6] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][8] = TILE_TYPES.COLLECTIBLE_COIN;
+
+    // Sky Gap 1 leap
+    this.grid[12][13] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[9][15] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][16] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][15] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+    this.grid[11][19] = TILE_TYPES.STEEL_BLOCK;
+
+    // Section 2: Rooftop Highway & Patrol 1 & 2
+    this.grid[13][21] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][23] = TILE_TYPES.ENEMY_SPAWN;
+    this.grid[13][25] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][27] = TILE_TYPES.COLLECTIBLE_COIN;
+
+    this.grid[10][28] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[10][29] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[10][30] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][29] = TILE_TYPES.ENEMY_SPAWN; // Highway Patrol
+    this.grid[9][30] = TILE_TYPES.COLLECTIBLE_RUBY;
+
+    // Section 3: Antenna Mast & Checkpoint 1
+    this.grid[11][32] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[10][32] = TILE_TYPES.CHECKPOINT;
+    this.checkpoints.push({ col: 32, row: 10, x: 32 * this.tileSize, y: 10 * this.tileSize, activated: false });
+
+    // Sky Gap 2 hop
+    this.grid[9][35] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][36] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][36] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+    this.grid[11][39] = TILE_TYPES.STEEL_BLOCK;
+
+    // Section 4: Dual-Level Skyway & Checkpoint 2
+    this.grid[13][41] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][43] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[8][43] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][44] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][45] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][46] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[7][44] = TILE_TYPES.COLLECTIBLE_RUBY;
+    this.grid[7][46] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+
+    this.grid[12][51] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[11][51] = TILE_TYPES.CHECKPOINT;
+    this.checkpoints.push({ col: 51, row: 11, x: 51 * this.tileSize, y: 11 * this.tileSize, activated: false });
+
+    // Section 5: Radio Tower Spire & Golden Trophy
+    this.grid[10][57] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[8][59] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][60] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[7][59] = TILE_TYPES.ENEMY_SPAWN; // Mast Guard
+
+    // Ascending Radio Mast
+    this.grid[6][63] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[6][64] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[4][66] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[4][67] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[2][69] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[2][70] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[1][69] = TILE_TYPES.COLLECTIBLE_TROPHY;
+    this.grid[1][70] = TILE_TYPES.COLLECTIBLE_RUBY;
+
+    // Section 6: Sky Terminal Descent
+    this.grid[5][73] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[5][74] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][76] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[8][77] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[11][80] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[11][81] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[13][83] = TILE_TYPES.COLLECTIBLE_COIN;
+
+    // Exit Door
+    this.grid[12][84] = TILE_TYPES.EXIT_DOOR;
+    this.grid[13][84] = TILE_TYPES.EXIT_DOOR;
+  }
+
+  // ==========================================
+  // LEVEL 8: SHADOW CITADEL (Covert Bastion)
+  // ==========================================
+  buildLevel8() {
+    this.cols = 90;
+    this.playerSpawn = { x: 32, y: 192 };
+    this.grid = Array.from({ length: this.rows }, () => new Array(this.cols).fill(TILE_TYPES.EMPTY));
+
+    // Boundaries
+    for (let c = 0; c < this.cols; c++) this.grid[0][c] = TILE_TYPES.STEEL_BLOCK;
+    for (let r = 0; r < this.rows; r++) {
+      this.grid[r][0] = TILE_TYPES.STEEL_BLOCK;
+      this.grid[r][this.cols - 1] = TILE_TYPES.STEEL_BLOCK;
+    }
+
+    // Floor with incinerator pits (HAZARD_FIRE) and laser security spikes (HAZARD_SPIKES)
+    for (let c = 0; c < this.cols; c++) {
+      if ((c >= 13 && c <= 17) || (c >= 36 && c <= 41) || (c >= 60 && c <= 65)) {
+        this.grid[14][c] = TILE_TYPES.HAZARD_FIRE;
+      } else if ((c >= 26 && c <= 28) || (c >= 50 && c <= 52)) {
+        this.grid[14][c] = TILE_TYPES.HAZARD_SPIKES;
+      } else {
+        this.grid[14][c] = TILE_TYPES.STEEL_BLOCK;
+      }
+    }
+
+    // Section 1: Infiltration Bastion
+    this.grid[11][5] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[11][6] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[11][7] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[10][5] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[10][6] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][9] = TILE_TYPES.COLLECTIBLE_COIN;
+
+    // Moat 1 hop
+    this.grid[12][12] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[9][14] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][15] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][15] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+    this.grid[11][18] = TILE_TYPES.STEEL_BLOCK;
+
+    // Section 2: Security Corridor & Patrol 1 & 2
+    this.grid[13][20] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][21] = TILE_TYPES.ENEMY_SPAWN;
+    this.grid[13][23] = TILE_TYPES.COLLECTIBLE_COIN;
+
+    this.grid[9][24] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][25] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][26] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][27] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][25] = TILE_TYPES.ENEMY_SPAWN; // Gantry Guard
+    this.grid[8][26] = TILE_TYPES.COLLECTIBLE_RUBY;
+
+    // Checkpoint 1
+    this.grid[11][31] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[10][31] = TILE_TYPES.CHECKPOINT;
+    this.checkpoints.push({ col: 31, row: 10, x: 31 * this.tileSize, y: 10 * this.tileSize, activated: false });
+
+    // Section 3: Central Prison Block & Moat 2
+    this.grid[10][37] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[10][38] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][37] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+    this.grid[8][39] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][40] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[7][40] = TILE_TYPES.COLLECTIBLE_RUBY;
+    this.grid[11][42] = TILE_TYPES.STEEL_BLOCK;
+
+    this.grid[13][44] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][45] = TILE_TYPES.ENEMY_SPAWN;
+
+    // Checkpoint 2
+    this.grid[12][48] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[11][48] = TILE_TYPES.CHECKPOINT;
+    this.checkpoints.push({ col: 48, row: 11, x: 48 * this.tileSize, y: 11 * this.tileSize, activated: false });
+
+    // Section 4: Citadel Armory & High Spire Ascent
+    this.grid[9][50] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][51] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][52] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][51] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+
+    this.grid[10][55] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[10][56] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[7][58] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[7][59] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[7][60] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[6][59] = TILE_TYPES.ENEMY_SPAWN; // Tower Guard
+
+    // Moat 3 hop
+    this.grid[6][62] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[6][63] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[5][63] = TILE_TYPES.COLLECTIBLE_RUBY;
+    this.grid[8][66] = TILE_TYPES.STEEL_BLOCK;
+
+    // Section 5: The Shadow Vault & Golden Trophy
+    this.grid[6][69] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[6][70] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[4][72] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[4][73] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[3][75] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[3][76] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[2][75] = TILE_TYPES.COLLECTIBLE_TROPHY;
+    this.grid[2][76] = TILE_TYPES.COLLECTIBLE_RUBY;
+
+    // Section 6: Airlock Extraction & Exit Door
+    this.grid[6][79] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[6][80] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][82] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[9][83] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[12][85] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[13][86] = TILE_TYPES.COLLECTIBLE_COIN;
+
+    // Exit Door
+    this.grid[12][87] = TILE_TYPES.EXIT_DOOR;
+    this.grid[13][87] = TILE_TYPES.EXIT_DOOR;
+  }
+
+  // ==========================================
+  // LEVEL 9: QUANTUM REACTOR (Energy Accelerator)
+  // ==========================================
+  buildLevel9() {
+    this.cols = 92;
+    this.playerSpawn = { x: 32, y: 192 };
+    this.grid = Array.from({ length: this.rows }, () => new Array(this.cols).fill(TILE_TYPES.EMPTY));
+
+    // Boundaries
+    for (let c = 0; c < this.cols; c++) this.grid[0][c] = TILE_TYPES.STEEL_BLOCK;
+    for (let r = 0; r < this.rows; r++) {
+      this.grid[r][0] = TILE_TYPES.STEEL_BLOCK;
+      this.grid[r][this.cols - 1] = TILE_TYPES.STEEL_BLOCK;
+    }
+
+    // Floor with plasma discharge (HAZARD_FIRE) and ionized grids (HAZARD_SPIKES)
+    for (let c = 0; c < this.cols; c++) {
+      if ((c >= 14 && c <= 18) || (c >= 38 && c <= 43) || (c >= 62 && c <= 67)) {
+        this.grid[14][c] = TILE_TYPES.HAZARD_FIRE;
+      } else if ((c >= 28 && c <= 30) || (c >= 52 && c <= 54)) {
+        this.grid[14][c] = TILE_TYPES.HAZARD_SPIKES;
+      } else {
+        this.grid[14][c] = TILE_TYPES.STEEL_BLOCK;
+      }
+    }
+
+    // Section 1: Injection Chamber
+    this.grid[11][5] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[11][6] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[11][7] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[10][5] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[10][6] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][8] = TILE_TYPES.COLLECTIBLE_COIN;
+
+    // Plasma Leap 1
+    this.grid[12][13] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[9][15] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][16] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][16] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+    this.grid[11][19] = TILE_TYPES.STEEL_BLOCK;
+
+    // Section 2: Accelerator Ring & Patrol 1 & 2
+    this.grid[13][21] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][22] = TILE_TYPES.ENEMY_SPAWN;
+    this.grid[13][24] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][26] = TILE_TYPES.COLLECTIBLE_COIN;
+
+    this.grid[9][27] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][28] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][29] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][30] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][28] = TILE_TYPES.ENEMY_SPAWN; // Ledge Guard
+    this.grid[8][29] = TILE_TYPES.COLLECTIBLE_RUBY;
+
+    // Checkpoint 1
+    this.grid[11][33] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[10][33] = TILE_TYPES.CHECKPOINT;
+    this.checkpoints.push({ col: 33, row: 10, x: 33 * this.tileSize, y: 10 * this.tileSize, activated: false });
+
+    // Section 3: Magnetic Compression Core
+    this.grid[10][39] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[10][40] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][39] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+    this.grid[8][41] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][42] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[7][42] = TILE_TYPES.COLLECTIBLE_RUBY;
+    this.grid[11][44] = TILE_TYPES.STEEL_BLOCK;
+
+    this.grid[13][46] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][47] = TILE_TYPES.ENEMY_SPAWN;
+
+    // Checkpoint 2
+    this.grid[12][50] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[11][50] = TILE_TYPES.CHECKPOINT;
+    this.checkpoints.push({ col: 50, row: 11, x: 50 * this.tileSize, y: 11 * this.tileSize, activated: false });
+
+    // Section 4: Quantum Split Conduit
+    this.grid[9][52] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][53] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][54] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][53] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+
+    this.grid[10][56] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[10][57] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[7][59] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[7][60] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[7][61] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[6][60] = TILE_TYPES.ENEMY_SPAWN; // Conduit Guard
+
+    // Plasma 3 leap
+    this.grid[6][63] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[6][64] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[5][64] = TILE_TYPES.COLLECTIBLE_RUBY;
+    this.grid[8][68] = TILE_TYPES.STEEL_BLOCK;
+
+    // Section 5: The Quantum Core Altar & Golden Trophy
+    this.grid[6][71] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[6][72] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[4][74] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[4][75] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[3][77] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[3][78] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[2][77] = TILE_TYPES.COLLECTIBLE_TROPHY;
+    this.grid[2][78] = TILE_TYPES.COLLECTIBLE_RUBY;
+
+    // Section 6: Evacuation Shunt to Exit
+    this.grid[6][81] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[6][82] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][84] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[9][85] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[12][87] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[13][88] = TILE_TYPES.COLLECTIBLE_COIN;
+
+    // Exit Door
+    this.grid[12][89] = TILE_TYPES.EXIT_DOOR;
+    this.grid[13][89] = TILE_TYPES.EXIT_DOOR;
+  }
+
+  // ==========================================
+  // LEVEL 10: THE EMPEROR'S SANCTUM (The Final Climax)
+  // ==========================================
+  buildLevel10() {
+    this.cols = 96;
+    this.playerSpawn = { x: 32, y: 192 };
+    this.grid = Array.from({ length: this.rows }, () => new Array(this.cols).fill(TILE_TYPES.EMPTY));
+
+    // Boundaries
+    for (let c = 0; c < this.cols; c++) this.grid[0][c] = TILE_TYPES.STEEL_BLOCK;
+    for (let r = 0; r < this.rows; r++) {
+      this.grid[r][0] = TILE_TYPES.STEEL_BLOCK;
+      this.grid[r][this.cols - 1] = TILE_TYPES.STEEL_BLOCK;
+    }
+
+    // Floor with imperial lava moats (HAZARD_FIRE) and royal spikes (HAZARD_SPIKES)
+    for (let c = 0; c < this.cols; c++) {
+      if ((c >= 15 && c <= 20) || (c >= 40 && c <= 46) || (c >= 66 && c <= 72)) {
+        this.grid[14][c] = TILE_TYPES.HAZARD_FIRE;
+      } else if ((c >= 30 && c <= 33) || (c >= 56 && c <= 58)) {
+        this.grid[14][c] = TILE_TYPES.HAZARD_SPIKES;
+      } else {
+        this.grid[14][c] = TILE_TYPES.RED_BRICK;
+      }
+    }
+
+    // Section 1: The Golden Gate of Dave
+    this.grid[11][5] = TILE_TYPES.RED_BRICK;
+    this.grid[11][6] = TILE_TYPES.RED_BRICK;
+    this.grid[11][7] = TILE_TYPES.RED_BRICK;
+    this.grid[11][8] = TILE_TYPES.RED_BRICK;
+    this.grid[10][5] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[10][6] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[10][7] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+    this.grid[13][10] = TILE_TYPES.COLLECTIBLE_COIN;
+
+    // Moat of Champions (cols 15..20)
+    this.grid[12][14] = TILE_TYPES.RED_BRICK;
+    this.grid[9][16] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][17] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][17] = TILE_TYPES.COLLECTIBLE_RUBY;
+    this.grid[9][18] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][19] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][18] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+    this.grid[11][21] = TILE_TYPES.RED_BRICK;
+
+    // Section 2: Colonnade of Honor & Patrol 1 & 2
+    this.grid[13][23] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][24] = TILE_TYPES.ENEMY_SPAWN;
+    this.grid[13][26] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][28] = TILE_TYPES.COLLECTIBLE_COIN;
+
+    this.grid[9][29] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][30] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][31] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][32] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][30] = TILE_TYPES.ENEMY_SPAWN; // Royal Colonnade Guard
+    this.grid[8][31] = TILE_TYPES.COLLECTIBLE_RUBY;
+
+    // Checkpoint 1
+    this.grid[11][35] = TILE_TYPES.RED_BRICK;
+    this.grid[10][35] = TILE_TYPES.CHECKPOINT;
+    this.checkpoints.push({ col: 35, row: 10, x: 35 * this.tileSize, y: 10 * this.tileSize, activated: false });
+
+    // Section 3: Grand Throne Moat & Patrol 3
+    this.grid[10][41] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[10][42] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][41] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+    this.grid[8][43] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][44] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[7][44] = TILE_TYPES.COLLECTIBLE_RUBY;
+    this.grid[11][47] = TILE_TYPES.STEEL_BLOCK;
+
+    this.grid[13][49] = TILE_TYPES.COLLECTIBLE_COIN;
+    this.grid[13][50] = TILE_TYPES.ENEMY_SPAWN;
+
+    // Checkpoint 2
+    this.grid[12][53] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[11][53] = TILE_TYPES.CHECKPOINT;
+    this.checkpoints.push({ col: 53, row: 11, x: 53 * this.tileSize, y: 11 * this.tileSize, activated: false });
+
+    // Section 4: Hall of Statues & High Spire Climb
+    this.grid[9][56] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][57] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][58] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[8][57] = TILE_TYPES.ENEMY_SPAWN; // Statue Guard
+    this.grid[8][58] = TILE_TYPES.COLLECTIBLE_SAPPHIRE;
+
+    this.grid[10][60] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[10][61] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[7][63] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[7][64] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[7][65] = TILE_TYPES.STEEL_BLOCK;
+
+    // Moat 3 hop
+    this.grid[6][67] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[6][68] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[5][68] = TILE_TYPES.COLLECTIBLE_RUBY;
+    this.grid[8][73] = TILE_TYPES.STEEL_BLOCK;
+
+    // Section 5: The Emperor's Grand Altar & The Ultimate Golden Trophy
+    this.grid[6][76] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[6][77] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[5][76] = TILE_TYPES.ENEMY_SPAWN; // Elite Emperor Champion
+    this.grid[4][79] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[4][80] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[4][81] = TILE_TYPES.STEEL_BLOCK;
+
+    // Imperial Dais
+    this.grid[3][82] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[3][83] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[2][82] = TILE_TYPES.COLLECTIBLE_TROPHY; // The Grand Emperor Trophy!
+    this.grid[2][83] = TILE_TYPES.COLLECTIBLE_RUBY;
+
+    // Section 6: Master Campaign Victory Portal
+    this.grid[6][85] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[6][86] = TILE_TYPES.WOOD_PLATFORM;
+    this.grid[9][88] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[9][89] = TILE_TYPES.STEEL_BLOCK;
+    this.grid[12][91] = TILE_TYPES.RED_BRICK;
+    this.grid[13][92] = TILE_TYPES.COLLECTIBLE_COIN;
+
+    // The Master Victory Exit Door
+    this.grid[12][93] = TILE_TYPES.EXIT_DOOR;
+    this.grid[13][93] = TILE_TYPES.EXIT_DOOR;
+  }
+
   /**
    * Returns list of configured enemy spawn coordinates
    */
@@ -573,7 +1499,7 @@ export class GameMap {
         ctx.fillRect(camera.x + actualX, 30, 16, vh - 30);
         ctx.fillRect(camera.x + actualX - 10, 60, 36, 6);
       }
-    } else {
+    } else if (this.levelNumber === 3) {
       // Level 3: Dave Fortress with Obsidian Spires & Rising Embers
       ctx.fillStyle = '#100609';
       ctx.fillRect(camera.x, 0, vw, vh);
@@ -599,6 +1525,181 @@ export class GameMap {
         const emberY = (vh - ((this.animTimer * 20 + i * 24) % vh));
         ctx.fillStyle = i % 2 === 0 ? '#f97316' : '#facc15';
         ctx.fillRect(camera.x + actualX, emberY, 1, 1);
+      }
+    } else if (this.levelNumber === 4) {
+      // Level 4: Toxic Sewers with Acid Mist & Dripping Chemical Conduits
+      ctx.fillStyle = '#06130b';
+      ctx.fillRect(camera.x, 0, vw, vh);
+
+      // Distant Sewer Pipes & Grate Silhouettes (0.28x scroll)
+      ctx.fillStyle = '#0c2616';
+      for (let i = 0; i < 6; i++) {
+        const pipeX = (i * 110 - camera.x * 0.28) % (vw + 110);
+        const actualX = pipeX < -110 ? pipeX + vw + 220 : pipeX;
+        ctx.fillRect(camera.x + actualX, 15, 20, vh - 15);
+        ctx.fillRect(camera.x + actualX - 6, 45, 32, 10);
+      }
+
+      // Falling Toxic Sludge Droplets
+      ctx.fillStyle = '#22c55e';
+      for (let i = 0; i < 16; i++) {
+        const dropX = ((i * 37 + 19) - camera.x * 0.15) % (vw + 20);
+        const actualX = dropX < 0 ? dropX + vw + 20 : dropX;
+        const dropY = (this.animTimer * 45 + i * 31) % (vh - 20) + 10;
+        ctx.fillRect(camera.x + actualX, dropY, 1, 3);
+      }
+    } else if (this.levelNumber === 5) {
+      // Level 5: Crystal Caverns with Subterranean Indigo & Shimmering Stalactites
+      ctx.fillStyle = '#060d1f';
+      ctx.fillRect(camera.x, 0, vw, vh);
+
+      // Hanging Geode Stalactites (0.3x scroll)
+      ctx.fillStyle = '#111f3d';
+      for (let i = 0; i < 8; i++) {
+        const stX = (i * 85 - camera.x * 0.3) % (vw + 85);
+        const actualX = stX < -85 ? stX + vw + 170 : stX;
+        const h = (i % 3 === 0) ? 35 : ((i % 2 === 0) ? 24 : 18);
+        ctx.beginPath();
+        ctx.moveTo(camera.x + actualX, 0);
+        ctx.lineTo(camera.x + actualX + 12, 0);
+        ctx.lineTo(camera.x + actualX + 6, h);
+        ctx.fill();
+      }
+
+      // Sparkle Shimmer Dust (0.35x scroll)
+      for (let i = 0; i < 18; i++) {
+        const pX = ((i * 49 + 13) - camera.x * 0.35) % (vw + 30);
+        const actualX = pX < 0 ? pX + vw + 30 : pX;
+        const pY = (i * 27 + 19) % (vh - 40) + 15;
+        const pulse = Math.sin(this.animTimer * 4 + i) > 0.3;
+        if (pulse) {
+          ctx.fillStyle = (i % 2 === 0) ? '#06b6d4' : '#c084fc';
+          ctx.fillRect(camera.x + actualX, pY, 2, 2);
+        }
+      }
+    } else if (this.levelNumber === 6) {
+      // Level 6: Magma Core with Basalt Chimneys & Thermal Shockwaves
+      ctx.fillStyle = '#170406';
+      ctx.fillRect(camera.x, 0, vw, vh);
+
+      // Basalt Chimneys (0.28x scroll)
+      ctx.fillStyle = '#260a0f';
+      for (let i = 0; i < 6; i++) {
+        const chX = (i * 125 - camera.x * 0.28) % (vw + 125);
+        const actualX = chX < -125 ? chX + vw + 250 : chX;
+        ctx.fillRect(camera.x + actualX, 35, 24, vh - 35);
+        ctx.fillRect(camera.x + actualX - 4, 30, 32, 6);
+      }
+
+      // Intense Rising Heat Sparks
+      for (let i = 0; i < 22; i++) {
+        const spX = ((i * 41 + 17) - camera.x * 0.45) % (vw + 20);
+        const actualX = spX < 0 ? spX + vw + 20 : spX;
+        const spY = (vh - ((this.animTimer * 35 + i * 21) % vh));
+        ctx.fillStyle = (i % 3 === 0) ? '#ef4444' : ((i % 2 === 0) ? '#f97316' : '#fef08a');
+        ctx.fillRect(camera.x + actualX, spY, 1, 2);
+      }
+    } else if (this.levelNumber === 7) {
+      // Level 7: Neo Skyway with High Altitude Clouds & Cyberpunk Towers
+      ctx.fillStyle = '#061024';
+      ctx.fillRect(camera.x, 0, vw, vh);
+
+      // Layer 1: Distant City Silhouettes (0.15x scroll)
+      ctx.fillStyle = '#0d1d3a';
+      for (let i = 0; i < 7; i++) {
+        const bX = (i * 95 - camera.x * 0.15) % (vw + 95);
+        const actualX = bX < -95 ? bX + vw + 190 : bX;
+        const bH = 60 + (i % 4) * 25;
+        ctx.fillRect(camera.x + actualX, vh - bH, 22, bH);
+        // Antennas
+        ctx.fillRect(camera.x + actualX + 10, vh - bH - 12, 2, 12);
+      }
+
+      // Layer 2: Floating Neon Clouds (0.35x scroll)
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.08)';
+      for (let i = 0; i < 5; i++) {
+        const cX = ((i * 140 + this.animTimer * 10) - camera.x * 0.35) % (vw + 140);
+        const actualX = cX < -140 ? cX + vw + 280 : cX;
+        ctx.fillRect(camera.x + actualX, 70 + (i % 3) * 35, 90, 14);
+      }
+    } else if (this.levelNumber === 8) {
+      // Level 8: Shadow Citadel with Midnight Lasers & Surveillance Scanners
+      ctx.fillStyle = '#0c0414';
+      ctx.fillRect(camera.x, 0, vw, vh);
+
+      // Shadow Citadel Monoliths (0.25x scroll)
+      ctx.fillStyle = '#190a26';
+      for (let i = 0; i < 5; i++) {
+        const mX = (i * 135 - camera.x * 0.25) % (vw + 135);
+        const actualX = mX < -135 ? mX + vw + 270 : mX;
+        ctx.fillRect(camera.x + actualX, 25, 30, vh - 25);
+        ctx.fillRect(camera.x + actualX + 4, 35, 22, 4);
+      }
+
+      // Sweeping Laser Scanner Beams
+      const scanBeamY = 40 + Math.sin(this.animTimer * 2) * 25;
+      ctx.fillStyle = 'rgba(236, 72, 153, 0.09)';
+      ctx.fillRect(camera.x, scanBeamY, vw, 4);
+      ctx.fillStyle = '#ec4899';
+      ctx.fillRect(camera.x, scanBeamY + 1, vw, 1);
+    } else if (this.levelNumber === 9) {
+      // Level 9: Quantum Reactor with Pulsing Plasma Conduits & Flux Particles
+      ctx.fillStyle = '#060618';
+      ctx.fillRect(camera.x, 0, vw, vh);
+
+      // Vertical Plasma Flux Pillars (0.28x scroll)
+      ctx.fillStyle = '#101033';
+      for (let i = 0; i < 6; i++) {
+        const pX = (i * 115 - camera.x * 0.28) % (vw + 115);
+        const actualX = pX < -115 ? pX + vw + 230 : pX;
+        ctx.fillRect(camera.x + actualX, 10, 18, vh - 10);
+
+        // Core plasma glow inside pillar
+        const coreAlpha = 0.3 + 0.4 * Math.sin(this.animTimer * 5 + i);
+        ctx.fillStyle = `rgba(129, 140, 248, ${coreAlpha})`;
+        ctx.fillRect(camera.x + actualX + 6, 20, 6, vh - 30);
+        ctx.fillStyle = '#101033';
+      }
+
+      // Quantum flux particles
+      for (let i = 0; i < 20; i++) {
+        const qX = ((i * 43 + 29) - camera.x * 0.4) % (vw + 30);
+        const actualX = qX < 0 ? qX + vw + 30 : qX;
+        const qY = (i * 31 + 7 + Math.sin(this.animTimer * 4 + i) * 12) % (vh - 30) + 15;
+        ctx.fillStyle = (i % 2 === 0) ? '#818cf8' : '#38bdf8';
+        ctx.fillRect(camera.x + actualX, qY, 1, 1);
+      }
+    } else {
+      // Level 10: The Emperor's Sanctum with Royal Colonnades & Gold Aura
+      ctx.fillStyle = '#120d04';
+      ctx.fillRect(camera.x, 0, vw, vh);
+
+      // Imperial Golden Colonnades (0.24x scroll)
+      ctx.fillStyle = '#261b08';
+      for (let i = 0; i < 6; i++) {
+        const cX = (i * 120 - camera.x * 0.24) % (vw + 120);
+        const actualX = cX < -120 ? cX + vw + 240 : cX;
+        ctx.fillRect(camera.x + actualX, 15, 24, vh - 15);
+        ctx.fillRect(camera.x + actualX - 6, 15, 36, 6);
+        ctx.fillRect(camera.x + actualX - 4, 45, 32, 4);
+      }
+
+      // Royal Golden Light Pillars (0.35x scroll)
+      for (let i = 0; i < 4; i++) {
+        const lX = (i * 170 - camera.x * 0.35) % (vw + 170);
+        const actualX = lX < -170 ? lX + vw + 340 : lX;
+        const pulse = 0.08 + 0.06 * Math.sin(this.animTimer * 3 + i);
+        ctx.fillStyle = `rgba(250, 204, 21, ${pulse})`;
+        ctx.fillRect(camera.x + actualX, 0, 32, vh);
+      }
+
+      // Rising Imperial Gold Dust
+      for (let i = 0; i < 18; i++) {
+        const dX = ((i * 47 + 11) - camera.x * 0.3) % (vw + 30);
+        const actualX = dX < 0 ? dX + vw + 30 : dX;
+        const dY = (vh - ((this.animTimer * 18 + i * 22) % vh));
+        ctx.fillStyle = (i % 2 === 0) ? '#facc15' : '#fef08a';
+        ctx.fillRect(camera.x + actualX, dY, 1, 1);
       }
     }
   }
