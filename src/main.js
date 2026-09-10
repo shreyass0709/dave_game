@@ -6,14 +6,14 @@
  * and dual Keyboard + Mouse navigation.
  */
 
-import { GameMap, TILE_SIZE } from './map.js?v=10.1';
+import { GameMap, TILE_SIZE } from './map.js?v=10.2';
 import { Player, PlayerState, Direction } from './player.js';
 import { PhysicsEngine } from './physics.js';
 import { InputHandler } from './input.js';
 import { Camera } from './camera.js';
 import { Enemy } from './enemy.js';
 import { EffectManager } from './effects.js';
-import { UIManager, UIButton } from './ui.js?v=10.1';
+import { UIManager, UIButton } from './ui.js?v=10.2';
 import { SoundSystem } from './audio.js';
 
 export const GameState = {
@@ -66,6 +66,9 @@ export class Game {
     this.selectedMenuIndex = 0;
     this.selectedLevelIndex = 0;
     this.unlockedLevels = 1;
+    if (typeof window !== 'undefined' && window.location && window.location.search && (window.location.search.includes('unlock') || window.location.search.includes('all'))) {
+      this.unlockedLevels = 10;
+    }
     this.completedLevels = new Set();
     this.highScores = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0 };
     this.previousState = GameState.MAIN_MENU;
@@ -156,6 +159,13 @@ export class Game {
    */
   handleLevelSelectNavigation() {
     if (!this.input) return;
+
+    // Quick Cheat/Review Trigger: Press 'U' to unlock all 10 missions
+    if (this.input.wasUnlockAllJustPressed && this.input.wasUnlockAllJustPressed()) {
+      this.unlockedLevels = 10;
+      this.showMessage("ALL 10 MISSIONS UNLOCKED!", 2.5);
+      if (this.sound) this.sound.playGem();
+    }
 
     const isLeft = this.input.wasMenuLeft ? this.input.wasMenuLeft() : false;
     const isRight = this.input.wasMenuRight ? this.input.wasMenuRight() : false;

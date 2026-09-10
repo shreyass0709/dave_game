@@ -139,6 +139,10 @@ export class InputHandler {
     return this.justPressed.has('KeyB');
   }
 
+  wasUnlockAllJustPressed() {
+    return this.justPressed.has('KeyU');
+  }
+
   wasDeathTestPressed() {
     return this.justPressed.has('KeyK');
   }

@@ -5,7 +5,7 @@
  * reusable UIPanel / modal card containers, motion easing utilities, and screen state renders.
  */
 
-import { LEVEL_METADATA } from './map.js?v=10.1';
+import { LEVEL_METADATA } from './map.js?v=10.2';
 
 // =============================================================================
 // 1. DESIGN TOKENS & PALETTE
@@ -1146,7 +1146,7 @@ export class UIManager {
       shadow: true
     });
 
-    UITypography.drawText(ctx, '[◄/►] MISSION   [ENTER] LAUNCH   [ESC] BACK', width / 2 + 55, height - 13, {
+    UITypography.drawText(ctx, '[◄/►] MOVE   [ENTER] PLAY   [U] UNLOCK ALL   [ESC] BACK', width / 2 + 55, height - 13, {
       size: '5.5px',
       color: UITokens.textMuted,
       align: 'center',
